@@ -1,0 +1,5 @@
+config.js
+node_modules/
+.netlify/
+.DS_Store
+*.zip
