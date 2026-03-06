@@ -24,8 +24,9 @@ app.factory('AuthService', function($http, $q) {
         },
         login: function(email, password) {
             return $http.post(CONFIG.API + '/v3/auth/token', {
+                grant_type: 'password',
                 apiKey: CONFIG.API_KEY,
-                login: email,
+                username: email,
                 password: password
             });
         },
