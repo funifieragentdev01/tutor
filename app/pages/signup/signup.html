@@ -1,0 +1,40 @@
+<div class="auth-page">
+    <div class="auth-container">
+        <h1 class="auth-logo">Tutor</h1>
+        <h2 class="auth-title">Criar conta</h2>
+        <p class="auth-subtitle">Cadastro do responsável</p>
+        
+        <form ng-submit="signup()" class="auth-form">
+            <div class="form-group">
+                <label>Nome completo</label>
+                <input type="text" ng-model="name" placeholder="Seu nome" required>
+            </div>
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" ng-model="email" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" ng-model="password" placeholder="Mínimo 6 caracteres" required>
+            </div>
+            <div class="form-group">
+                <label>Confirmar senha</label>
+                <input type="password" ng-model="confirmPassword" placeholder="Repita a senha" required>
+            </div>
+            
+            <div class="auth-error" ng-show="error">{{error}}</div>
+            <div class="auth-success" ng-show="success">{{success}}</div>
+            
+            <button type="submit" class="btn btn-primary btn-block" ng-disabled="loading">
+                {{loading ? 'Criando...' : 'Criar Conta'}}
+            </button>
+        </form>
+        
+        <p class="auth-link">
+            Já tem conta? <a href="" ng-click="goLogin()">Entrar</a>
+        </p>
+        <p class="auth-link">
+            <a href="" ng-click="goLanding()">Voltar</a>
+        </p>
+    </div>
+</div>
