@@ -5,7 +5,7 @@
 - **API Key:** `69ab1a9a607db81962b92cd2`
 - **BASIC Token:** `Basic NjlhYjFhOWE2MDdkYjgxOTYyYjkyY2QyOg==`
 
-## Roles (Ricardo precisa criar no Studio)
+## Roles (✅ Criadas)
 
 ### Role: public
 - **Scope:** `read_all`
@@ -15,10 +15,11 @@
 - **Scope:** `read_all, write_all, delete_all, database`
 - **Uso:** Token Bearer (usuários logados — pais e filhos)
 
-## App (Ricardo precisa criar no Studio)
+## App (✅ Criada)
 - **Nome:** Tutor App
+- **App Secret:** `69ab3566607db81962b9686e`
 - **Scope:** `read_all, write_all, delete_all, database`
-- **Uso:** Gerar Basic token não-expirante para triggers e endpoints internos
+- **Basic Token:** `Basic NjlhYjFhOWE2MDdkYjgxOTYyYjkyY2QyOjY5YWIzNTY2NjA3ZGI4MTk2MmI5Njg2ZQ==`
 
 ## Signup Handler (Trigger)
 - **Entidade:** `signup__c`
