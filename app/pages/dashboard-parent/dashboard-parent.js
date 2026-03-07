@@ -134,7 +134,8 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     
     function addChildToParent(parentId, childId, childProfile) {
         ApiService.getProfile(parentId).then(function(res) {
-            var profile = res.data || { _id: parentId };
+            var profile = (res.data && res.data._id) ? res.data : { _id: parentId };
+            profile._id = parentId; // always ensure correct _id
             if (!profile.children) profile.children = [];
             if (profile.children.indexOf(childId) === -1) {
                 profile.children.push(childId);
