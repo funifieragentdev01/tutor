@@ -59,7 +59,7 @@
                 <span>Toque para tirar foto ou escolher da galeria</span>
             </div>
         </div>
-        <input type="file" id="photoInput" accept="image/*" capture="user" style="display:none" onchange="angular.element(this).scope().onPhotoSelected(this)">
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="angular.element(this).scope().onPhotoSelected(this)">
         
         <button class="btn btn-primary btn-block btn-lg" ng-click="nextStep()" ng-disabled="saving">
             {{saving ? 'Salvando...' : photoPreview ? 'Continuar' : 'Continuar sem foto'}}
