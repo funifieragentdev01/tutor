@@ -179,6 +179,22 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
         $scope.newChild = {};
     };
     
+    $scope.deleteChild = function(child, $event) {
+        $event.stopPropagation();
+        if (!confirm('Excluir "' + child.name + '" e todos os dados?\n\nEsta ação não pode ser desfeita.')) return;
+        
+        $scope.loading = true;
+        // Delete player via API — trigger handles cleanup (folder, profile, signup, parent ref)
+        ApiService.deletePlayer(child._id).then(function() {
+            var idx = $scope.children.indexOf(child);
+            if (idx !== -1) $scope.children.splice(idx, 1);
+            $scope.loading = false;
+        }).catch(function() {
+            alert('Erro ao excluir. Tente novamente.');
+            $scope.loading = false;
+        });
+    };
+    
     $scope.logout = function() {
         AuthService.logout();
         $location.path('/landing');

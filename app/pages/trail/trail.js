@@ -217,6 +217,49 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         });
     };
     
+    // Delete a folder item (subject, module, lesson) with confirmation
+    $scope.deleteItem = function(item, $event) {
+        $event.stopPropagation();
+        var typeNames = { subject: 'disciplina', module: 'módulo', lesson: 'aula' };
+        var typeName = typeNames[item.type] || 'item';
+        if (!confirm('Excluir ' + typeName + ' "' + item.title + '" e todo o conteúdo interno?\n\nEsta ação não pode ser desfeita.')) return;
+        
+        $scope.loading = true;
+        ApiService.deleteFolderWithQuizzes(item._id).then(function() {
+            // Remove from local list
+            var idx = $scope.items.indexOf(item);
+            if (idx !== -1) $scope.items.splice(idx, 1);
+            $scope.loading = false;
+            $scope.$applyAsync();
+        }).catch(function() {
+            alert('Erro ao excluir. Tente novamente.');
+            $scope.loading = false;
+            $scope.$applyAsync();
+        });
+    };
+    
+    // Delete a content item (quiz)
+    $scope.deleteContent = function(c, $event) {
+        $event.stopPropagation();
+        if (!confirm('Excluir esta atividade?\n\nEsta ação não pode ser desfeita.')) return;
+        
+        $scope.loading = true;
+        // Delete quiz first (cascade: questions), then folder_content
+        var p = c.content && c.type === 'quiz' ? ApiService.deleteQuiz(c.content).catch(function(){}) : Promise.resolve();
+        p.then(function() {
+            return ApiService.deleteFolderContent(c._id);
+        }).then(function() {
+            var idx = $scope.contents.indexOf(c);
+            if (idx !== -1) $scope.contents.splice(idx, 1);
+            $scope.loading = false;
+            $scope.$applyAsync();
+        }).catch(function() {
+            alert('Erro ao excluir. Tente novamente.');
+            $scope.loading = false;
+            $scope.$applyAsync();
+        });
+    };
+    
     $scope.openCapture = function() {
         // Navigate to capture page with context
         var ctx = encodeURIComponent(JSON.stringify({

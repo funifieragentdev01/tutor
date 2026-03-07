@@ -432,6 +432,11 @@ body {
 }
 .child-name { font-size: 16px; font-weight: 700; }
 .child-stats { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+.btn-delete-child {
+    background: none; border: none; font-size: 14px; padding: 4px;
+    cursor: pointer; opacity: 0.3; transition: opacity 0.2s; margin-top: 4px;
+}
+.btn-delete-child:hover, .btn-delete-child:active { opacity: 1; }
 .child-card-add { border: 2px dashed var(--border); background: transparent; box-shadow: none; }
 .add-avatar { background: var(--bg) !important; color: var(--primary) !important; font-size: 32px; }
 
@@ -483,6 +488,11 @@ body {
 .folder-title { font-size: 15px; font-weight: 700; }
 .folder-meta { font-size: 12px; color: var(--text-light); margin-top: 4px; display: flex; align-items: center; gap: 8px; }
 .folder-arrow { font-size: 20px; color: var(--text-muted); font-weight: 700; }
+.btn-delete-item {
+    background: none; border: none; font-size: 16px; padding: 8px;
+    cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
+}
+.btn-delete-item:hover, .btn-delete-item:active { opacity: 1; }
 .folder-lock { font-size: 18px; }
 .folder-percent { font-size: 12px; font-weight: 700; color: var(--primary); }
 

@@ -41,7 +41,8 @@
                         {{item.childCount}} ite{{item.childCount !== 1 ? 'ns' : 'm'}}
                     </div>
                 </div>
-                <div class="folder-arrow" ng-if="item.is_unlocked !== false">›</div>
+                <button class="btn-delete-item" ng-if="isParent" ng-click="deleteItem(item, $event)" title="Excluir">🗑</button>
+                <div class="folder-arrow" ng-if="item.is_unlocked !== false && !isParent">›</div>
                 <div class="folder-lock" ng-if="item.is_unlocked === false">🔒</div>
             </div>
         </div>
@@ -55,7 +56,8 @@
                     <div class="content-title">{{c.title}}</div>
                     <div class="content-type">{{c.type === 'quiz' ? 'Quiz' : c.type}}</div>
                 </div>
-                <div class="folder-arrow">›</div>
+                <button class="btn-delete-item" ng-if="isParent" ng-click="deleteContent(c, $event)" title="Excluir">🗑</button>
+                <div class="folder-arrow" ng-if="!isParent">›</div>
             </div>
         </div>
 
