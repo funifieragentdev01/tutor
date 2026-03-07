@@ -67,7 +67,7 @@
             <button class="btn btn-primary" ng-click="openCapture()" ng-if="isParent && canCapture">
                 📷 Adicionar Conteúdo
             </button>
-            <button class="btn btn-outline" ng-click="addSubjectManual()" ng-if="isParent && currentLevel === 'root'">
+            <button class="btn btn-outline" ng-click="openAddSubject()" ng-if="isParent && currentLevel === 'root'">
                 + Nova Disciplina
             </button>
         </div>
@@ -83,7 +83,7 @@
                 <button class="btn btn-primary btn-block" ng-click="createSubject()" ng-disabled="creatingSubject">
                     {{creatingSubject ? 'Criando...' : 'Criar Disciplina'}}
                 </button>
-                <button class="btn btn-outline btn-block" ng-click="showAddSubject = false">Cancelar</button>
+                <button class="btn btn-outline btn-block" ng-click="cancelAddSubject()">Cancelar</button>
             </div>
         </div>
 

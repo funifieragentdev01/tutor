@@ -157,6 +157,15 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
         });
     }
     
+    $scope.openAddChild = function() {
+        $scope.showAddChild = true;
+    };
+    
+    $scope.cancelAddChild = function() {
+        $scope.showAddChild = false;
+        $scope.newChild = {};
+    };
+    
     $scope.logout = function() {
         AuthService.logout();
         $location.path('/landing');

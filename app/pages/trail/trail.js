@@ -185,8 +185,12 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         });
     };
     
-    $scope.addSubjectManual = function() {
+    $scope.openAddSubject = function() {
         $scope.showAddSubject = true;
+    };
+    
+    $scope.cancelAddSubject = function() {
+        $scope.showAddSubject = false;
     };
     
     $scope.createSubject = function() {

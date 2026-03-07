@@ -28,7 +28,7 @@
             </div>
             
             <!-- Add child -->
-            <div class="child-card child-card-add" ng-click="showAddChild = true" ng-if="!showAddChild">
+            <div class="child-card child-card-add" ng-click="openAddChild()" ng-if="!showAddChild">
                 <div class="child-avatar add-avatar">+</div>
                 <div class="child-name">Adicionar Filho</div>
             </div>
@@ -61,7 +61,7 @@
                 <button class="btn btn-primary btn-block" ng-click="addChild()" ng-disabled="addingChild">
                     {{addingChild ? 'Criando...' : 'Criar Perfil'}}
                 </button>
-                <button class="btn btn-outline btn-block" ng-click="showAddChild = false; newChild = {}">Cancelar</button>
+                <button class="btn btn-outline btn-block" ng-click="cancelAddChild()">Cancelar</button>
             </div>
             <div class="auth-error" ng-if="childError">{{childError}}</div>
         </div>
@@ -72,7 +72,7 @@
         <div class="empty-icon">👨‍👧‍👦</div>
         <h3>Nenhum filho cadastrado</h3>
         <p>Cadastre seu primeiro filho para começar a criar trilhas de aprendizado personalizadas.</p>
-        <button class="btn btn-primary" ng-click="showAddChild = true">Cadastrar Filho</button>
+        <button class="btn btn-primary" ng-click="openAddChild()">Cadastrar Filho</button>
     </div>
 
     <!-- Loading -->

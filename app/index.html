@@ -33,12 +33,12 @@
     <!-- Version Footer -->
     <div class="app-version">v{{CONFIG.VERSION}}</div>
 
+    <!-- App (must load first — defines angular module) -->
+    <script src="app.js"></script>
+    
     <!-- Services -->
     <script src="services/auth.js"></script>
     <script src="services/api.js"></script>
-    
-    <!-- App -->
-    <script src="app.js"></script>
     
     <!-- Pages -->
     <script src="pages/landing/landing.js"></script>
