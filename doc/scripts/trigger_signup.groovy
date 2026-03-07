@@ -41,6 +41,10 @@ void trigger(event, entity, player, database) {
     extra.put("role", role != null ? role.toString() : "parent")
     extra.put("plan", ["type": "basic", "status": "trial", "created": new Date().getTime()])
     extra.put("created", new Date().getTime())
+    def parentId = entity.get("parent_id")
+    if (parentId != null && parentId.toString().trim().length() > 0) {
+        extra.put("parent_id", parentId.toString().trim())
+    }
     newPlayer.extra = extra
 
     pm.insert(newPlayer)

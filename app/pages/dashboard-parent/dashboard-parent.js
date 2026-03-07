@@ -19,35 +19,37 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
             $scope.parentName = (res.data && res.data.name) || userId.split('@')[0];
         });
         
-        // Load children from parent's extra.children array
+        // Load children from parent's profile__c.children array
         ApiService.getProfile(userId).then(function(res) {
             var profile = res.data || {};
-            var childIds = (profile.children || []);
-            if (childIds.length === 0) {
-                $scope.loading = false;
-                return;
-            }
-            
-            // Load each child's player data
-            var loaded = 0;
-            childIds.forEach(function(childId) {
-                ApiService.getPlayer(childId).then(function(childRes) {
-                    var child = childRes.data;
-                    if (child && child._id) {
-                        child.color = COLORS[$scope.children.length % COLORS.length];
-                        // Count subjects from folder
-                        loadChildSubjectCount(child);
-                        $scope.children.push(child);
-                    }
-                    loaded++;
-                    if (loaded >= childIds.length) $scope.loading = false;
-                }).catch(function() {
-                    loaded++;
-                    if (loaded >= childIds.length) $scope.loading = false;
-                });
-            });
+            loadChildren(profile.children || []);
         }).catch(function() {
+            // profile__c doesn't exist yet — no children
+            loadChildren([]);
+        });
+    }
+    
+    function loadChildren(childIds) {
+        if (childIds.length === 0) {
             $scope.loading = false;
+            return;
+        }
+        
+        var loaded = 0;
+        childIds.forEach(function(childId) {
+            ApiService.getPlayer(childId).then(function(childRes) {
+                var child = childRes.data;
+                if (child && child._id) {
+                    child.color = COLORS[$scope.children.length % COLORS.length];
+                    loadChildSubjectCount(child);
+                    $scope.children.push(child);
+                }
+                loaded++;
+                if (loaded >= childIds.length) $scope.loading = false;
+            }).catch(function() {
+                loaded++;
+                if (loaded >= childIds.length) $scope.loading = false;
+            });
         });
     }
     
@@ -71,13 +73,21 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
             $scope.childError = 'Nome, idade e série são obrigatórios.';
             return;
         }
+        if (!$scope.newChild.email) {
+            $scope.childError = 'E-mail é obrigatório.';
+            return;
+        }
+        if (!$scope.newChild.password) {
+            $scope.childError = 'Senha é obrigatória.';
+            return;
+        }
         
         $scope.addingChild = true;
         $scope.childError = '';
         
         var parentId = AuthService.getUser();
-        var childId = parentId.replace('@', '+child' + Date.now() + '@');
-        var childPassword = 'child' + Math.random().toString(36).substring(2, 10);
+        var childId = $scope.newChild.email.trim().toLowerCase();
+        var childPassword = $scope.newChild.password;
         
         // 1. Create child player via signup__c
         AuthService.signup({
@@ -85,7 +95,8 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
             name: $scope.newChild.name,
             email: childId,
             password: childPassword,
-            role: 'child'
+            role: 'child',
+            parent_id: parentId
         }).then(function(res) {
             var data = res.data;
             if (data.error) {
