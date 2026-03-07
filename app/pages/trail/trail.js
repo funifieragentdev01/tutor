@@ -1,6 +1,6 @@
 app.controller('TrailController', function($scope, $location, $routeParams, AuthService, ApiService) {
-    var childId = $routeParams.childId;
-    var folderId = $routeParams.folderId || childId; // default to root
+    var childId = decodeURIComponent($routeParams.childId || '');
+    var folderId = decodeURIComponent($routeParams.folderId || '') || childId; // default to root
     
     $scope.isParent = AuthService.getRole() === 'parent';
     $scope.currentTitle = '';
@@ -61,7 +61,9 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         
         // Get children folders
         ApiService.getFolderInside(id).then(function(res) {
-            var all = res.data || [];
+            var data = res.data || {};
+            var all = data.items || data || [];
+            if (!Array.isArray(all)) all = [];
             // Separate folders from content
             $scope.items = all.filter(function(i) { return i.type !== 'content'; });
             $scope.loading = false;

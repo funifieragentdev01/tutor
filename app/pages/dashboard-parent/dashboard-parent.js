@@ -54,7 +54,8 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     function loadChildSubjectCount(child) {
         // Root folder _id = child._id
         ApiService.getFolderInside(child._id).then(function(res) {
-            var items = res.data || [];
+            var data = res.data || {};
+            var items = data.items || [];
             child.subjectCount = items.filter(function(i) { return i.type === 'subject'; }).length;
         }).catch(function() {
             child.subjectCount = 0;

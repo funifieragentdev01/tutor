@@ -3,8 +3,8 @@ app.controller('CaptureController', function($scope, $location, $routeParams, Au
     var ctx = {};
     try { ctx = JSON.parse(decodeURIComponent($routeParams.ctx || $location.search().ctx || '{}')); } catch(e) {}
     
-    var childId = ctx.childId;
-    var parentFolderId = ctx.folderId || childId;
+    var childId = decodeURIComponent(ctx.childId || '');
+    var parentFolderId = decodeURIComponent(ctx.folderId || '') || childId;
     var level = ctx.level || 'root';
     
     $scope.step = 'photo';
