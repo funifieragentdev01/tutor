@@ -44,6 +44,15 @@ app.factory('ApiService', function($http, AuthService) {
         },
         
         // Folder operations (learning trails)
+        // Breadcrumb: returns array of folders from root to given folder (correct order)
+        getFolderBreadcrumb: function(folderId) {
+            return $http.post(
+                API + '/v3/folder/breadcrumb',
+                { folder: folderId },
+                AuthService.authHeader()
+            );
+        },
+        
         getFolderInside: function(folderId) {
             return $http.post(
                 API + '/v3/folder/inside',
@@ -65,10 +74,12 @@ app.factory('ApiService', function($http, AuthService) {
                 AuthService.authHeader()
             );
         },
-        logFolderItem: function(itemId, playerId) {
+        logFolderItem: function(itemId, playerId, percent) {
+            var data = { item: itemId, player: playerId, status: 'done', finished: new Date().toISOString() };
+            if (percent !== undefined) data.percent = percent;
             return $http.post(
                 API + '/v3/folder/log',
-                { item: itemId, player: playerId, status: 'done', finished: bsonDate() },
+                data,
                 AuthService.authHeader()
             );
         },

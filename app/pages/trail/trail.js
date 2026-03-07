@@ -43,14 +43,12 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
                 $scope.currentLevel = folder.type || 'root';
             } else if (id === childId) {
                 $scope.currentLevel = 'root';
-                // Get child name from profile
                 ApiService.dbGet('profile__c', childId).then(function(pRes) {
                     $scope.currentTitle = (pRes.data && pRes.data.name) || 'Trilha';
                 });
             }
             
             updateCanCapture();
-            updateBreadcrumb(folder);
             updateEmptyState();
         }).catch(function() {
             $scope.currentLevel = 'root';
@@ -59,22 +57,41 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
             updateEmptyState();
         });
         
-        // Get children folders
-        ApiService.getFolderInside(id).then(function(res) {
-            var data = res.data || {};
-            var all = data.items || data || [];
-            if (!Array.isArray(all)) all = [];
-            // Separate folders from content
-            $scope.items = all.filter(function(i) { return i.type !== 'content'; });
-            $scope.loading = false;
+        // Load breadcrumb from API (correct order: root → ... → current)
+        ApiService.getFolderBreadcrumb(id).then(function(res) {
+            var crumbs = res.data || [];
+            // Remove the last item (current folder) and root folder from breadcrumb display
+            $scope.breadcrumb = crumbs.filter(function(c) {
+                return c._id !== id && c._id !== childId;
+            });
         }).catch(function() {
-            $scope.loading = false;
+            $scope.breadcrumb = [];
         });
         
-        // Get folder contents (for lessons)
-        ApiService.dbQuery('folder_content', 'parent:"' + id + '"', { position: 1 }, 50).then(function(res) {
-            $scope.contents = res.data || [];
-        }).catch(function() {});
+        // Get children with player progress
+        var playerId = childId;
+        ApiService.getFolderProgress(id, playerId).then(function(res) {
+            var data = res.data || {};
+            var all = data.items || [];
+            if (!Array.isArray(all)) all = [];
+            
+            // Separate folders from content
+            $scope.items = all.filter(function(i) { return i.folder !== false; });
+            $scope.contents = all.filter(function(i) { return i.folder === false; });
+            $scope.loading = false;
+        }).catch(function() {
+            // Fallback to inside (no progress)
+            ApiService.getFolderInside(id).then(function(res) {
+                var data = res.data || {};
+                var all = data.items || [];
+                if (!Array.isArray(all)) all = [];
+                $scope.items = all.filter(function(i) { return i.folder !== false; });
+                $scope.contents = all.filter(function(i) { return i.folder === false; });
+                $scope.loading = false;
+            }).catch(function() {
+                $scope.loading = false;
+            });
+        });
     }
     
     function updateCanCapture() {
@@ -107,28 +124,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         }
     }
     
-    function updateBreadcrumb(folder) {
-        $scope.breadcrumb = [];
-        if (!folder || !folder.parent) return;
-        
-        // Build breadcrumb by traversing parents (simplified — just show current path)
-        function addParent(id) {
-            if (!id || id === childId) {
-                $scope.breadcrumb.unshift({ _id: childId, title: $scope.currentTitle || 'Root', type: 'root' });
-                return;
-            }
-            ApiService.dbGet('folder', id).then(function(res) {
-                var f = res.data;
-                if (f && f.title) {
-                    $scope.breadcrumb.unshift({ _id: f._id, title: f.title, type: f.type });
-                    if (f.parent) addParent(f.parent);
-                    else $scope.breadcrumb.unshift({ _id: childId, title: 'Root', type: 'root' });
-                }
-            });
-        }
-        
-        if (folder.parent) addParent(folder.parent);
-    }
+    // breadcrumb is now loaded from /v3/folder/breadcrumb API
     
     $scope.getIcon = function(item) {
         if (item.type === 'subject') {

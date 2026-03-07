@@ -112,9 +112,10 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
             var fc = res.data && res.data[0];
             if (fc && fc.parent) {
                 var playerId = AuthService.getUser();
-                ApiService.logFolderItem(fc._id, playerId);
-                // Also log the lesson folder
-                ApiService.logFolderItem(fc.parent, playerId);
+                // Log content completion with percent
+                ApiService.logFolderItem(fc._id, playerId, $scope.scorePercent);
+                // Log lesson folder too
+                ApiService.logFolderItem(fc.parent, playerId, $scope.scorePercent);
             }
         });
     }

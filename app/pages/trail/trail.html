@@ -51,10 +51,10 @@
         <div class="content-list" ng-if="contents.length > 0">
             <h3 class="subsection-title">Atividades</h3>
             <div class="content-item" ng-repeat="c in contents" ng-click="openContent(c)">
-                <div class="content-icon">📝</div>
+                <div class="content-icon">{{c.percent >= 100 ? '✅' : '📝'}}</div>
                 <div class="content-info">
                     <div class="content-title">{{c.title}}</div>
-                    <div class="content-type">{{c.type === 'quiz' ? 'Quiz' : c.type}}</div>
+                    <div class="content-type">{{c.type === 'quiz' ? 'Quiz' : c.type}}{{c.percent >= 100 ? ' — Concluído!' : ''}}</div>
                 </div>
                 <button class="btn-delete-item" ng-if="isParent" ng-click="deleteContent(c, $event)" title="Excluir">🗑</button>
                 <div class="folder-arrow" ng-if="!isParent">›</div>
