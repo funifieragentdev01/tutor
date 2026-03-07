@@ -86,21 +86,43 @@
             <input type="file" id="bodyPhotoInput" accept="image/*" style="display:none" onchange="angular.element(this).scope().onBodyPhoto(this)">
 
             <!-- Generated character -->
-            <div class="character-preview" ng-if="child.character_url">
-                <h4>Personagem gerado:</h4>
+            <div class="character-preview" ng-if="child.character_url && !pendingCharacterUrl">
+                <h4>Personagem atual:</h4>
                 <img ng-src="{{child.character_url}}" class="character-img">
             </div>
         </div>
 
-        <div class="character-style-info">
+        <!-- Generating indicator -->
+        <div class="generating-indicator" ng-if="generatingCharacter">
+            <div class="spinner"></div>
+            <p>Gerando personagem chibi...</p>
+            <p class="text-muted" style="font-size:12px;">Isso pode levar alguns segundos</p>
+        </div>
+
+        <!-- Pending character for approval -->
+        <div class="character-approval" ng-if="pendingCharacterUrl">
+            <h4>Personagem gerado:</h4>
+            <img ng-src="{{pendingCharacterUrl}}" class="character-img" style="max-width:280px;border-radius:16px;margin:12px 0;">
+            <p style="color:var(--text-muted);font-size:13px;">Gostou do resultado?</p>
+            <div style="display:flex;gap:12px;justify-content:center;">
+                <button class="btn btn-primary" ng-click="approveCharacter()" ng-disabled="saving">
+                    {{saving ? 'Salvando...' : '👍 Aprovar'}}
+                </button>
+                <button class="btn btn-secondary" ng-click="rejectCharacter()" ng-disabled="generatingCharacter">
+                    🔄 Gerar outro
+                </button>
+            </div>
+        </div>
+
+        <div class="character-style-info" ng-if="!generatingCharacter && !pendingCharacterUrl">
             <p>O personagem será criado no estilo <b>chibi kawaii</b> — fofo, com olhos grandes e proporções de desenho animado, usando a mesma roupa e cabelo da foto.</p>
         </div>
 
         <div class="auth-error" ng-if="error">{{error}}</div>
         <div class="success-msg" ng-if="saved">✅ Foto salva!</div>
 
-        <button class="btn btn-primary btn-block btn-lg" ng-click="saveBodyPhoto()" ng-disabled="saving" ng-if="bodyPhotoData">
-            {{saving ? 'Salvando...' : 'Salvar Foto'}}
+        <button class="btn btn-primary btn-block btn-lg" ng-click="saveBodyPhoto()" ng-disabled="saving || generatingCharacter" ng-if="bodyPhotoData">
+            {{saving ? 'Salvando...' : 'Salvar e Gerar Personagem'}}
         </button>
     </div>
 

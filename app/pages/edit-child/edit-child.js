@@ -199,6 +199,7 @@ app.controller('EditChildController', function($scope, $location, $routeParams, 
     $scope.saveBodyPhoto = function() {
         if (!$scope.bodyPhotoData) return;
         $scope.saving = true;
+        $scope.generatingCharacter = false;
         
         // Resize body photo
         var img = new Image();
@@ -215,7 +216,7 @@ app.controller('EditChildController', function($scope, $location, $routeParams, 
             $scope.child.body_photo_url = resized;
             $scope.bodyPhotoUrl = resized;
             
-            // Save to profile
+            // Save to profile then generate character
             ApiService.getProfile(childId).then(function(res) {
                 var profile = res.data || { _id: childId };
                 profile.body_photo_url = resized;
@@ -224,6 +225,8 @@ app.controller('EditChildController', function($scope, $location, $routeParams, 
                 $scope.saving = false;
                 flashSaved();
                 $scope.$applyAsync();
+                // Start character generation
+                generateCharacter(resized);
             }).catch(function() {
                 $scope.error = 'Erro ao salvar foto.';
                 $scope.saving = false;
@@ -231,6 +234,102 @@ app.controller('EditChildController', function($scope, $location, $routeParams, 
             });
         };
         img.src = $scope.bodyPhotoData;
+    };
+    
+    $scope.generatingCharacter = false;
+    $scope.pendingCharacterUrl = null;
+    
+    function generateCharacter(photoDataUrl) {
+        $scope.generatingCharacter = true;
+        $scope.pendingCharacterUrl = null;
+        $scope.error = '';
+        $scope.$applyAsync();
+        
+        var base64 = photoDataUrl.split(',')[1];
+        
+        // Step 1: Describe the child using Vision
+        var describeBody = {
+            model: 'gpt-4o-mini',
+            messages: [{
+                role: 'user',
+                content: [
+                    { type: 'text', text: 'Descreva esta crianca em detalhes para eu poder gerar um personagem chibi kawaii baseado nela. Inclua: genero, cor da pele, tipo e cor de cabelo, cor dos olhos, roupa que esta vestindo, e qualquer acessorio visivel. Responda APENAS com a descricao em portugues, em um paragrafo curto.' },
+                    { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64, detail: 'low' } }
+                ]
+            }],
+            max_tokens: 200
+        };
+        
+        fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.OPENAI_API_KEY },
+            body: JSON.stringify(describeBody)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var description = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+            if (!description) throw new Error('Sem descricao');
+            
+            // Step 2: Generate chibi character with DALL-E
+            var prompt = 'Chibi kawaii cartoon character of a child: ' + description + '. ' +
+                'Style: big head (40% of body), small body, large anime eyes, rosy cheeks, clean outlines, flat colors with soft shading. ' +
+                'Full body, standing, white background, cute and friendly expression. High quality digital art.';
+            
+            return fetch('https://api.openai.com/v1/images/generations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.OPENAI_API_KEY },
+                body: JSON.stringify({
+                    model: 'dall-e-3',
+                    prompt: prompt,
+                    n: 1,
+                    size: '1024x1024',
+                    response_format: 'url'
+                })
+            });
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var url = data.data && data.data[0] && data.data[0].url;
+            if (!url) throw new Error('Sem imagem gerada');
+            $scope.pendingCharacterUrl = url;
+            $scope.generatingCharacter = false;
+            $scope.$applyAsync();
+        })
+        .catch(function(err) {
+            console.error('Character generation error:', err);
+            $scope.error = 'Erro ao gerar personagem. Tente novamente.';
+            $scope.generatingCharacter = false;
+            $scope.$applyAsync();
+        });
+    }
+    
+    $scope.approveCharacter = function() {
+        $scope.saving = true;
+        $scope.child.character_url = $scope.pendingCharacterUrl;
+        $scope.pendingCharacterUrl = null;
+        
+        ApiService.getProfile(childId).then(function(res) {
+            var profile = res.data || { _id: childId };
+            profile.character_url = $scope.child.character_url;
+            return ApiService.dbSave('profile__c', profile);
+        }).then(function() {
+            $scope.saving = false;
+            flashSaved();
+            $scope.$applyAsync();
+        }).catch(function() {
+            $scope.error = 'Erro ao salvar personagem.';
+            $scope.saving = false;
+            $scope.$applyAsync();
+        });
+    };
+    
+    $scope.rejectCharacter = function() {
+        // Regenerate
+        if ($scope.child.body_photo_url) {
+            generateCharacter($scope.child.body_photo_url);
+        } else {
+            $scope.pendingCharacterUrl = null;
+        }
     };
     
     // === Sounds Tab ===
