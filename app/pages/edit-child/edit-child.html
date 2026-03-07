@@ -1,0 +1,170 @@
+<div class="app-page wizard-page">
+    <!-- Header -->
+    <div class="app-header">
+        <button class="btn-icon" ng-click="goBack()">
+            <span class="icon">←</span>
+        </button>
+        <div class="header-title">Perfil de {{child.name}}</div>
+        <div class="header-right"></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="edit-tabs">
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'profile'}" ng-click="tab = 'profile'">👤 Perfil</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'character'}" ng-click="tab = 'character'">🎨 Personagem</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'sounds'}" ng-click="tab = 'sounds'">🔊 Sons</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'stickers'}" ng-click="tab = 'stickers'">😂 Figurinhas</button>
+    </div>
+
+    <!-- Tab: Profile -->
+    <div class="wizard-content" ng-if="tab === 'profile'">
+        <!-- Profile Photo -->
+        <div class="photo-upload-area" ng-click="pickPhoto('profile')">
+            <img ng-if="profilePhotoUrl" ng-src="{{profilePhotoUrl}}" class="photo-preview-round">
+            <div ng-if="!profilePhotoUrl" class="photo-placeholder-round">
+                <span class="photo-placeholder-icon">📷</span>
+                <span>Foto de perfil</span>
+            </div>
+        </div>
+        <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="angular.element(this).scope().onProfilePhoto(this)">
+
+        <div class="form-group">
+            <label>Nome</label>
+            <input type="text" ng-model="child.name">
+        </div>
+        <div class="form-group">
+            <label>Idade</label>
+            <input type="number" ng-model="child.age" min="3" max="18">
+        </div>
+        <div class="form-group">
+            <label>Sobre {{child.name}}</label>
+            <div class="hint-chips">
+                <span class="chip" ng-click="addHint('📚 escola')">📚 escola</span>
+                <span class="chip" ng-click="addHint('🎮 diversão')">🎮 diversão</span>
+                <span class="chip" ng-click="addHint('👫 amigos')">👫 amigos</span>
+                <span class="chip" ng-click="addHint('💪 dificuldades')">💪 dificuldades</span>
+                <span class="chip" ng-click="addHint('🎯 objetivos')">🎯 objetivos</span>
+                <span class="chip" ng-click="addHint('❤️ família')">❤️ família</span>
+                <span class="chip" ng-click="addHint('⭐ ídolos')">⭐ ídolos</span>
+            </div>
+            <textarea ng-model="child.description" rows="6"
+                placeholder="Conte sobre seu filho(a)... O que gosta, amigos, escola, dificuldades, objetivos..."></textarea>
+        </div>
+
+        <div class="extracted-info" ng-if="child.extracted">
+            <h4>📋 IA entendeu:</h4>
+            <div class="extracted-item" ng-if="child.extracted.grade"><b>Série:</b> {{child.extracted.grade}}</div>
+            <div class="extracted-item" ng-if="child.extracted.interests.length"><b>Interesses:</b> {{child.extracted.interests.join(', ')}}</div>
+            <div class="extracted-item" ng-if="child.extracted.friends.length"><b>Amigos:</b> {{child.extracted.friends.join(', ')}}</div>
+            <div class="extracted-item" ng-if="child.extracted.difficulties.length"><b>Dificuldades:</b> {{child.extracted.difficulties.join(', ')}}</div>
+            <div class="extracted-item" ng-if="child.extracted.personality"><b>Personalidade:</b> {{child.extracted.personality}}</div>
+        </div>
+
+        <div class="auth-error" ng-if="error">{{error}}</div>
+        <div class="success-msg" ng-if="saved">✅ Salvo com sucesso!</div>
+
+        <button class="btn btn-primary btn-block btn-lg" ng-click="saveProfile()" ng-disabled="saving">
+            {{saving ? 'Salvando...' : 'Salvar Perfil'}}
+        </button>
+    </div>
+
+    <!-- Tab: Character -->
+    <div class="wizard-content" ng-if="tab === 'character'">
+        <div class="wizard-icon">🎨</div>
+        <h2 class="wizard-title">Personagem</h2>
+        <p class="wizard-subtitle">Tire uma foto de corpo inteiro com a roupa favorita para criar o personagem de {{child.name}}.</p>
+
+        <div class="character-photos">
+            <!-- Body photo -->
+            <div class="body-photo-area" ng-click="pickPhoto('body')">
+                <img ng-if="bodyPhotoUrl" ng-src="{{bodyPhotoUrl}}" class="body-photo-preview">
+                <div ng-if="!bodyPhotoUrl" class="body-photo-placeholder">
+                    <span class="photo-placeholder-icon">🧍</span>
+                    <span>Foto de corpo inteiro</span>
+                </div>
+            </div>
+            <input type="file" id="bodyPhotoInput" accept="image/*" style="display:none" onchange="angular.element(this).scope().onBodyPhoto(this)">
+
+            <!-- Generated character -->
+            <div class="character-preview" ng-if="child.character_url">
+                <h4>Personagem gerado:</h4>
+                <img ng-src="{{child.character_url}}" class="character-img">
+            </div>
+        </div>
+
+        <div class="character-style-info">
+            <p>O personagem será criado no estilo <b>chibi kawaii</b> — fofo, com olhos grandes e proporções de desenho animado, usando a mesma roupa e cabelo da foto.</p>
+        </div>
+
+        <div class="auth-error" ng-if="error">{{error}}</div>
+        <div class="success-msg" ng-if="saved">✅ Foto salva!</div>
+
+        <button class="btn btn-primary btn-block btn-lg" ng-click="saveBodyPhoto()" ng-disabled="saving" ng-if="bodyPhotoData">
+            {{saving ? 'Salvando...' : 'Salvar Foto'}}
+        </button>
+    </div>
+
+    <!-- Tab: Sounds -->
+    <div class="wizard-content" ng-if="tab === 'sounds'">
+        <div class="wizard-icon">🔊</div>
+        <h2 class="wizard-title">Sons de Feedback</h2>
+        <p class="wizard-subtitle">Escolha sons que {{child.name}} ache legais como recompensa ao acertar!</p>
+
+        <div class="sound-grid">
+            <div class="sound-card" ng-repeat="s in sounds" 
+                 ng-click="selectSound(s)"
+                 ng-class="{'sound-selected': child.feedback_sound === s.id}">
+                <div class="sound-emoji">{{s.emoji}}</div>
+                <div class="sound-name">{{s.name}}</div>
+                <button class="btn-play-sound" ng-click="playPreview(s, $event)">▶</button>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label>Ou envie um som customizado</label>
+            <input type="file" id="customSoundInput" accept="audio/*" onchange="angular.element(this).scope().onCustomSound(this)">
+        </div>
+        <div class="sound-card sound-selected" ng-if="child.feedback_sound === 'custom' && child.custom_sound_name">
+            <div class="sound-emoji">🎵</div>
+            <div class="sound-name">{{child.custom_sound_name}}</div>
+        </div>
+
+        <div class="success-msg" ng-if="saved">✅ Som salvo!</div>
+
+        <button class="btn btn-primary btn-block btn-lg" ng-click="saveSound()" ng-disabled="saving">
+            {{saving ? 'Salvando...' : 'Salvar Som'}}
+        </button>
+    </div>
+
+    <!-- Tab: Stickers -->
+    <div class="wizard-content" ng-if="tab === 'stickers'">
+        <div class="wizard-icon">😂</div>
+        <h2 class="wizard-title">Figurinhas e Memes</h2>
+        <p class="wizard-subtitle">Imagens que fazem {{child.name}} rir! Serão usadas como recompensa surpresa.</p>
+
+        <div class="sticker-grid" ng-if="child.stickers && child.stickers.length > 0">
+            <div class="sticker-item" ng-repeat="st in child.stickers">
+                <img ng-src="{{st}}" class="sticker-img">
+                <button class="sticker-remove" ng-click="removeSticker($index, $event)">✕</button>
+            </div>
+        </div>
+
+        <div class="sticker-upload" ng-click="pickSticker()">
+            <span class="photo-placeholder-icon">+</span>
+            <span>Adicionar figurinha</span>
+        </div>
+        <input type="file" id="stickerInput" accept="image/*" style="display:none" onchange="angular.element(this).scope().onStickerSelected(this)">
+
+        <div class="success-msg" ng-if="saved">✅ Figurinhas salvas!</div>
+
+        <button class="btn btn-primary btn-block btn-lg" ng-click="saveStickers()" ng-disabled="saving" ng-if="child.stickers && child.stickers.length > 0">
+            {{saving ? 'Salvando...' : 'Salvar Figurinhas'}}
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" ng-if="loading">
+        <div class="spinner"></div>
+        <p>Carregando perfil...</p>
+    </div>
+</div>

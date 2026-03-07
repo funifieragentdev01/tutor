@@ -26,7 +26,10 @@
                 <div class="child-stats" ng-if="child.subjectCount !== undefined">
                     {{child.subjectCount}} disciplina{{child.subjectCount !== 1 ? 's' : ''}}
                 </div>
-                <button class="btn-delete-child" ng-click="deleteChild(child, $event)" title="Excluir filho">🗑</button>
+                <div class="child-actions">
+                    <button class="btn-child-action" ng-click="editChild(child, $event)" title="Editar perfil">✏️</button>
+                    <button class="btn-child-action btn-child-delete" ng-click="deleteChild(child, $event)" title="Excluir">🗑</button>
+                </div>
             </div>
             
             <!-- Add child -->

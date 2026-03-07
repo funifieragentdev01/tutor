@@ -433,11 +433,13 @@ body {
 .child-name { font-size: 16px; font-weight: 700; }
 .child-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .child-stats { font-size: 13px; color: var(--text-light); margin-top: 4px; }
-.btn-delete-child {
+.child-actions { display: flex; gap: 4px; margin-top: 4px; }
+.btn-child-action {
     background: none; border: none; font-size: 14px; padding: 4px;
-    cursor: pointer; opacity: 0.3; transition: opacity 0.2s; margin-top: 4px;
+    cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
 }
-.btn-delete-child:hover, .btn-delete-child:active { opacity: 1; }
+.btn-child-action:hover, .btn-child-action:active { opacity: 1; }
+.btn-child-delete { opacity: 0.25; }
 .child-card-add { border: 2px dashed var(--border); background: transparent; box-shadow: none; }
 .add-avatar { background: var(--bg) !important; color: var(--primary) !important; font-size: 32px; }
 
@@ -705,6 +707,80 @@ body {
 .results-message { font-size: 16px; margin-top: 8px; font-weight: 700; }
 .results-actions { margin-top: 24px; }
 .btn-lg { font-size: 18px; padding: 16px; letter-spacing: 1px; }
+/* ===== Edit Child Tabs ===== */
+.edit-tabs {
+    display: flex; overflow-x: auto; gap: 0;
+    border-bottom: 2px solid var(--border); padding: 0 12px;
+}
+.edit-tab {
+    background: none; border: none; padding: 12px 16px;
+    font-size: 13px; font-weight: 700; color: var(--text-muted);
+    cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent;
+    transition: all 0.2s; margin-bottom: -2px;
+}
+.tab-active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.extracted-info {
+    background: #F0F4FF; border-radius: var(--radius-sm);
+    padding: 16px; text-align: left; margin: 16px 0;
+}
+.extracted-info h4 { margin: 0 0 8px; font-size: 14px; }
+.extracted-item { font-size: 13px; margin: 4px 0; }
+.success-msg { color: var(--green); font-weight: 700; margin: 12px 0; font-size: 15px; }
+
+/* Character */
+.body-photo-area {
+    width: 200px; height: 300px; margin: 0 auto 20px;
+    border-radius: var(--radius); overflow: hidden; cursor: pointer;
+    border: 3px dashed var(--border); display: flex;
+    align-items: center; justify-content: center;
+}
+.body-photo-area:active { border-color: var(--primary); }
+.body-photo-preview { width: 100%; height: 100%; object-fit: cover; }
+.body-photo-placeholder {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; color: var(--text-muted); font-size: 13px;
+}
+.character-preview { margin: 20px 0; }
+.character-img { max-width: 200px; border-radius: var(--radius); }
+.character-style-info { background: #F5F5F5; border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--text-light); margin: 16px 0; }
+
+/* Sounds */
+.sound-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.sound-card {
+    background: var(--card); border: 2px solid var(--border); border-radius: var(--radius);
+    padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s;
+    position: relative;
+}
+.sound-card:active { transform: scale(0.97); }
+.sound-selected { border-color: var(--primary); background: #F0EDFF; }
+.sound-emoji { font-size: 32px; margin-bottom: 4px; }
+.sound-name { font-size: 13px; font-weight: 700; }
+.btn-play-sound {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--primary); color: white; border: none;
+    width: 28px; height: 28px; border-radius: 50%;
+    font-size: 12px; cursor: pointer;
+}
+
+/* Stickers */
+.sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.sticker-item { position: relative; }
+.sticker-img { width: 100%; border-radius: var(--radius-sm); }
+.sticker-remove {
+    position: absolute; top: -6px; right: -6px;
+    background: #FF6B6B; color: white; border: none;
+    width: 24px; height: 24px; border-radius: 50%;
+    font-size: 12px; cursor: pointer; font-weight: 700;
+}
+.sticker-upload {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 24px; text-align: center; cursor: pointer;
+    color: var(--text-muted); display: flex; flex-direction: column;
+    align-items: center; gap: 8px;
+}
+.sticker-upload:active { border-color: var(--primary); }
+
 .parent-test-notice {
     background: #FFF3CD; color: #856404; border-radius: var(--radius-sm);
     padding: 10px 16px; font-size: 13px; font-weight: 600; margin-bottom: 16px;

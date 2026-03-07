@@ -28,6 +28,10 @@ app.config(function($routeProvider, $locationProvider) {
             templateUrl: 'pages/trail/trail.html',
             controller: 'TrailController'
         })
+        .when('/parent/edit-child/:childId', {
+            templateUrl: 'pages/edit-child/edit-child.html',
+            controller: 'EditChildController'
+        })
         .when('/parent/add-child', {
             templateUrl: 'pages/add-child/add-child.html',
             controller: 'AddChildController'

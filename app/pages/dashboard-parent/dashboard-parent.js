@@ -64,6 +64,11 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
         $location.path('/parent/child/' + encodeURIComponent(child._id));
     };
     
+    $scope.editChild = function(child, $event) {
+        $event.stopPropagation();
+        $location.path('/parent/edit-child/' + encodeURIComponent(child._id));
+    };
+    
     $scope.openAddChild = function() {
         $location.path('/parent/add-child');
     };
