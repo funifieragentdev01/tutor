@@ -135,16 +135,12 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $timeout(function() { $scope.showConfetti = false; }, 2000);
     }
     
-    // Pre-load audio
-    var beepAudio = new Audio('audio/beep.mp3');
-    
     function playSound(type) {
         try {
             if (type === 'correct') {
-                beepAudio.currentTime = 0;
-                beepAudio.play();
+                var audio = new Audio('audio/beep.mp3');
+                audio.play();
             }
-            // Wrong answer: no sound (just visual shake)
         } catch(e) {}
     }
     
