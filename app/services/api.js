@@ -101,13 +101,14 @@ app.factory('ApiService', function($http, AuthService) {
         dbQuery: function(collection, query, sort, limit) {
             var q = encodeURIComponent(query || '');
             var sortStage = sort ? [{ $sort: sort }] : [];
-            var rangeEnd = (limit || 20) - 1;
+            var lim = limit || 20;
+            // Range header format: items=skip-limit (NOT start-end)
             return $http({
                 method: 'POST',
                 url: API + '/v3/database/' + collection + '/aggregate?q=' + q + '&strict=true',
                 headers: {
                     'Authorization': 'Bearer ' + AuthService.getToken(),
-                    'Range': 'items=0-' + rangeEnd
+                    'Range': 'items=0-' + lim
                 },
                 data: sortStage
             });
