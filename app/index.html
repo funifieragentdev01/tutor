@@ -20,7 +20,7 @@
     
     <!-- AngularJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.2/angular.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.2/angular-route.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-route/1.8.2/angular-route.min.js"></script>
     
     <!-- Config -->
     <script src="config.js"></script>
@@ -29,6 +29,9 @@
 
     <!-- App View -->
     <div ng-view class="view-container"></div>
+    
+    <!-- Version Footer -->
+    <div class="app-version">v{{CONFIG.VERSION}}</div>
 
     <!-- Services -->
     <script src="services/auth.js"></script>

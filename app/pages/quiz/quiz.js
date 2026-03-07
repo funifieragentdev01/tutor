@@ -126,34 +126,16 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $timeout(function() { $scope.showConfetti = false; }, 2000);
     }
     
+    // Pre-load audio
+    var beepAudio = new Audio('audio/beep.mp3');
+    
     function playSound(type) {
         try {
-            var freq = type === 'correct' ? 800 : 300;
-            var ctx = new (window.AudioContext || window.webkitAudioContext)();
-            var osc = ctx.createOscillator();
-            var gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.frequency.value = freq;
-            osc.type = 'sine';
-            gain.gain.value = 0.15;
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-            osc.stop(ctx.currentTime + 0.3);
-            
             if (type === 'correct') {
-                // Second tone for correct (happy sound)
-                var osc2 = ctx.createOscillator();
-                var gain2 = ctx.createGain();
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.frequency.value = 1000;
-                osc2.type = 'sine';
-                gain2.gain.value = 0.15;
-                osc2.start(ctx.currentTime + 0.15);
-                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-                osc2.stop(ctx.currentTime + 0.45);
+                beepAudio.currentTime = 0;
+                beepAudio.play();
             }
+            // Wrong answer: no sound (just visual shake)
         } catch(e) {}
     }
     
