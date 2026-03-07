@@ -1,0 +1,117 @@
+<div class="app-page wizard-page">
+    <!-- Header -->
+    <div class="app-header">
+        <button class="btn-icon" ng-click="cancel()">
+            <span class="icon">✕</span>
+        </button>
+        <div class="header-title">Cadastrar Filho</div>
+        <div class="header-right"></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="wizard-progress">
+        <div class="wizard-step" ng-repeat="s in steps" ng-class="{'step-active': $index === step, 'step-done': $index < step}">
+            <div class="step-dot">{{$index < step ? '✓' : $index + 1}}</div>
+            <div class="step-label">{{s}}</div>
+        </div>
+    </div>
+
+    <!-- Step 1: Basic Info -->
+    <div class="wizard-content" ng-if="step === 0">
+        <div class="wizard-icon">👋</div>
+        <h2 class="wizard-title">Quem é seu filho(a)?</h2>
+        <p class="wizard-subtitle">Informações básicas para criar a conta.</p>
+        
+        <div class="form-group">
+            <label>Nome</label>
+            <input type="text" ng-model="child.name" placeholder="Ex: Beatriz" autofocus>
+        </div>
+        <div class="form-group">
+            <label>E-mail (login da criança)</label>
+            <input type="email" ng-model="child.email" placeholder="Ex: beatriz@email.com">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" ng-model="child.password" placeholder="Senha para a criança entrar">
+        </div>
+        <div class="form-group">
+            <label>Idade</label>
+            <input type="number" ng-model="child.age" placeholder="Ex: 8" min="3" max="18">
+        </div>
+        
+        <div class="auth-error" ng-if="error">{{error}}</div>
+        
+        <button class="btn btn-primary btn-block btn-lg" ng-click="nextStep()" ng-disabled="saving">
+            {{saving ? 'Criando conta...' : 'Continuar'}}
+        </button>
+    </div>
+
+    <!-- Step 2: Profile Photo -->
+    <div class="wizard-content" ng-if="step === 1">
+        <div class="wizard-icon">📸</div>
+        <h2 class="wizard-title">Foto de perfil</h2>
+        <p class="wizard-subtitle">Uma foto do rosto de {{child.name}} para o avatar.</p>
+        
+        <div class="photo-upload-area" ng-click="pickPhoto()">
+            <img ng-if="photoPreview" ng-src="{{photoPreview}}" class="photo-preview-round">
+            <div ng-if="!photoPreview" class="photo-placeholder-round">
+                <span class="photo-placeholder-icon">📷</span>
+                <span>Toque para tirar foto ou escolher da galeria</span>
+            </div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" capture="user" style="display:none" onchange="angular.element(this).scope().onPhotoSelected(this)">
+        
+        <button class="btn btn-primary btn-block btn-lg" ng-click="nextStep()" ng-disabled="saving">
+            {{saving ? 'Salvando...' : photoPreview ? 'Continuar' : 'Continuar sem foto'}}
+        </button>
+        <button class="btn btn-ghost btn-block" ng-click="skipStep()" ng-if="!photoPreview">Pular</button>
+    </div>
+
+    <!-- Step 3: Description -->
+    <div class="wizard-content" ng-if="step === 2">
+        <div class="wizard-icon">💬</div>
+        <h2 class="wizard-title">Conte sobre {{child.name}}</h2>
+        <p class="wizard-subtitle">Quanto mais você contar, mais personalizada será a experiência.</p>
+        
+        <div class="hint-chips">
+            <span class="chip" ng-click="addHint('📚 escola')">📚 escola</span>
+            <span class="chip" ng-click="addHint('🎮 diversão')">🎮 diversão</span>
+            <span class="chip" ng-click="addHint('👫 amigos')">👫 amigos</span>
+            <span class="chip" ng-click="addHint('💪 dificuldades')">💪 dificuldades</span>
+            <span class="chip" ng-click="addHint('🎯 objetivos')">🎯 objetivos</span>
+            <span class="chip" ng-click="addHint('❤️ família')">❤️ família</span>
+            <span class="chip" ng-click="addHint('⭐ ídolos')">⭐ ídolos</span>
+        </div>
+        
+        <div class="form-group">
+            <textarea ng-model="child.description" rows="6" 
+                placeholder="Ex: A Beatriz tem 15 anos, está no 9º ano. Adora arrumar o cabelo e sonha em viajar pra Cancún. Melhor amiga é a Lara. Está com dificuldade em química e matemática..."></textarea>
+        </div>
+        
+        <div class="auth-error" ng-if="error">{{error}}</div>
+        
+        <button class="btn btn-primary btn-block btn-lg" ng-click="finish()" ng-disabled="saving">
+            {{saving ? 'Salvando perfil...' : 'Concluir'}}
+        </button>
+        <button class="btn btn-ghost btn-block" ng-click="finish()" ng-if="!child.description">Pular</button>
+    </div>
+
+    <!-- Done -->
+    <div class="wizard-content wizard-done" ng-if="step === 3">
+        <div class="wizard-icon done-icon">🎉</div>
+        <h2 class="wizard-title">Perfil criado!</h2>
+        <p class="wizard-subtitle">{{child.name}} está pronto(a) para aprender.</p>
+        
+        <div class="done-summary">
+            <div class="done-avatar" ng-style="{'background-color': avatarColor}">
+                <img ng-if="photoPreview" ng-src="{{photoPreview}}" class="done-avatar-img">
+                <span ng-if="!photoPreview">{{child.name.charAt(0).toUpperCase()}}</span>
+            </div>
+            <div class="done-name">{{child.name}}</div>
+            <div class="done-email">{{child.email}}</div>
+        </div>
+        
+        <button class="btn btn-primary btn-block btn-lg" ng-click="goToChild()">Ver Trilha de {{child.name}}</button>
+        <button class="btn btn-outline btn-block" ng-click="goBack()">Voltar ao Painel</button>
+    </div>
+</div>

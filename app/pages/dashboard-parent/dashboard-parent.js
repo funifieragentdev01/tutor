@@ -4,10 +4,6 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     
     $scope.parentName = '';
     $scope.children = [];
-    $scope.showAddChild = false;
-    $scope.newChild = {};
-    $scope.addingChild = false;
-    $scope.childError = '';
     $scope.loading = true;
     
     // Load parent profile and children
@@ -68,115 +64,8 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
         $location.path('/parent/child/' + encodeURIComponent(child._id));
     };
     
-    $scope.addChild = function() {
-        if (!$scope.newChild.name || !$scope.newChild.age || !$scope.newChild.grade) {
-            $scope.childError = 'Nome, idade e série são obrigatórios.';
-            return;
-        }
-        if (!$scope.newChild.email) {
-            $scope.childError = 'E-mail é obrigatório.';
-            return;
-        }
-        if (!$scope.newChild.password) {
-            $scope.childError = 'Senha é obrigatória.';
-            return;
-        }
-        
-        $scope.addingChild = true;
-        $scope.childError = '';
-        
-        var parentId = AuthService.getUser();
-        var childId = $scope.newChild.email.trim().toLowerCase();
-        var childPassword = $scope.newChild.password;
-        
-        // 1. Create child player via signup__c
-        AuthService.signup({
-            _id: childId,
-            name: $scope.newChild.name,
-            email: childId,
-            password: childPassword,
-            role: 'child',
-            parent_id: parentId
-        }).then(function(res) {
-            var data = res.data;
-            if (data.error) {
-                $scope.childError = data.error;
-                $scope.addingChild = false;
-                return;
-            }
-            
-            // 2. Save child profile with extra data
-            var childProfile = {
-                _id: childId,
-                parent: parentId,
-                name: $scope.newChild.name,
-                age: parseInt($scope.newChild.age),
-                grade: $scope.newChild.grade,
-                interests: $scope.newChild.interests || '',
-                friends: $scope.newChild.friends || '',
-                created: new Date().getTime()
-            };
-            
-            ApiService.dbSave('profile__c', childProfile).then(function() {
-                // 3. Create root folder for child
-                ApiService.createFolder({
-                    _id: childId,
-                    type: 'root',
-                    title: $scope.newChild.name,
-                    position: 0,
-                    active: true,
-                    extra: { parent: parentId }
-                }).then(function() {
-                    // 4. Add child to parent's children list
-                    addChildToParent(parentId, childId, childProfile);
-                }).catch(function(err) {
-                    // Root folder might already exist, still add to parent
-                    addChildToParent(parentId, childId, childProfile);
-                });
-            }).catch(function() {
-                $scope.childError = 'Erro ao salvar perfil da criança.';
-                $scope.addingChild = false;
-            });
-        }).catch(function(err) {
-            $scope.childError = 'Erro ao criar conta da criança.';
-            $scope.addingChild = false;
-        });
-    };
-    
-    function addChildToParent(parentId, childId, childProfile) {
-        ApiService.getProfile(parentId).then(function(res) {
-            var profile = (res.data && res.data._id) ? res.data : { _id: parentId };
-            profile._id = parentId; // always ensure correct _id
-            if (!profile.children) profile.children = [];
-            if (profile.children.indexOf(childId) === -1) {
-                profile.children.push(childId);
-            }
-            return ApiService.dbSave('profile__c', profile);
-        }).then(function() {
-            // Add to local list
-            $scope.children.push({
-                _id: childId,
-                name: childProfile.name,
-                extra: { role: 'child' },
-                color: COLORS[$scope.children.length % COLORS.length],
-                subjectCount: 0
-            });
-            $scope.newChild = {};
-            $scope.showAddChild = false;
-            $scope.addingChild = false;
-        }).catch(function() {
-            $scope.childError = 'Criança criada mas erro ao vincular. Recarregue a página.';
-            $scope.addingChild = false;
-        });
-    }
-    
     $scope.openAddChild = function() {
-        $scope.showAddChild = true;
-    };
-    
-    $scope.cancelAddChild = function() {
-        $scope.showAddChild = false;
-        $scope.newChild = {};
+        $location.path('/parent/add-child');
     };
     
     $scope.deleteChild = function(child, $event) {

@@ -19,7 +19,8 @@
             <!-- Existing children -->
             <div class="child-card" ng-repeat="child in children" ng-click="openChild(child)">
                 <div class="child-avatar" ng-style="{'background-color': child.color || '#6C5CE7'}">
-                    {{child.name.charAt(0).toUpperCase()}}
+                    <img ng-if="child.image && child.image.small && child.image.small.url" ng-src="{{child.image.small.url}}" class="child-avatar-img">
+                    <span ng-if="!(child.image && child.image.small && child.image.small.url)">{{child.name.charAt(0).toUpperCase()}}</span>
                 </div>
                 <div class="child-name">{{child.name}}</div>
                 <div class="child-stats" ng-if="child.subjectCount !== undefined">
@@ -29,50 +30,10 @@
             </div>
             
             <!-- Add child -->
-            <div class="child-card child-card-add" ng-click="openAddChild()" ng-if="!showAddChild">
+            <div class="child-card child-card-add" ng-click="openAddChild()">
                 <div class="child-avatar add-avatar">+</div>
                 <div class="child-name">Adicionar Filho</div>
             </div>
-        </div>
-
-        <!-- Add Child Form -->
-        <div class="add-child-form" ng-if="showAddChild">
-            <h3>Cadastrar Filho</h3>
-            <div class="form-group">
-                <label>Nome da criança</label>
-                <input type="text" ng-model="newChild.name" placeholder="Ex: Beatriz">
-            </div>
-            <div class="form-group">
-                <label>E-mail (login da criança)</label>
-                <input type="email" ng-model="newChild.email" placeholder="Ex: beatriz@email.com">
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" ng-model="newChild.password" placeholder="Senha para a criança entrar">
-            </div>
-            <div class="form-group">
-                <label>Idade</label>
-                <input type="number" ng-model="newChild.age" placeholder="Ex: 8" min="3" max="18">
-            </div>
-            <div class="form-group">
-                <label>Série/Ano escolar</label>
-                <input type="text" ng-model="newChild.grade" placeholder="Ex: 3º ano">
-            </div>
-            <div class="form-group">
-                <label>Interesses (opcional)</label>
-                <input type="text" ng-model="newChild.interests" placeholder="Ex: dinossauros, futebol, desenho">
-            </div>
-            <div class="form-group">
-                <label>Melhores amigos (opcional)</label>
-                <input type="text" ng-model="newChild.friends" placeholder="Ex: Lucas, Maria">
-            </div>
-            <div class="form-row">
-                <button class="btn btn-primary btn-block" ng-click="addChild()" ng-disabled="addingChild">
-                    {{addingChild ? 'Criando...' : 'Criar Perfil'}}
-                </button>
-                <button class="btn btn-outline btn-block" ng-click="cancelAddChild()">Cancelar</button>
-            </div>
-            <div class="auth-error" ng-if="childError">{{childError}}</div>
         </div>
     </div>
 
