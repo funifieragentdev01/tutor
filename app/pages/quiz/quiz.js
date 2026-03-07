@@ -1,5 +1,7 @@
 app.controller('QuizController', function($scope, $location, $routeParams, $timeout, AuthService, ApiService) {
     var quizId = $routeParams.quizId;
+    // Player: use query param (when parent views child's quiz) or logged-in user
+    var playerId = $location.search().player || AuthService.getUser();
     
     $scope.questions = [];
     $scope.currentIndex = 0;
@@ -106,7 +108,6 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
     }
     
     function logCompletion() {
-        var playerId = AuthService.getUser();
         console.log('[Quiz] logCompletion: quizId=' + quizId + ', player=' + playerId + ', score=' + $scope.scorePercent);
         
         // Find the folder_content that references this quiz

@@ -49,7 +49,8 @@ app.config(function($routeProvider, $locationProvider) {
         // Quiz
         .when('/quiz/:quizId', {
             templateUrl: 'pages/quiz/quiz.html',
-            controller: 'QuizController'
+            controller: 'QuizController',
+            reloadOnSearch: false
         })
         .otherwise({
             redirectTo: '/landing'

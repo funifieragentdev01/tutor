@@ -158,7 +158,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
     
     $scope.openContent = function(c) {
         if (c.type === 'quiz') {
-            $location.path('/quiz/' + encodeURIComponent(c.content));
+            $location.path('/quiz/' + encodeURIComponent(c.content)).search({ player: childId });
         }
     };
     
