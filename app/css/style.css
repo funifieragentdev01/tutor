@@ -823,11 +823,12 @@ body {
 /* ===== Version Footer ===== */
 .app-version {
     position: fixed;
-    bottom: 4px;
-    right: 8px;
-    font-size: 10px;
-    color: var(--text-muted);
-    opacity: 0.5;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #999;
+    opacity: 0.7;
     pointer-events: none;
     z-index: 9999;
 }

@@ -1,4 +1,4 @@
-app.controller('EditChildController', function($scope, $location, $routeParams, AuthService, ApiService) {
+app.controller('EditChildController', function($scope, $http, $location, $routeParams, AuthService, ApiService) {
     var childId = decodeURIComponent($routeParams.childId || '');
     
     $scope.tab = 'profile';
@@ -99,7 +99,18 @@ app.controller('EditChildController', function($scope, $location, $routeParams, 
                 medium: { url: resized, size: 0, width: w, height: h, depth: 0 },
                 original: { url: resized, size: 0, width: w, height: h, depth: 0 }
             };
-            ApiService.dbSave('player', { _id: childId, name: $scope.child.name, email: childId, image: imageObj });
+            // Use POST /v3/player (not /v3/database/player) to properly save image
+            $http.post(CONFIG.API + '/v3/player', {
+                _id: childId,
+                name: $scope.child.name || '',
+                email: childId,
+                image: imageObj
+            }, AuthService.authHeader()).then(function() {
+                flashSaved();
+                $scope.$applyAsync();
+            }).catch(function(err) {
+                console.error('Failed to save profile photo:', err);
+            });
         };
         img.src = dataUrl;
     }
@@ -271,9 +282,10 @@ app.controller('EditChildController', function($scope, $location, $routeParams, 
             if (!description) throw new Error('Sem descricao');
             
             // Step 2: Generate chibi character with DALL-E
-            var prompt = 'Chibi kawaii cartoon character of a child: ' + description + '. ' +
+            var prompt = 'A SINGLE chibi kawaii cartoon character of a child, centered in the image. ' + description + '. ' +
                 'Style: big head (40% of body), small body, large anime eyes, rosy cheeks, clean outlines, flat colors with soft shading. ' +
-                'Full body, standing, white background, cute and friendly expression. High quality digital art.';
+                'Show exactly ONE character, full body, standing pose, plain white background, cute and friendly expression. ' +
+                'Do NOT show multiple characters, do NOT show multiple angles or poses. Just one single character. High quality digital art.';
             
             return fetch('https://api.openai.com/v1/images/generations', {
                 method: 'POST',

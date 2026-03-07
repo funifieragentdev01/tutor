@@ -1,5 +1,5 @@
 app.controller('TrailController', function($scope, $location, $routeParams, AuthService, ApiService) {
-    var childId = decodeURIComponent($routeParams.childId || '');
+    var childId = decodeURIComponent($routeParams.childId || '') || (AuthService.getRole() === 'child' ? AuthService.getUser() : '');
     var folderId = decodeURIComponent($routeParams.folderId || '') || childId; // default to root
     
     $scope.isParent = AuthService.getRole() === 'parent';
@@ -70,16 +70,20 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         
         // Get children with player progress
         var playerId = childId;
+        console.log('[Trail] getFolderProgress folder=' + id + ' player=' + playerId);
         ApiService.getFolderProgress(id, playerId).then(function(res) {
             var data = res.data || {};
             var all = data.items || [];
             if (!Array.isArray(all)) all = [];
+            console.log('[Trail] progress items:', all.length, 'total:', data.total, 'done:', data.done, 'percent:', data.percent);
+            all.forEach(function(i) { console.log('[Trail]   item:', i._id, i.title, 'total:', i.total, 'percent:', i.percent, 'folder:', i.folder); });
             
             // Separate folders from content
             $scope.items = all.filter(function(i) { return i.folder !== false; });
             $scope.contents = all.filter(function(i) { return i.folder === false; });
             $scope.loading = false;
-        }).catch(function() {
+        }).catch(function(err) {
+            console.error('[Trail] progress error:', err);
             // Fallback to inside (no progress)
             ApiService.getFolderInside(id).then(function(res) {
                 var data = res.data || {};
