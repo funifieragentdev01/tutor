@@ -1,0 +1,104 @@
+<div class="app-page capture-page">
+    <div class="app-header">
+        <button class="btn-icon" ng-click="goBack()">
+            <span class="icon">←</span>
+        </button>
+        <div class="header-title">Adicionar Conteúdo</div>
+    </div>
+
+    <!-- Step 1: Take photo -->
+    <div class="section-pad" ng-if="step === 'photo'">
+        <div class="capture-card">
+            <div class="capture-icon">📷</div>
+            <h3>Fotografe o caderno ou livro</h3>
+            <p>A IA vai analisar o conteúdo e criar quizzes personalizados para {{childName}}.</p>
+            
+            <div class="capture-preview" ng-if="photoPreview">
+                <img ng-src="{{photoPreview}}" alt="Preview">
+            </div>
+            
+            <div class="capture-actions">
+                <label class="btn btn-primary btn-block capture-btn">
+                    {{photoPreview ? '📷 Tirar outra foto' : '📷 Tirar Foto'}}
+                    <input type="file" accept="image/*" capture="environment" 
+                           onchange="angular.element(this).scope().onPhotoSelected(this.files)"
+                           style="display:none">
+                </label>
+                
+                <label class="btn btn-outline btn-block" ng-if="!photoPreview">
+                    📁 Escolher da Galeria
+                    <input type="file" accept="image/*"
+                           onchange="angular.element(this).scope().onPhotoSelected(this.files)"
+                           style="display:none">
+                </label>
+                
+                <button class="btn btn-primary btn-block" ng-if="photoPreview" ng-click="analyzePhoto()" ng-disabled="analyzing">
+                    {{analyzing ? '🤖 Analisando...' : '🤖 Analisar com IA'}}
+                </button>
+            </div>
+        </div>
+        
+        <div class="context-info">
+            <span class="context-label">Será adicionado em:</span>
+            <span class="context-path">{{contextPath}}</span>
+        </div>
+    </div>
+
+    <!-- Step 2: Review AI result -->
+    <div class="section-pad" ng-if="step === 'review'">
+        <div class="capture-card">
+            <div class="capture-icon">✅</div>
+            <h3>Conteúdo gerado pela IA</h3>
+            <p>Revise o que será criado para {{childName}}:</p>
+        </div>
+
+        <!-- Subject -->
+        <div class="review-item review-subject" ng-if="result.subject">
+            <span class="review-badge">Disciplina</span>
+            <span class="review-text">{{result.subject}}</span>
+        </div>
+
+        <!-- Module -->
+        <div class="review-item review-module" ng-if="result.module">
+            <span class="review-badge">Módulo</span>
+            <span class="review-text">{{result.module}}</span>
+        </div>
+
+        <!-- Lessons -->
+        <div class="review-lessons">
+            <h4>{{result.lessons.length}} Aula{{result.lessons.length !== 1 ? 's' : ''}}</h4>
+            <div class="review-lesson" ng-repeat="lesson in result.lessons">
+                <div class="review-lesson-title">📝 {{lesson.title}}</div>
+                <div class="review-lesson-questions">{{lesson.questions.length}} perguntas</div>
+            </div>
+        </div>
+
+        <div class="capture-actions">
+            <button class="btn btn-primary btn-block" ng-click="saveTrail()" ng-disabled="saving">
+                {{saving ? 'Criando trilha...' : '✅ Criar Trilha'}}
+            </button>
+            <button class="btn btn-outline btn-block" ng-click="step = 'photo'">← Voltar e refazer</button>
+        </div>
+        
+        <div class="save-progress" ng-if="saving">
+            <div class="progress-bar">
+                <div class="progress-fill" ng-style="{'width': saveProgress + '%'}"></div>
+            </div>
+            <span class="progress-text">{{saveStatus}}</span>
+        </div>
+    </div>
+
+    <!-- Step 3: Done -->
+    <div class="section-pad" ng-if="step === 'done'">
+        <div class="capture-card capture-done">
+            <div class="capture-icon">🎉</div>
+            <h3>Trilha criada com sucesso!</h3>
+            <p>{{result.lessons.length}} aula{{result.lessons.length !== 1 ? 's' : ''}} com quizzes prontos para {{childName}}.</p>
+            <button class="btn btn-primary btn-block" ng-click="goToTrail()">Ver Trilha</button>
+            <button class="btn btn-outline btn-block" ng-click="resetCapture()">📷 Adicionar mais conteúdo</button>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div class="auth-error" ng-if="error" style="margin: 20px;">{{error}}</div>
+</div>

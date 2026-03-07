@@ -1,0 +1,101 @@
+<div class="app-page trail-page">
+    <!-- Header with breadcrumb -->
+    <div class="app-header">
+        <button class="btn-icon" ng-click="goBack()">
+            <span class="icon">←</span>
+        </button>
+        <div class="header-title">{{currentTitle}}</div>
+        <div class="header-right" ng-if="isParent">
+            <button class="btn-icon" ng-click="openCapture()" ng-if="canCapture">
+                <span class="icon">📷</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb" ng-if="breadcrumb.length > 0">
+        <span ng-repeat="b in breadcrumb" class="breadcrumb-item">
+            <a ng-click="navigateTo(b)">{{b.title}}</a>
+            <span ng-if="!$last"> › </span>
+        </span>
+    </div>
+
+    <!-- Folder list -->
+    <div class="section-pad">
+        <div class="folder-list" ng-if="items.length > 0">
+            <div class="folder-item" ng-repeat="item in items | orderBy:'position'" 
+                 ng-click="openItem(item)"
+                 ng-class="{'folder-locked': item.is_unlocked === false}">
+                <div class="folder-icon-wrap" ng-style="{'background-color': getIconColor(item)}">
+                    <span class="folder-icon">{{getIcon(item)}}</span>
+                </div>
+                <div class="folder-info">
+                    <div class="folder-title">{{item.title}}</div>
+                    <div class="folder-meta" ng-if="item.total > 0">
+                        <div class="progress-bar-mini">
+                            <div class="progress-fill-mini" ng-style="{'width': (item.percent || 0) + '%'}"></div>
+                        </div>
+                        <span class="folder-percent">{{item.percent || 0}}%</span>
+                    </div>
+                    <div class="folder-meta" ng-if="item.childCount !== undefined">
+                        {{item.childCount}} ite{{item.childCount !== 1 ? 'ns' : 'm'}}
+                    </div>
+                </div>
+                <div class="folder-arrow" ng-if="item.is_unlocked !== false">›</div>
+                <div class="folder-lock" ng-if="item.is_unlocked === false">🔒</div>
+            </div>
+        </div>
+
+        <!-- Content items (quiz inside lesson) -->
+        <div class="content-list" ng-if="contents.length > 0">
+            <h3 class="subsection-title">Atividades</h3>
+            <div class="content-item" ng-repeat="c in contents" ng-click="openContent(c)">
+                <div class="content-icon">📝</div>
+                <div class="content-info">
+                    <div class="content-title">{{c.title}}</div>
+                    <div class="content-type">{{c.type === 'quiz' ? 'Quiz' : c.type}}</div>
+                </div>
+                <div class="folder-arrow">›</div>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" ng-if="items.length === 0 && contents.length === 0 && !loading">
+            <div class="empty-icon">{{emptyIcon}}</div>
+            <h3>{{emptyTitle}}</h3>
+            <p>{{emptyText}}</p>
+            <button class="btn btn-primary" ng-click="openCapture()" ng-if="isParent && canCapture">
+                📷 Adicionar Conteúdo
+            </button>
+            <button class="btn btn-outline" ng-click="addSubjectManual()" ng-if="isParent && currentLevel === 'root'">
+                + Nova Disciplina
+            </button>
+        </div>
+
+        <!-- Add subject form -->
+        <div class="add-child-form" ng-if="showAddSubject">
+            <h3>Nova Disciplina</h3>
+            <div class="form-group">
+                <label>Nome da disciplina</label>
+                <input type="text" ng-model="newSubjectName" placeholder="Ex: Matemática">
+            </div>
+            <div class="form-row">
+                <button class="btn btn-primary btn-block" ng-click="createSubject()" ng-disabled="creatingSubject">
+                    {{creatingSubject ? 'Criando...' : 'Criar Disciplina'}}
+                </button>
+                <button class="btn btn-outline btn-block" ng-click="showAddSubject = false">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- Capture button (floating) -->
+        <div class="fab-container" ng-if="isParent && canCapture && items.length > 0">
+            <button class="fab" ng-click="openCapture()">📷</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" ng-if="loading">
+        <div class="spinner"></div>
+        <p>Carregando trilha...</p>
+    </div>
+</div>

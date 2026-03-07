@@ -1,0 +1,93 @@
+<div class="app-page quiz-page">
+    <!-- Header -->
+    <div class="app-header">
+        <button class="btn-icon" ng-click="exitQuiz()">
+            <span class="icon">✕</span>
+        </button>
+        <div class="quiz-progress-header">
+            <div class="progress-bar">
+                <div class="progress-fill" ng-style="{'width': progressPercent + '%', 'background': progressColor}"></div>
+            </div>
+        </div>
+        <div class="quiz-counter">{{currentIndex + 1}}/{{questions.length}}</div>
+    </div>
+
+    <!-- Question -->
+    <div class="quiz-content" ng-if="!finished && questions.length > 0">
+        <div class="question-card" ng-class="{'shake': shakeCard}">
+            <div class="question-number">Pergunta {{currentIndex + 1}}</div>
+            <div class="question-text">{{currentQuestion.title}}</div>
+        </div>
+
+        <!-- Choices -->
+        <div class="choices-list">
+            <button class="choice-btn" 
+                    ng-repeat="choice in currentQuestion.choices"
+                    ng-click="selectChoice(choice)"
+                    ng-class="{
+                        'choice-selected': selectedChoice === choice && !revealed,
+                        'choice-correct': revealed && choice.grade > 0,
+                        'choice-wrong': revealed && selectedChoice === choice && choice.grade === 0
+                    }"
+                    ng-disabled="revealed">
+                <span class="choice-letter">{{$index === 0 ? 'A' : $index === 1 ? 'B' : $index === 2 ? 'C' : 'D'}}</span>
+                <span class="choice-label">{{choice.label}}</span>
+                <span class="choice-indicator" ng-if="revealed && choice.grade > 0">✓</span>
+                <span class="choice-indicator" ng-if="revealed && selectedChoice === choice && choice.grade === 0">✕</span>
+            </button>
+        </div>
+
+        <!-- Confirm / Next -->
+        <div class="quiz-actions">
+            <button class="btn btn-primary btn-block" ng-click="confirmChoice()" 
+                    ng-if="selectedChoice && !revealed">
+                Confirmar
+            </button>
+            <button class="btn btn-primary btn-block" ng-click="nextQuestion()" 
+                    ng-if="revealed"
+                    ng-class="{'btn-green': lastCorrect, 'btn-red': !lastCorrect}">
+                {{currentIndex < questions.length - 1 ? 'Próxima →' : 'Ver Resultado'}}
+            </button>
+        </div>
+
+        <!-- Feedback message -->
+        <div class="quiz-feedback" ng-if="revealed" ng-class="{'feedback-correct': lastCorrect, 'feedback-wrong': !lastCorrect}">
+            <span ng-if="lastCorrect">{{correctMessages[correctMsgIndex]}}</span>
+            <span ng-if="!lastCorrect">A resposta certa era: <b>{{correctLabel}}</b></span>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="quiz-results" ng-if="finished">
+        <div class="results-card" ng-class="{'results-great': scorePercent >= 80, 'results-ok': scorePercent >= 50 && scorePercent < 80, 'results-low': scorePercent < 50}">
+            <div class="results-emoji">{{scorePercent >= 80 ? '🏆' : scorePercent >= 50 ? '💪' : '📚'}}</div>
+            <div class="results-score">{{correctCount}}/{{questions.length}}</div>
+            <div class="results-percent">{{scorePercent}}% de acerto</div>
+            <div class="results-message">
+                <span ng-if="scorePercent >= 80">Incrível! Você arrasou! 🌟</span>
+                <span ng-if="scorePercent >= 50 && scorePercent < 80">Muito bem! Continue praticando!</span>
+                <span ng-if="scorePercent < 50">Não desista! Tente novamente! 💪</span>
+            </div>
+        </div>
+
+        <!-- XP earned -->
+        <div class="xp-earned" ng-if="scorePercent >= 80">
+            <span class="xp-badge">+{{xpEarned}} XP</span>
+            <span>Aula desbloqueada!</span>
+        </div>
+
+        <div class="quiz-actions">
+            <button class="btn btn-primary btn-block" ng-click="retryQuiz()">🔄 Tentar Novamente</button>
+            <button class="btn btn-outline btn-block" ng-click="exitQuiz()">← Voltar</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" ng-if="loading">
+        <div class="spinner"></div>
+        <p>Carregando quiz...</p>
+    </div>
+
+    <!-- Confetti container -->
+    <div class="confetti-container" ng-if="showConfetti"></div>
+</div>

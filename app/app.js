@@ -15,13 +15,37 @@ app.config(function($routeProvider, $locationProvider) {
             templateUrl: 'pages/signup/signup.html',
             controller: 'SignupController'
         })
+        // Parent routes
         .when('/parent', {
             templateUrl: 'pages/dashboard-parent/dashboard-parent.html',
             controller: 'ParentDashboardController'
         })
+        .when('/parent/child/:childId', {
+            templateUrl: 'pages/trail/trail.html',
+            controller: 'TrailController'
+        })
+        .when('/parent/child/:childId/folder/:folderId', {
+            templateUrl: 'pages/trail/trail.html',
+            controller: 'TrailController'
+        })
+        .when('/capture', {
+            templateUrl: 'pages/capture/capture.html',
+            controller: 'CaptureController',
+            reloadOnSearch: false
+        })
+        // Child routes
         .when('/child', {
             templateUrl: 'pages/dashboard-child/dashboard-child.html',
             controller: 'ChildDashboardController'
+        })
+        .when('/child/folder/:folderId', {
+            templateUrl: 'pages/trail/trail.html',
+            controller: 'TrailController'
+        })
+        // Quiz
+        .when('/quiz/:quizId', {
+            templateUrl: 'pages/quiz/quiz.html',
+            controller: 'QuizController'
         })
         .otherwise({
             redirectTo: '/landing'
@@ -42,15 +66,12 @@ app.run(function($rootScope, $location, AuthService) {
         }
     });
     
-    // Auto-login if token exists
+    // Auto-redirect if logged in and on landing
     if (AuthService.isLoggedIn()) {
-        var user = AuthService.getUser();
         var role = AuthService.getRole();
-        // Route based on role
-        if (role === 'parent') {
-            $location.path('/parent');
-        } else {
-            $location.path('/child');
+        var currentPath = $location.path();
+        if (currentPath === '' || currentPath === '/' || currentPath === '/landing') {
+            $location.path(role === 'child' ? '/child' : '/parent');
         }
     }
 });

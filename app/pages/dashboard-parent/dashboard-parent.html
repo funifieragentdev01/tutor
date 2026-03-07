@@ -1,0 +1,83 @@
+<div class="app-page parent-page">
+    <!-- Header -->
+    <div class="app-header">
+        <div class="header-left">
+            <span class="header-greeting">Olá, {{parentName}}!</span>
+        </div>
+        <div class="header-right">
+            <button class="btn-icon" ng-click="logout()">
+                <span class="icon">↩</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Children List -->
+    <div class="section-pad">
+        <h2 class="section-heading">Seus Filhos</h2>
+        
+        <div class="children-grid">
+            <!-- Existing children -->
+            <div class="child-card" ng-repeat="child in children" ng-click="openChild(child)">
+                <div class="child-avatar" ng-style="{'background-color': child.color || '#6C5CE7'}">
+                    {{child.name.charAt(0).toUpperCase()}}
+                </div>
+                <div class="child-name">{{child.name}}</div>
+                <div class="child-stats" ng-if="child.subjectCount !== undefined">
+                    {{child.subjectCount}} disciplina{{child.subjectCount !== 1 ? 's' : ''}}
+                </div>
+            </div>
+            
+            <!-- Add child -->
+            <div class="child-card child-card-add" ng-click="showAddChild = true" ng-if="!showAddChild">
+                <div class="child-avatar add-avatar">+</div>
+                <div class="child-name">Adicionar Filho</div>
+            </div>
+        </div>
+
+        <!-- Add Child Form -->
+        <div class="add-child-form" ng-if="showAddChild">
+            <h3>Cadastrar Filho</h3>
+            <div class="form-group">
+                <label>Nome da criança</label>
+                <input type="text" ng-model="newChild.name" placeholder="Ex: Beatriz">
+            </div>
+            <div class="form-group">
+                <label>Idade</label>
+                <input type="number" ng-model="newChild.age" placeholder="Ex: 8" min="3" max="18">
+            </div>
+            <div class="form-group">
+                <label>Série/Ano escolar</label>
+                <input type="text" ng-model="newChild.grade" placeholder="Ex: 3º ano">
+            </div>
+            <div class="form-group">
+                <label>Interesses (opcional)</label>
+                <input type="text" ng-model="newChild.interests" placeholder="Ex: dinossauros, futebol, desenho">
+            </div>
+            <div class="form-group">
+                <label>Melhores amigos (opcional)</label>
+                <input type="text" ng-model="newChild.friends" placeholder="Ex: Lucas, Maria">
+            </div>
+            <div class="form-row">
+                <button class="btn btn-primary btn-block" ng-click="addChild()" ng-disabled="addingChild">
+                    {{addingChild ? 'Criando...' : 'Criar Perfil'}}
+                </button>
+                <button class="btn btn-outline btn-block" ng-click="showAddChild = false; newChild = {}">Cancelar</button>
+            </div>
+            <div class="auth-error" ng-if="childError">{{childError}}</div>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" ng-if="children.length === 0 && !showAddChild && !loading">
+        <div class="empty-icon">👨‍👧‍👦</div>
+        <h3>Nenhum filho cadastrado</h3>
+        <p>Cadastre seu primeiro filho para começar a criar trilhas de aprendizado personalizadas.</p>
+        <button class="btn btn-primary" ng-click="showAddChild = true">Cadastrar Filho</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" ng-if="loading">
+        <div class="spinner"></div>
+        <p>Carregando...</p>
+    </div>
+</div>
