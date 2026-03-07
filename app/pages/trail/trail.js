@@ -213,6 +213,23 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         });
     };
     
+    // Clear progress (folder_log) for a content item
+    $scope.clearProgress = function(c, $event) {
+        $event.stopPropagation();
+        if (!confirm('Limpar progresso de "' + c.title + '"?\n\nO filho precisará refazer esta atividade.')) return;
+        
+        // Delete folder_log for this item + player
+        var playerId = childId;
+        ApiService.dbDelete('folder_log', 'item:"' + c._id + '",player:"' + playerId + '"').then(function() {
+            c.percent = 0;
+            c.done = 0;
+            c.time = null;
+            $scope.$applyAsync();
+        }).catch(function() {
+            alert('Erro ao limpar progresso.');
+        });
+    };
+    
     // Delete a folder item (subject, module, lesson) with confirmation
     $scope.deleteItem = function(item, $event) {
         $event.stopPropagation();

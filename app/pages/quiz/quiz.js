@@ -1,7 +1,9 @@
 app.controller('QuizController', function($scope, $location, $routeParams, $timeout, AuthService, ApiService) {
     var quizId = $routeParams.quizId;
-    // Player: use query param (when parent views child's quiz) or logged-in user
+    // Player: use query param (child ID when parent views child's trail) or logged-in user
     var playerId = $location.search().player || AuthService.getUser();
+    var isParent = playerId !== AuthService.getUser();
+    $scope.isParentTest = isParent;
     
     $scope.questions = [];
     $scope.currentIndex = 0;
@@ -95,8 +97,11 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $scope.xpEarned = $scope.correctCount * 10;
         $scope.progressPercent = 100;
         
-        // Always log completion (with actual percent)
-        logCompletion();
+        // Only log completion when the player is the logged-in user (child playing)
+        // Parent testing does NOT register progress for the child
+        if (!isParent) {
+            logCompletion();
+        }
         
         if ($scope.scorePercent >= 80) {
             triggerCelebration();

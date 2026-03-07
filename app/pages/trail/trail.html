@@ -10,6 +10,7 @@
                 <span class="icon">📷</span>
             </button>
         </div>
+        <div class="header-right" ng-if="!isParent"></div>
     </div>
 
     <!-- Breadcrumb -->
@@ -56,6 +57,7 @@
                     <div class="content-title">{{c.title}}</div>
                     <div class="content-type">{{c.type === 'quiz' ? 'Quiz' : c.type}}{{c.percent >= 100 ? ' — Concluído!' : ''}}</div>
                 </div>
+                <button class="btn-clear-progress" ng-if="isParent && c.percent > 0" ng-click="clearProgress(c, $event)" title="Limpar progresso">🔄</button>
                 <button class="btn-delete-item" ng-if="isParent" ng-click="deleteContent(c, $event)" title="Excluir">🗑</button>
                 <div class="folder-arrow" ng-if="!isParent">›</div>
             </div>

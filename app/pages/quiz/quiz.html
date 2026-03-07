@@ -82,8 +82,12 @@
         </div>
 
         <!-- XP earned -->
-        <div class="xp-earned">
+        <div class="xp-earned" ng-if="!isParentTest">
             <span class="xp-badge">+{{xpEarned}} XP</span>
+        </div>
+        
+        <div class="parent-test-notice" ng-if="isParentTest">
+            ℹ️ Modo teste — progresso não registrado para o aluno.
         </div>
 
         <div class="quiz-actions results-actions">
