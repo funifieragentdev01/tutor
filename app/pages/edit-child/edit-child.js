@@ -262,13 +262,13 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         
         var base64 = photoDataUrl.split(',')[1];
         
-        // Step 1: Describe the child using Vision
+        // Step 1: Describe the child using GPT-4o-mini Vision
         var describeBody = {
             model: 'gpt-4o-mini',
             messages: [{
                 role: 'user',
                 content: [
-                    { type: 'text', text: 'Descreva esta crianca em detalhes para eu poder gerar um personagem chibi kawaii baseado nela. Inclua: genero, cor da pele, tipo e cor de cabelo, cor dos olhos, roupa que esta vestindo, e qualquer acessorio visivel. Responda APENAS com a descricao em portugues, em um paragrafo curto.' },
+                    { type: 'text', text: 'Describe this child in detail for a character illustration. Include: gender, skin tone, hair type and color, eye color, clothing, and any visible accessories. Reply ONLY with the description in English, in a short paragraph.' },
                     { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64, detail: 'low' } }
                 ]
             }],
@@ -285,31 +285,29 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             var description = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
             if (!description) throw new Error('Sem descricao');
             
-            // Step 2: Generate chibi character with DALL-E
-            var prompt = 'IMPORTANT: Show only ONE character. No duplicate characters, no mirror images, no multiple views. ' +
-                'A SINGLE chibi kawaii cartoon character of a child, centered in the image. ' + description + '. ' +
-                'Style: big head (40% of body), small body, large anime eyes, rosy cheeks, clean outlines, flat colors with soft shading. ' +
-                'Show exactly ONE character, full body, standing pose, plain white background, cute and friendly expression. ' +
-                'Avoid: multiple characters, twins, reflections, duplicates, multiple poses, side views. ' +
-                'Focus: one adorable child character only. High quality digital art.';
+            // Step 2: Generate character with Freepik Flux 2 Pro (Duolingo style)
+            var prompt = 'Turn the following person into a simplified cartoon mascot. Use a cute, playful, child-friendly style consistent with educational apps like Duolingo. ' +
+                'Flat colors, clean outlines, no gradients, no realistic shading. Single character, full body, standing pose, white background. ' +
+                description;
             
-            return fetch('https://api.openai.com/v1/images/generations', {
+            return fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-pro', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.OPENAI_API_KEY },
+                headers: { 'Content-Type': 'application/json', 'x-freepik-api-key': CONFIG.FREEPIK_API_KEY },
                 body: JSON.stringify({
-                    model: 'dall-e-3',
                     prompt: prompt,
-                    n: 1,
-                    size: '1024x1024',
-                    response_format: 'url'
+                    image: { size: 'square_1_1' }
                 })
             });
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            var url = data.data && data.data[0] && data.data[0].url;
-            if (!url) throw new Error('Sem imagem gerada');
-            $scope.pendingCharacterUrl = url;
+            var taskId = data.data && data.data.task_id;
+            if (!taskId) throw new Error('Freepik task creation failed');
+            // Poll for result
+            return pollFreepikTask(taskId);
+        })
+        .then(function(imageUrl) {
+            $scope.pendingCharacterUrl = imageUrl;
             $scope.generatingCharacter = false;
             $scope.$applyAsync();
         })
@@ -318,6 +316,41 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             $scope.error = 'Erro ao gerar personagem. Tente novamente.';
             $scope.generatingCharacter = false;
             $scope.$applyAsync();
+        });
+    }
+    
+    function pollFreepikTask(taskId) {
+        var maxAttempts = 30;
+        var attempt = 0;
+        return new Promise(function(resolve, reject) {
+            function check() {
+                attempt++;
+                if (attempt > maxAttempts) return reject(new Error('Timeout gerando personagem'));
+                
+                fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-pro/' + taskId, {
+                    headers: { 'x-freepik-api-key': CONFIG.FREEPIK_API_KEY }
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var status = data.data && data.data.status;
+                    if (status === 'COMPLETED') {
+                        var generated = data.data.generated;
+                        if (generated && generated.length > 0) {
+                            var img = generated[0];
+                            // Can be URL string or object with url
+                            var url = typeof img === 'string' ? img : (img.url || img.base64);
+                            if (url) return resolve(url);
+                        }
+                        return reject(new Error('No image in result'));
+                    } else if (status === 'FAILED' || status === 'ERROR') {
+                        return reject(new Error('Freepik generation failed'));
+                    }
+                    // Still processing, wait and retry
+                    setTimeout(check, 2000);
+                })
+                .catch(reject);
+            }
+            setTimeout(check, 3000); // Initial delay before first poll
         });
     }
     
