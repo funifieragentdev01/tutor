@@ -35,7 +35,7 @@
                         <div class="progress-bar-mini">
                             <div class="progress-fill-mini" ng-style="{'width': (item.percent || 0) + '%'}"></div>
                         </div>
-                        <span class="folder-percent">{{item.percent || 0}}%</span>
+                        <span class="folder-percent">{{(item.percent || 0) | number:0}}%</span>
                     </div>
                     <div class="folder-meta" ng-if="item.childCount !== undefined">
                         {{item.childCount}} ite{{item.childCount !== 1 ? 'ns' : 'm'}}
