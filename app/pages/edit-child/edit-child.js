@@ -100,16 +100,20 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 original: { url: resized, size: 0, width: w, height: h, depth: 0 }
             };
             // Use POST /v3/player (not /v3/database/player) to properly save image
+            console.log('[EditChild] Saving profile photo for:', childId);
             $http.post(CONFIG.API + '/v3/player', {
                 _id: childId,
                 name: $scope.child.name || '',
                 email: childId,
                 image: imageObj
-            }, AuthService.authHeader()).then(function() {
+            }, AuthService.authHeader()).then(function(response) {
+                console.log('[EditChild] Profile photo saved successfully:', response.data);
                 flashSaved();
                 $scope.$applyAsync();
             }).catch(function(err) {
-                console.error('Failed to save profile photo:', err);
+                console.error('[EditChild] Failed to save profile photo:', err);
+                $scope.error = 'Erro ao salvar foto do perfil. Tente novamente.';
+                $scope.$applyAsync();
             });
         };
         img.src = dataUrl;
@@ -282,10 +286,12 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             if (!description) throw new Error('Sem descricao');
             
             // Step 2: Generate chibi character with DALL-E
-            var prompt = 'A SINGLE chibi kawaii cartoon character of a child, centered in the image. ' + description + '. ' +
+            var prompt = 'IMPORTANT: Show only ONE character. No duplicate characters, no mirror images, no multiple views. ' +
+                'A SINGLE chibi kawaii cartoon character of a child, centered in the image. ' + description + '. ' +
                 'Style: big head (40% of body), small body, large anime eyes, rosy cheeks, clean outlines, flat colors with soft shading. ' +
                 'Show exactly ONE character, full body, standing pose, plain white background, cute and friendly expression. ' +
-                'Do NOT show multiple characters, do NOT show multiple angles or poses. Just one single character. High quality digital art.';
+                'Avoid: multiple characters, twins, reflections, duplicates, multiple poses, side views. ' +
+                'Focus: one adorable child character only. High quality digital art.';
             
             return fetch('https://api.openai.com/v1/images/generations', {
                 method: 'POST',

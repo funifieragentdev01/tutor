@@ -1,16 +1,42 @@
 <div class="auth-page">
     <div class="auth-container">
         <h1 class="auth-logo">Tutor</h1>
-        <h2 class="auth-title">Entrar</h2>
         
-        <form ng-submit="login()" class="auth-form">
+        <!-- User Type Selection -->
+        <div ng-if="!userType" class="user-type-selection">
+            <h2 class="auth-title">Como você quer entrar?</h2>
+            
+            <button class="btn-user-type" ng-click="selectUserType('parent')">
+                <span class="user-type-icon">👨‍👩‍👧</span>
+                <span class="user-type-label">Sou Pai/Mãe</span>
+                <span class="user-type-desc">Vou acompanhar o aprendizado do meu filho</span>
+            </button>
+            
+            <button class="btn-user-type" ng-click="selectUserType('child')">
+                <span class="user-type-icon">🎒</span>
+                <span class="user-type-label">Sou Aluno(a)</span>
+                <span class="user-type-desc">Vou fazer quizzes e aprender</span>
+            </button>
+        </div>
+        
+        <!-- Login Form -->
+        <div ng-if="userType" class="login-form-section">
+            <h2 class="auth-title">
+                {{userType === 'parent' ? 'Entrar como Pai/Mãe' : 'Entrar como Aluno(a)'}}
+            </h2>
+            
+            <form ng-submit="login()" class="auth-form">
             <div class="form-group">
                 <label>E-mail</label>
-                <input type="email" ng-model="email" placeholder="seu@email.com" required>
+                <input type="email" ng-model="email" 
+                       placeholder="{{userType === 'parent' ? 'pai@email.com' : 'aluno@email.com'}}" 
+                       required>
             </div>
             <div class="form-group">
                 <label>Senha</label>
-                <input type="password" ng-model="password" placeholder="Sua senha" required>
+                <input type="password" ng-model="password" 
+                       placeholder="{{userType === 'parent' ? 'Sua senha' : 'Senha definida pelos pais'}}" 
+                       required>
             </div>
             
             <div class="auth-error" ng-show="error">{{error}}</div>
@@ -24,7 +50,9 @@
             Não tem conta? <a href="" ng-click="goSignup()">Criar conta</a>
         </p>
         <p class="auth-link">
-            <a href="" ng-click="goLanding()">Voltar</a>
+            <a href="" ng-click="userType = null">← Voltar</a> |
+            <a href="" ng-click="goLanding()">Página inicial</a>
         </p>
+        </div>
     </div>
 </div>

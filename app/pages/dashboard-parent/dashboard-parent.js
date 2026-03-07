@@ -64,6 +64,18 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
         $location.path('/parent/child/' + encodeURIComponent(child._id));
     };
     
+    $scope.captureChild = function(child, $event) {
+        $event.stopPropagation();
+        var ctx = encodeURIComponent(JSON.stringify({
+            childId: child._id,
+            folderId: child._id, // root folder
+            level: 'root',
+            subject: null,
+            module: null
+        }));
+        $location.path('/capture').search({ ctx: ctx });
+    };
+    
     $scope.editChild = function(child, $event) {
         $event.stopPropagation();
         $location.path('/parent/edit-child/' + encodeURIComponent(child._id));

@@ -3,6 +3,12 @@ app.controller('LoginController', function($scope, $location, $rootScope, AuthSe
     $scope.password = '';
     $scope.error = '';
     $scope.loading = false;
+    $scope.userType = null; // null, 'parent', or 'child'
+    
+    $scope.selectUserType = function(type) {
+        $scope.userType = type;
+        $scope.error = '';
+    };
     
     $scope.login = function() {
         if (!$scope.email || !$scope.password) {

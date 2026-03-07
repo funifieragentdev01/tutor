@@ -64,6 +64,10 @@ app.config(function($routeProvider, $locationProvider) {
 app.run(function($rootScope, $location, AuthService) {
     $rootScope.CONFIG = CONFIG;
     
+    // Bottom navigation visibility
+    $rootScope.showBottomNav = false;
+    $rootScope.isLoggedIn = AuthService.isLoggedIn();
+    
     // Check auth on route change
     $rootScope.$on('$routeChangeStart', function(event, next) {
         var publicRoutes = ['/landing', '/login', '/signup'];
@@ -75,6 +79,18 @@ app.run(function($rootScope, $location, AuthService) {
         }
     });
     
+    // Update bottom nav visibility and login status on route change
+    $rootScope.$on('$routeChangeSuccess', function() {
+        var path = $location.path();
+        var hiddenRoutes = ['/landing', '/login', '/signup'];
+        var hiddenPattern = /^\/quiz\//; // Hide on quiz pages
+        
+        $rootScope.isLoggedIn = AuthService.isLoggedIn();
+        $rootScope.showBottomNav = $rootScope.isLoggedIn && 
+            hiddenRoutes.indexOf(path) === -1 && 
+            !hiddenPattern.test(path);
+    });
+    
     // Auto-redirect if logged in and on landing
     if (AuthService.isLoggedIn()) {
         var role = AuthService.getRole();
@@ -83,4 +99,29 @@ app.run(function($rootScope, $location, AuthService) {
             $location.path(role === 'child' ? '/child' : '/parent');
         }
     }
+});
+
+// Bottom Navigation Controller
+app.controller('BottomNavController', function($scope, $location, AuthService) {
+    $scope.isParent = AuthService.getRole() === 'parent';
+    
+    $scope.isActive = function(path) {
+        return $location.path() === path;
+    };
+    
+    $scope.goToCapture = function() {
+        // TODO: Get last child context - for now just go to capture
+        $location.path('/capture');
+    };
+    
+    $scope.logout = function() {
+        AuthService.logout();
+        $location.path('/landing');
+    };
+    
+    $scope.showProfile = function() {
+        // For now just show child name/avatar in alert
+        var user = AuthService.getUser();
+        alert('👤 Perfil: ' + user + '\n\n(Em breve: página completa de perfil)');
+    };
 });

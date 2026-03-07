@@ -53,7 +53,10 @@
         <!-- Feedback message -->
         <div class="quiz-feedback" ng-if="revealed" ng-class="{'feedback-correct': lastCorrect, 'feedback-wrong': !lastCorrect}">
             <span ng-if="lastCorrect">{{correctMessages[correctMsgIndex]}}</span>
-            <span ng-if="!lastCorrect">A resposta certa era: <b>{{correctLabel}}</b></span>
+            <div ng-if="!lastCorrect">
+                <div><strong>A resposta certa era: {{correctLabel}}</strong></div>
+                <div ng-if="wrongFeedback" class="feedback-explanation">💡 {{wrongFeedback}}</div>
+            </div>
         </div>
     </div>
 

@@ -12,6 +12,7 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
     $scope.revealed = false;
     $scope.lastCorrect = false;
     $scope.correctLabel = '';
+    $scope.wrongFeedback = '';
     $scope.finished = false;
     $scope.loading = true;
     $scope.shakeCard = false;
@@ -28,7 +29,21 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
     ];
     $scope.correctMsgIndex = 0;
     
+    // Sound settings
+    $scope.feedbackSound = 'beep'; // default
+    $scope.customSoundUrl = null;
+    
     function init() {
+        // Load child's feedback sound from profile
+        ApiService.dbGet('profile__c', playerId).then(function(res) {
+            var profile = res.data || {};
+            $scope.feedbackSound = profile.feedback_sound || 'beep';
+            $scope.customSoundUrl = profile.custom_sound_url || null;
+            console.log('[Quiz] Loaded feedback sound:', $scope.feedbackSound, $scope.customSoundUrl);
+        }).catch(function() {
+            console.log('[Quiz] Could not load profile, using default sound');
+        });
+        
         // Load questions for this quiz
         ApiService.dbQuery('question', 'quiz:"' + quizId + '"', { _id: 1 }, 50).then(function(res) {
             $scope.questions = res.data || [];
@@ -68,6 +83,18 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
             // Find correct answer label
             var correct = $scope.currentQuestion.choices.filter(function(c) { return c.grade > 0; });
             $scope.correctLabel = correct.length > 0 ? correct[0].label : '?';
+            
+            // Get wrong answer feedback
+            $scope.wrongFeedback = '';
+            if ($scope.currentQuestion.feedbacks) {
+                var wrongFeedback = $scope.currentQuestion.feedbacks.find(function(f) { 
+                    return f.event === 'wrong'; 
+                });
+                if (wrongFeedback) {
+                    $scope.wrongFeedback = wrongFeedback.message;
+                }
+            }
+            
             $scope.shakeCard = true;
             $timeout(function() { $scope.shakeCard = false; }, 500);
             playSound('wrong');
@@ -80,6 +107,7 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $scope.currentIndex++;
         $scope.selectedChoice = null;
         $scope.revealed = false;
+        $scope.wrongFeedback = '';
         $scope.progressColor = '#6C5CE7';
         
         if ($scope.currentIndex >= $scope.questions.length) {
@@ -144,10 +172,31 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
     function playSound(type) {
         try {
             if (type === 'correct') {
-                var audio = new Audio('audio/beep.mp3');
+                var soundFile;
+                var soundMap = {
+                    'beep': 'audio/beep.mp3',
+                    'car': 'audio/car.mp3',
+                    'magic': 'audio/magic.mp3',
+                    'applause': 'audio/applause.mp3',
+                    'coin': 'audio/coin.mp3',
+                    'levelup': 'audio/levelup.mp3',
+                    'whoosh': 'audio/whoosh.mp3',
+                    'pop': 'audio/pop.mp3'
+                };
+                
+                if ($scope.feedbackSound === 'custom' && $scope.customSoundUrl) {
+                    soundFile = $scope.customSoundUrl;
+                } else {
+                    soundFile = soundMap[$scope.feedbackSound] || 'audio/beep.mp3';
+                }
+                
+                console.log('[Quiz] Playing sound:', soundFile);
+                var audio = new Audio(soundFile);
                 audio.play();
             }
-        } catch(e) {}
+        } catch(e) {
+            console.error('[Quiz] Error playing sound:', e);
+        }
     }
     
     $scope.retryQuiz = function() {

@@ -78,7 +78,8 @@ app.controller('CaptureController', function($scope, $location, $routeParams, Au
         
         userPrompt += '\nCADA PERGUNTA deve ter 4 opcoes com exatamente 1 correta.\n' +
             'Use o nome e interesses do aluno nas perguntas quando possivel (hiper-personalizacao).\n' +
-            'Dificuldade compativel com a serie do aluno.\n\n' +
+            'Dificuldade compativel com a serie do aluno.\n' +
+            'OBRIGATORIO: Inclua um campo "feedback" com explicacao didatica para respostas erradas.\n\n' +
             'FORMATO JSON OBRIGATORIO:\n' +
             '{\n' +
             '  "subject": "nome da disciplina",\n' +
@@ -89,6 +90,7 @@ app.controller('CaptureController', function($scope, $location, $routeParams, Au
             '      "questions": [\n' +
             '        {\n' +
             '          "title": "pergunta",\n' +
+            '          "feedback": "explicacao educativa para quando o aluno errar",\n' +
             '          "choices": [\n' +
             '            {"label": "opcao A", "correct": false},\n' +
             '            {"label": "opcao B", "correct": true},\n' +
@@ -282,6 +284,15 @@ app.controller('CaptureController', function($scope, $location, $routeParams, Au
                                     };
                                 });
                                 
+                                // Build feedbacks array with wrong answer explanation
+                                var feedbacks = [];
+                                if (q.feedback) {
+                                    feedbacks.push({
+                                        event: 'wrong',
+                                        message: q.feedback
+                                    });
+                                }
+                                
                                 return ApiService.dbSave('question', {
                                     quiz: quizId,
                                     type: 'MULTIPLE_CHOICE',
@@ -293,7 +304,7 @@ app.controller('CaptureController', function($scope, $location, $routeParams, Au
                                     select: 'one_answer',
                                     answerNumbering: 'uppercase_letters',
                                     shuffle: true,
-                                    feedbacks: []
+                                    feedbacks: feedbacks
                                 });
                             });
                         });
