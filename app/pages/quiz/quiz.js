@@ -93,30 +93,38 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $scope.xpEarned = $scope.correctCount * 10;
         $scope.progressPercent = 100;
         
+        // Always log completion (with actual percent)
+        logCompletion();
+        
         if ($scope.scorePercent >= 80) {
             triggerCelebration();
-            // Epic celebration for 100%
             if ($scope.scorePercent === 100) {
                 $timeout(function() { triggerCelebration(); }, 500);
                 $timeout(function() { triggerCelebration(); }, 1000);
             }
-            
-            // Log completion to Funifier folder system
-            logCompletion();
         }
     }
     
     function logCompletion() {
+        var playerId = AuthService.getUser();
+        console.log('[Quiz] logCompletion: quizId=' + quizId + ', player=' + playerId + ', score=' + $scope.scorePercent);
+        
         // Find the folder_content that references this quiz
         ApiService.dbQuery('folder_content', 'content:"' + quizId + '"', null, 1).then(function(res) {
+            console.log('[Quiz] folder_content found:', JSON.stringify(res.data));
             var fc = res.data && res.data[0];
-            if (fc && fc.parent) {
-                var playerId = AuthService.getUser();
-                // Log content completion with percent
-                ApiService.logFolderItem(fc._id, playerId, $scope.scorePercent);
-                // Log lesson folder too
-                ApiService.logFolderItem(fc.parent, playerId, $scope.scorePercent);
+            if (fc) {
+                // Log content (folder_content) completion
+                ApiService.logFolderItem(fc._id, playerId, $scope.scorePercent).then(function(logRes) {
+                    console.log('[Quiz] folder_log content OK:', JSON.stringify(logRes.data));
+                }).catch(function(err) {
+                    console.error('[Quiz] folder_log content FAIL:', err);
+                });
+            } else {
+                console.warn('[Quiz] No folder_content found for quiz ' + quizId);
             }
+        }).catch(function(err) {
+            console.error('[Quiz] dbQuery folder_content FAIL:', err);
         });
     }
     

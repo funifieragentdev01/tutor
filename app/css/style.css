@@ -690,10 +690,15 @@ body {
 .results-great { background: linear-gradient(135deg, #00B894, #00CEC9); color: var(--white); }
 .results-ok { background: linear-gradient(135deg, #FDCB6E, #F0932B); color: var(--white); }
 .results-low { background: linear-gradient(135deg, #74B9FF, #6C5CE7); color: var(--white); }
-.results-emoji { font-size: 64px; margin-bottom: 12px; }
-.results-score { font-size: 48px; font-weight: 900; }
-.results-percent { font-size: 18px; font-weight: 600; opacity: 0.9; }
-.results-message { font-size: 16px; margin-top: 12px; font-weight: 700; }
+.results-emoji { font-size: 64px; margin-bottom: 8px; }
+.results-title { font-size: 28px; font-weight: 900; margin: 0 0 8px; }
+.results-score { font-size: 18px; font-weight: 600; opacity: 0.9; }
+.results-percent-ring { width: 120px; height: 120px; margin: 16px auto; }
+.percent-ring { width: 100%; height: 100%; color: white; }
+.percent-ring circle:first-child { opacity: 0.3; }
+.results-message { font-size: 16px; margin-top: 8px; font-weight: 700; }
+.results-actions { margin-top: 24px; }
+.btn-lg { font-size: 18px; padding: 16px; letter-spacing: 1px; }
 
 .xp-earned {
     background: var(--white);
