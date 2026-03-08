@@ -14,6 +14,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     $scope.callStatusText = '';
     $scope.isMuted = false;
     $scope.callDuration = '00:00';
+    $scope.callHistory = [];
     
     var pc = null;
     var dc = null;
@@ -226,6 +227,28 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 }
             } catch(e) {}
             
+            // Load call history
+            try {
+                var cRes = await fetch(CONFIG.API + '/v3/database/call_log__c/aggregate?q=' + encodeURIComponent(JSON.stringify({player: childId})) + '&strict=true', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': 'application/json', 'Range': 'items=0-20' },
+                    body: JSON.stringify([{ $sort: { created: -1 } }])
+                });
+                var cData = await cRes.json();
+                if (Array.isArray(cData)) {
+                    $scope.callHistory = cData.map(function(c) {
+                        var dur = c.duration_seconds || 0;
+                        var mins = Math.floor(dur / 60);
+                        var secs = dur % 60;
+                        var started = c.started && c.started.$date ? new Date(c.started.$date) : new Date(0);
+                        return {
+                            date: started.toLocaleDateString('pt-BR') + ' ' + started.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                            duration: (mins > 0 ? mins + 'min ' : '') + secs + 's'
+                        };
+                    });
+                }
+            } catch(e) { $scope.callHistory = []; }
+
             $scope.loading = false;
             $scope.$applyAsync();
             scrollToBottom();
@@ -652,6 +675,31 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     };
     
     $scope.endCall = function() {
+        // Save call history
+        if (callStartTime) {
+            var duration = Math.round((Date.now() - callStartTime) / 1000);
+            if (duration >= 3) {
+                ApiService.dbSave('call_log__c', {
+                    _id: childId + '_call_' + Date.now(),
+                    player: childId,
+                    mode: 'voice',
+                    started: { $date: new Date(callStartTime).toISOString() },
+                    ended: { $date: new Date().toISOString() },
+                    duration_seconds: duration,
+                    created: { $date: new Date().toISOString() }
+                }).catch(function(){});
+                // Add to local list
+                var mins = Math.floor(duration / 60);
+                var secs = duration % 60;
+                var started = new Date(callStartTime);
+                $scope.callHistory.unshift({
+                    date: started.toLocaleDateString('pt-BR') + ' ' + started.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    duration: (mins > 0 ? mins + 'min ' : '') + secs + 's'
+                });
+            }
+            callStartTime = null;
+        }
+
         if (callTimer) { clearInterval(callTimer); callTimer = null; }
         if (localStream) { localStream.getTracks().forEach(function(t) { t.stop(); }); localStream = null; }
         if (dc) { try { dc.close(); } catch(e) {} dc = null; }
@@ -662,7 +710,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         $scope.callStatusText = '';
         $scope.mode = 'select';
         $scope.isMuted = false;
-        callStartTime = null;
         $scope.$applyAsync();
     };
     

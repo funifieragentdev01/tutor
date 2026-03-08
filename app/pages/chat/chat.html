@@ -22,6 +22,17 @@
                 <div class="mode-card-desc">Converse por voz em tempo real</div>
             </button>
         </div>
+        <!-- Call History -->
+        <div class="call-history" ng-if="callHistory.length > 0">
+            <div class="call-history-title">Histórico de ligações</div>
+            <div class="call-history-item" ng-repeat="call in callHistory">
+                <div class="call-history-icon">📞</div>
+                <div class="call-history-info">
+                    <div class="call-history-date">{{call.date}}</div>
+                </div>
+                <div class="call-history-duration">{{call.duration}}</div>
+            </div>
+        </div>
     </div>
 
     <!-- TEXT MODE -->
