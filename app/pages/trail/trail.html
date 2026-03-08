@@ -38,7 +38,7 @@
                     <div class="duo-module-progress" ng-if="item.percent > 0">{{item.percent | number:0}}% completo</div>
                     <!-- Character -->
                     <div class="duo-character" ng-if="characterUrl" ng-style="getCharacterStyle(item)">
-                        <img ng-src="{{characterUrl}}" ng-class="{'duo-character-gray': isCharacterGray(item)}" alt="personagem" onerror="this.parentElement.style.display='none'">
+                        <img ng-src="{{poseUrls[item._id] || characterUrl}}" ng-class="{'duo-character-gray': isCharacterGray(item)}" alt="personagem" onerror="this.parentElement.style.display='none'">
                     </div>
                 </div>
                 

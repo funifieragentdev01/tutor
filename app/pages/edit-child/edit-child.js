@@ -264,11 +264,15 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         var base64 = photoDataUrl.split(',')[1];
         
         // Use Funifier Public Endpoint as proxy (Freepik API blocks CORS from browser)
-        var prompt = 'Turn the person from the reference photo into a simplified cartoon mascot. ' +
-            'Use a cute, playful, child-friendly style consistent with educational apps like Duolingo. ' +
-            'Flat colors, clean outlines, no gradients, no realistic shading. ' +
-            'IMPORTANT: Show only ONE character. Full body, standing pose, white background. ' +
-            'No duplicate characters, no mirror images, no multiple views.';
+        var prompt = 'Create a flat-design cartoon character based on the reference photo. ' +
+            'Style: Duolingo mascot / Headspace characters. ' +
+            'NO outlines, NO borders, NO strokes around shapes. ' +
+            'Solid flat colors only, no gradients, no shading, no shadows. ' +
+            'Simple geometric shapes, minimal details. ' +
+            'Friendly, cute, child-appropriate. ' +
+            'Full body, front-facing, standing pose. ' +
+            'Solid white background (#FFFFFF). ' +
+            'IMPORTANT: Only ONE character, no duplicates, no mirror images.';
         
         var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
         
@@ -284,9 +288,17 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             return pollFreepikTask(taskId);
         })
         .then(function(imageUrl) {
-            $scope.pendingCharacterUrl = imageUrl;
-            $scope.generatingCharacter = false;
-            $scope.$applyAsync();
+            // Try background removal
+            return removeBackground(imageUrl).then(function(transparentUrl) {
+                $scope.pendingCharacterUrl = transparentUrl;
+                $scope.generatingCharacter = false;
+                $scope.$applyAsync();
+            }).catch(function(err) {
+                console.warn('Background removal failed, using original:', err);
+                $scope.pendingCharacterUrl = imageUrl;
+                $scope.generatingCharacter = false;
+                $scope.$applyAsync();
+            });
         })
         .catch(function(err) {
             console.error('Character generation error:', err);
@@ -335,21 +347,82 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         });
     }
     
+    function removeBackground(imageUrl) {
+        var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_remove_bg';
+        return fetch(proxyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_url: imageUrl })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var inner = data.response || {};
+            // Freepik remove-bg returns data.image.url or data[0].url etc
+            var imgUrl = null;
+            if (inner.data && inner.data.image && inner.data.image.url) {
+                imgUrl = inner.data.image.url;
+            } else if (inner.data && Array.isArray(inner.data) && inner.data[0] && inner.data[0].url) {
+                imgUrl = inner.data[0].url;
+            } else if (inner.image && inner.image.url) {
+                imgUrl = inner.image.url;
+            }
+            if (!imgUrl) throw new Error('No URL in remove-bg response: ' + JSON.stringify(data).substring(0, 300));
+            return imgUrl;
+        });
+    }
+    
+    function uploadImageToFunifier(imageUrl) {
+        // Convert image URL or data URL to blob, then upload to Funifier
+        var blobPromise;
+        if (imageUrl.indexOf('data:') === 0) {
+            // data URL -> blob
+            var parts = imageUrl.split(',');
+            var mime = parts[0].match(/:(.*?);/)[1];
+            var byteString = atob(parts[1]);
+            var ab = new ArrayBuffer(byteString.length);
+            var ia = new Uint8Array(ab);
+            for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+            blobPromise = Promise.resolve(new Blob([ab], { type: mime }));
+        } else {
+            blobPromise = fetch(imageUrl).then(function(r) { return r.blob(); });
+        }
+        
+        return blobPromise.then(function(blob) {
+            var formData = new FormData();
+            formData.append('file', blob, 'character.png');
+            formData.append('extra', '{"session":"characters"}');
+            
+            return $http.post(CONFIG.API + '/v3/upload/image', formData, {
+                headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+                transformRequest: angular.identity
+            });
+        }).then(function(res) {
+            return res.data.uploads[0].url;
+        });
+    }
+    
     $scope.approveCharacter = function() {
         $scope.saving = true;
-        $scope.child.character_url = $scope.pendingCharacterUrl;
+        $scope.error = '';
+        
+        var tempUrl = $scope.pendingCharacterUrl;
         $scope.pendingCharacterUrl = null;
         
-        ApiService.getProfile(childId).then(function(res) {
-            var profile = res.data || { _id: childId };
-            profile.character_url = $scope.child.character_url;
-            return ApiService.dbSave('profile__c', profile);
+        uploadImageToFunifier(tempUrl).then(function(permanentUrl) {
+            $scope.child.character_url = permanentUrl;
+            
+            return ApiService.getProfile(childId).then(function(res) {
+                var profile = res.data || { _id: childId };
+                profile.character_url = permanentUrl;
+                return ApiService.dbSave('profile__c', profile);
+            });
         }).then(function() {
             $scope.saving = false;
             flashSaved();
             $scope.$applyAsync();
-        }).catch(function() {
-            $scope.error = 'Erro ao salvar personagem.';
+        }).catch(function(err) {
+            console.error('Failed to upload character:', err);
+            $scope.error = 'Erro ao salvar personagem. Tente novamente.';
             $scope.saving = false;
             $scope.$applyAsync();
         });

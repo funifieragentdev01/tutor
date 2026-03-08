@@ -55,6 +55,21 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     
     var MODULE_COLORS = ['#FF9600', '#CE82FF', '#00CD9C', '#1CB0F6', '#FF4B4B', '#FFC800'];
     
+    var POSE_PROMPTS = [
+        'studying with a book, sitting cross-legged',
+        'celebrating with arms raised, jumping with joy',
+        'thinking with hand on chin, looking curious',
+        'writing in a notebook, focused',
+        'giving a thumbs up, confident smile',
+        'waving hello, friendly greeting',
+        'running with a backpack, energetic',
+        'reading a book while standing, concentrated'
+    ];
+    
+    $scope.poseUrls = {}; // moduleId -> url
+    var poseGenerationQueue = [];
+    var poseGenerating = false;
+    
     function init() {
         loadFolder(folderId);
         // Load character URL for child
@@ -187,6 +202,12 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
             });
         }).catch(function() {}).finally(function() {
             buildModuleEntries(folders, colorMap);
+            // Trigger pose generation for modules missing poses
+            if (!$scope.isParent) {
+                ApiService.dbQuery('folder', '_id:{$in:' + idsJson + '}', null, moduleIds.length + 1).then(function(res2) {
+                    checkAndGeneratePoses(res2.data || []);
+                }).catch(function() {});
+            }
         });
     }
     
@@ -590,6 +611,150 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         }));
         $location.path('/capture').search({ ctx: ctx });
     };
+    
+    // === Pose Generation (Change 5) ===
+    
+    function checkAndGeneratePoses(modules) {
+        if (!$scope.characterUrl) return;
+        
+        var missing = [];
+        modules.forEach(function(mod, idx) {
+            if (mod.extra && mod.extra.character_pose_url) {
+                $scope.poseUrls[mod._id] = mod.extra.character_pose_url;
+            } else {
+                missing.push({ _id: mod._id, poseIndex: idx % POSE_PROMPTS.length });
+            }
+        });
+        $scope.$applyAsync();
+        
+        if (missing.length === 0) return;
+        
+        // Queue them up
+        poseGenerationQueue = poseGenerationQueue.concat(missing);
+        if (!poseGenerating) processNextPose();
+    }
+    
+    function processNextPose() {
+        if (poseGenerationQueue.length === 0) { poseGenerating = false; return; }
+        poseGenerating = true;
+        
+        var item = poseGenerationQueue.shift();
+        var pose = POSE_PROMPTS[item.poseIndex];
+        var prompt = 'Create a flat-design cartoon character in this pose: ' + pose + '. ' +
+            'Match the character style from the reference image exactly. ' +
+            'Style: Duolingo mascot, NO outlines, NO borders, solid flat colors, no gradients. ' +
+            'Simple geometric shapes, minimal details, white background. ' +
+            'Only ONE character, full body.';
+        
+        // Need to fetch the character image as base64 for the reference
+        fetch($scope.characterUrl)
+            .then(function(r) { return r.blob(); })
+            .then(function(blob) {
+                return new Promise(function(resolve) {
+                    var reader = new FileReader();
+                    reader.onloadend = function() { resolve(reader.result.split(',')[1]); };
+                    reader.readAsDataURL(blob);
+                });
+            })
+            .then(function(base64) {
+                var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
+                return fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64, prompt: prompt })
+                });
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var taskId = data.response && data.response.data && data.response.data.task_id;
+                if (!taskId) throw new Error('No task_id');
+                return pollFreepikTask(taskId);
+            })
+            .then(function(imageUrl) {
+                // Remove background
+                var removeBgUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_remove_bg';
+                return fetch(removeBgUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_url: imageUrl })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    var inner = data.response || {};
+                    var url = null;
+                    if (inner.data && inner.data.image && inner.data.image.url) url = inner.data.image.url;
+                    else if (inner.data && Array.isArray(inner.data) && inner.data[0] && inner.data[0].url) url = inner.data[0].url;
+                    else if (inner.image && inner.image.url) url = inner.image.url;
+                    return url || imageUrl;
+                }).catch(function() { return imageUrl; });
+            })
+            .then(function(finalUrl) {
+                // Upload permanently
+                return fetch(finalUrl).then(function(r) { return r.blob(); }).then(function(blob) {
+                    var formData = new FormData();
+                    formData.append('file', blob, 'pose.png');
+                    formData.append('extra', '{"session":"characters"}');
+                    return fetch(CONFIG.API + '/v3/upload/image', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + AuthService.getToken() },
+                        body: formData
+                    });
+                }).then(function(r) { return r.json(); }).then(function(res) {
+                    return res.uploads[0].url;
+                });
+            })
+            .then(function(permanentUrl) {
+                // Save to folder extra
+                $scope.poseUrls[item._id] = permanentUrl;
+                $scope.$applyAsync();
+                
+                ApiService.dbGet('folder', item._id).then(function(res) {
+                    var folder = res.data || {};
+                    var extra = folder.extra || {};
+                    extra.character_pose_url = permanentUrl;
+                    return ApiService.updateFolder(item._id, { extra: extra });
+                }).catch(function(err) { console.error('Failed to save pose URL:', err); });
+                
+                // Wait 60s before next
+                setTimeout(processNextPose, 60000);
+            })
+            .catch(function(err) {
+                console.warn('Pose generation failed for', item._id, err);
+                setTimeout(processNextPose, 60000);
+            });
+    }
+    
+    function pollFreepikTask(taskId) {
+        var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_status';
+        var maxAttempts = 30;
+        var attempt = 0;
+        return new Promise(function(resolve, reject) {
+            function check() {
+                attempt++;
+                if (attempt > maxAttempts) return reject(new Error('Timeout'));
+                fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task_id: taskId })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var inner = data.response && data.response.data || data.data || {};
+                    if (inner.status === 'COMPLETED') {
+                        var generated = inner.generated;
+                        if (generated && generated.length > 0) {
+                            var img = generated[0];
+                            var url = typeof img === 'string' ? img : (img.url || img.base64);
+                            if (url) return resolve(url);
+                        }
+                        return reject(new Error('No image'));
+                    } else if (inner.status === 'FAILED' || inner.status === 'ERROR') {
+                        return reject(new Error('Failed'));
+                    }
+                    setTimeout(check, 2000);
+                }).catch(reject);
+            }
+            setTimeout(check, 3000);
+        });
+    }
     
     init();
 });
