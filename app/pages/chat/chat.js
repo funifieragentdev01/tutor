@@ -510,7 +510,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                         type: 'realtime',
                         model: 'gpt-realtime-mini',
                         instructions: instructions,
-                        audio: { output: { voice: data.voice || 'coral' } }
+                        audio: { output: { voice: data.voice || 'coral' } },
+                        tools: voiceTools
                     }
                 })
             });
@@ -607,18 +608,23 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         switch(evt.type) {
             case 'session.created':
             case 'session.updated':
-                console.log('[Voice] ' + evt.type, JSON.stringify(evt).substring(0, 300));
+                console.log('[Voice] ' + evt.type, JSON.stringify(evt).substring(0, 500));
                 break;
 
             case 'response.function_call_arguments.done':
                 console.log('[Voice] Function call:', evt.name, evt.call_id, evt.arguments);
                 if (evt.name === 'end_call') {
-                    console.log('[Voice] Professor requested end_call');
+                    console.log('[Voice] Professor requested end_call — ending in 2s');
                     sendToolResult(evt.call_id, { success: true });
                     setTimeout(function() {
                         $scope.endCall();
-                    }, 3000);
+                        $scope.$applyAsync();
+                    }, 2000);
                 }
+                break;
+
+            case 'response.done':
+                console.log('[Voice] response.done');
                 break;
 
             case 'error':
