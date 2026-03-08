@@ -1,4 +1,4 @@
-// Chat Controller — AI Teacher Chat
+// Chat Controller — AI Teacher Chat + Voice Call
 app.controller('ChatController', function($scope, $location, $routeParams, $sce, AuthService, ApiService) {
     var childId = $routeParams.childId || AuthService.getUser();
     var isParent = AuthService.getRole() === 'parent';
@@ -8,6 +8,23 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     $scope.typing = false;
     $scope.loading = true;
     
+    // Voice mode
+    $scope.mode = 'text'; // 'text' or 'voice'
+    $scope.callStatus = 'idle'; // idle, connecting, connected
+    $scope.callStatusText = '';
+    $scope.isMuted = false;
+    $scope.callDuration = '00:00';
+    $scope.transcriptLines = [];
+    $scope.currentTeacherText = '';
+    
+    var pc = null;
+    var dc = null;
+    var audioEl = null;
+    var localStream = null;
+    var sessionData = null;
+    var callTimer = null;
+    var callStartTime = null;
+    
     var childProfile = null;
     var childPlayer = null;
     var folders = [];
@@ -15,6 +32,10 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     
     // Go back
     $scope.goBack = function() {
+        if ($scope.mode === 'voice') {
+            $scope.endCall();
+            return;
+        }
         if (isParent) {
             $location.path('/parent/child/' + childId);
         } else {
@@ -26,9 +47,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     $scope.formatMessage = function(text) {
         if (!text) return '';
         var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        // Bold
         escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        // Line breaks
         escaped = escaped.replace(/\n/g, '<br>');
         return $sce.trustAsHtml(escaped);
     };
@@ -44,6 +63,13 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     function scrollToBottom() {
         setTimeout(function() {
             var el = document.getElementById('chatMessages');
+            if (el) el.scrollTop = el.scrollHeight;
+        }, 50);
+    }
+    
+    function scrollTranscript() {
+        setTimeout(function() {
+            var el = document.getElementById('callTranscript');
             if (el) el.scrollTop = el.scrollHeight;
         }, 50);
     }
@@ -89,17 +115,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     // Load context data
     async function loadContext() {
         try {
-            // Load player
-            try {
-                childPlayer = await ApiService.getPlayer(childId);
-            } catch(e) {}
-            
-            // Load profile
-            try {
-                childProfile = await ApiService.getProfile(childId);
-            } catch(e) {}
-            
-            // Load folders (subjects)
+            try { childPlayer = await ApiService.getPlayer(childId); } catch(e) {}
+            try { childProfile = await ApiService.getProfile(childId); } catch(e) {}
             try {
                 var q = JSON.stringify({ player: childId, parent: { $exists: false } });
                 folders = await ApiService.dbQuery('folder__c', q);
@@ -107,7 +124,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             
             buildSystemPrompt();
             
-            // Load chat history
             try {
                 var pipeline = [
                     { $match: { player: childId } },
@@ -136,7 +152,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         
         $scope.userInput = '';
         
-        // Add user message
         var userMsg = {
             _id: 'msg_' + Date.now() + '_u',
             player: childId,
@@ -148,17 +163,14 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         $scope.typing = true;
         scrollToBottom();
         
-        // Save user message
         ApiService.dbSave('chat_message__c', userMsg).catch(function() {});
         
-        // Build messages for OpenAI
         var apiMessages = [{ role: 'system', content: systemPrompt }];
         var recent = $scope.messages.slice(-10);
         recent.forEach(function(m) {
             apiMessages.push({ role: m.role, content: m.content });
         });
         
-        // Call OpenAI
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -189,7 +201,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             $scope.$applyAsync();
             scrollToBottom();
             
-            // Save assistant message
             ApiService.dbSave('chat_message__c', assistantMsg).catch(function() {});
         })
         .catch(function() {
@@ -211,6 +222,235 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     $scope.onKeyPress = function(e) {
         if (e.which === 13) $scope.sendMessage();
     };
+    
+    // ==================== VOICE MODE ====================
+    
+    function buildVoiceInstructions(data) {
+        var name = data.player_name || 'aluno';
+        var age = '';
+        var description = '';
+        var interests = '';
+        var subjects = '';
+        var quizInfo = '';
+        
+        if (data.profile) {
+            age = data.profile.age || data.profile.age__c || '';
+            description = data.profile.description || '';
+            interests = data.profile.interests || data.profile.interests__c || '';
+        }
+        
+        if (data.folders && data.folders.length > 0) {
+            subjects = data.folders.map(function(f) { return f.name || f.title || ''; }).filter(Boolean).join(', ');
+        }
+        
+        if (data.quiz_results && data.quiz_results.length > 0) {
+            quizInfo = data.quiz_results.map(function(q) {
+                return (q.subject || q.folder_name || 'Quiz') + ': ' + (q.score != null ? q.score + ' pontos' : 'feito');
+            }).join('; ');
+        }
+        
+        var instr = 'Voce eh o Professor Tutor, professor particular virtual para criancas. ' +
+            'IDIOMA: SEMPRE fale em PORTUGUES BRASILEIRO. ' +
+            'Tom: paciente, encorajador, divertido, use linguagem adequada para a idade da crianca. ' +
+            'Voce ja conhece este aluno. NAO pergunte quem ele eh. Comece cumprimentando pelo nome.\n\n' +
+            'ALUNO: ' + name + (age ? ' (' + age + ' anos)' : '') + '\n';
+        
+        if (description) instr += 'DESCRICAO DO ALUNO (escrita pelos pais): ' + description + '\n';
+        if (interests) instr += 'INTERESSES: ' + interests + '\n';
+        if (subjects) instr += 'MATERIAS QUE ESTUDA: ' + subjects + '\n';
+        if (quizInfo) instr += 'DESEMPENHO RECENTE EM QUIZ: ' + quizInfo + '\n';
+        
+        instr += '\nREGRAS:\n' +
+            '- Adapte explicacoes para a idade\n' +
+            '- Respostas curtas (2-3 frases)\n' +
+            '- Elogie o esforco\n' +
+            '- Seja divertido e use analogias\n' +
+            '- A crianca pode pedir para criar novos conteudos — neste caso, encoraje e diga que em breve sera possivel\n' +
+            '- Se a crianca parecer desanimada, motive e sugira uma abordagem diferente';
+        
+        return instr;
+    }
+    
+    $scope.startCall = async function() {
+        $scope.mode = 'voice';
+        $scope.callStatus = 'connecting';
+        $scope.callStatusText = 'Conectando...';
+        $scope.transcriptLines = [];
+        $scope.currentTeacherText = '';
+        $scope.$applyAsync();
+        
+        try {
+            // 1. Get session data from tutor_session endpoint
+            var res = await fetch(CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/tutor_session', {
+                method: 'POST',
+                headers: {
+                    'Authorization': CONFIG.BASIC_TOKEN,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ player_id: childId })
+            });
+            sessionData = await res.json();
+            
+            if (!sessionData || !sessionData.api_key) {
+                throw new Error('Failed to get session data');
+            }
+            
+            // 2. Build instructions
+            var instructions = buildVoiceInstructions(sessionData);
+            
+            // 3. Get ephemeral key with instructions baked in
+            var ephRes = await fetch('https://api.openai.com/v1/realtime/sessions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + sessionData.api_key,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: sessionData.model || 'gpt-4o-realtime-mini-2025-01-21',
+                    voice: sessionData.voice || 'coral',
+                    instructions: instructions,
+                    input_audio_transcription: { model: 'whisper-1' }
+                })
+            });
+            var ephData = await ephRes.json();
+            
+            if (!ephData.client_secret) {
+                console.error('Ephemeral key error:', ephData);
+                throw new Error('Failed to get ephemeral key');
+            }
+            
+            var ephemeralKey = ephData.client_secret.value;
+            
+            // 4. Set up WebRTC
+            pc = new RTCPeerConnection();
+            
+            // Audio output
+            audioEl = document.createElement('audio');
+            audioEl.autoplay = true;
+            pc.ontrack = function(e) {
+                audioEl.srcObject = e.streams[0];
+            };
+            
+            // Audio input
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            localStream.getTracks().forEach(function(track) {
+                pc.addTrack(track, localStream);
+            });
+            
+            // Data channel
+            dc = pc.createDataChannel('oai-events');
+            dc.onmessage = function(e) {
+                handleRealtimeEvent(JSON.parse(e.data));
+            };
+            dc.onopen = function() {
+                console.log('Data channel open');
+            };
+            
+            // Connection state
+            pc.oniceconnectionstatechange = function() {
+                if (pc.iceConnectionState === 'connected') {
+                    $scope.callStatus = 'connected';
+                    $scope.callStatusText = 'Conectado';
+                    callStartTime = Date.now();
+                    callTimer = setInterval(updateCallDuration, 1000);
+                    $scope.$applyAsync();
+                } else if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+                    $scope.endCall();
+                }
+            };
+            
+            // Create offer and connect
+            var offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            
+            var sdpRes = await fetch('https://api.openai.com/v1/realtime?model=' + (sessionData.model || 'gpt-4o-realtime-mini-2025-01-21'), {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + ephemeralKey,
+                    'Content-Type': 'application/sdp'
+                },
+                body: offer.sdp
+            });
+            
+            var answerSdp = await sdpRes.text();
+            await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+            
+        } catch(err) {
+            console.error('Voice call error:', err);
+            $scope.callStatus = 'idle';
+            $scope.callStatusText = '';
+            $scope.mode = 'text';
+            $scope.$applyAsync();
+            alert('Não foi possível iniciar a chamada. Verifique o microfone.');
+        }
+    };
+    
+    function handleRealtimeEvent(evt) {
+        if (!evt || !evt.type) return;
+        
+        if (evt.type === 'response.audio_transcript.delta') {
+            $scope.currentTeacherText += (evt.delta || '');
+            $scope.$applyAsync();
+            scrollTranscript();
+        }
+        
+        if (evt.type === 'response.audio_transcript.done') {
+            if ($scope.currentTeacherText) {
+                $scope.transcriptLines.push({ role: 'teacher', text: $scope.currentTeacherText });
+                $scope.currentTeacherText = '';
+                $scope.$applyAsync();
+                scrollTranscript();
+            }
+        }
+        
+        if (evt.type === 'conversation.item.input_audio_transcription.completed') {
+            var childText = evt.transcript || '';
+            if (childText.trim()) {
+                $scope.transcriptLines.push({ role: 'child', text: childText.trim() });
+                $scope.$applyAsync();
+                scrollTranscript();
+            }
+        }
+    }
+    
+    function updateCallDuration() {
+        if (!callStartTime) return;
+        var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+        var min = Math.floor(elapsed / 60);
+        var sec = elapsed % 60;
+        $scope.callDuration = (min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec;
+        $scope.$applyAsync();
+    }
+    
+    $scope.toggleMute = function() {
+        $scope.isMuted = !$scope.isMuted;
+        if (localStream) {
+            localStream.getAudioTracks().forEach(function(track) {
+                track.enabled = !$scope.isMuted;
+            });
+        }
+    };
+    
+    $scope.endCall = function() {
+        if (callTimer) { clearInterval(callTimer); callTimer = null; }
+        if (localStream) { localStream.getTracks().forEach(function(t) { t.stop(); }); localStream = null; }
+        if (dc) { try { dc.close(); } catch(e) {} dc = null; }
+        if (pc) { try { pc.close(); } catch(e) {} pc = null; }
+        if (audioEl) { audioEl.srcObject = null; audioEl = null; }
+        
+        $scope.callStatus = 'idle';
+        $scope.callStatusText = '';
+        $scope.mode = 'text';
+        $scope.isMuted = false;
+        $scope.currentTeacherText = '';
+        callStartTime = null;
+        $scope.$applyAsync();
+    };
+    
+    // Cleanup on scope destroy
+    $scope.$on('$destroy', function() {
+        if ($scope.mode === 'voice') $scope.endCall();
+    });
     
     // Init
     loadContext();

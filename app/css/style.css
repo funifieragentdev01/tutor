@@ -1178,3 +1178,171 @@ body.has-bottom-nav .app-version {
     /* children-list is already full-width */
     .question-text { font-size: 16px; }
 }
+
+/* ===== Voice Call UI ===== */
+.call-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px 20px;
+    flex: 1;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    min-height: calc(100vh - 56px);
+}
+
+.call-avatar-large {
+    font-size: 80px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 4px 20px rgba(108, 92, 231, 0.4));
+}
+
+.call-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.call-status {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.call-status.pulse .call-status-dot {
+    animation: callPulse 1.2s ease-in-out infinite;
+}
+
+.call-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    background: #666;
+}
+.call-status-dot.green { background: #00b894; }
+.call-status-dot.yellow { background: #fdcb6e; }
+
+.call-timer {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 16px;
+}
+
+.call-transcript {
+    flex: 1;
+    width: 100%;
+    max-width: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    min-height: 120px;
+    max-height: 40vh;
+}
+
+.transcript-line {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.4;
+}
+
+.transcript-line.child {
+    justify-content: flex-end;
+}
+
+.transcript-line.child .transcript-text {
+    background: rgba(108, 92, 231, 0.3);
+    padding: 6px 10px;
+    border-radius: 12px;
+}
+
+.transcript-line.teacher .transcript-text {
+    background: rgba(255,255,255,0.08);
+    padding: 6px 10px;
+    border-radius: 12px;
+}
+
+.transcript-line.current .transcript-text {
+    opacity: 0.6;
+}
+
+.transcript-role {
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.call-controls {
+    display: flex;
+    gap: 30px;
+    padding-bottom: 20px;
+}
+
+.btn-call-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.btn-call-action span {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    background: rgba(255,255,255,0.1);
+    transition: background 0.2s;
+}
+
+.btn-call-action small {
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+}
+
+.btn-mute.active span {
+    background: rgba(231, 76, 60, 0.3);
+}
+
+.btn-endcall span {
+    background: #e74c3c !important;
+    transform: rotate(135deg);
+}
+
+.chat-mic-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(108, 92, 231, 0.15);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.chat-mic-btn:hover {
+    background: rgba(108, 92, 231, 0.3);
+}
+
+@keyframes callPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
