@@ -10,10 +10,10 @@
 
     <!-- Tabs -->
     <div class="edit-tabs">
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'profile'}" ng-click="setTab('profile')">👤 Perfil</button>
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'character'}" ng-click="setTab('character')">🎨 Personagem</button>
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'sounds'}" ng-click="setTab('sounds')">🔊 Sons</button>
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'stickers'}" ng-click="setTab('stickers')">😂 Figurinhas</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'profile'}" ng-click="setTab('profile')"><i class="fa-solid fa-user"></i> Perfil</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'character'}" ng-click="setTab('character')"><i class="fa-solid fa-palette"></i> Personagem</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'sounds'}" ng-click="setTab('sounds')"><i class="fa-solid fa-volume-high"></i> Sons</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'stickers'}" ng-click="setTab('stickers')"><i class="fa-solid fa-face-laugh"></i> Figurinhas</button>
     </div>
 
     <!-- Tab: Profile -->
@@ -22,7 +22,7 @@
         <div class="photo-upload-area" ng-click="pickPhoto('profile')">
             <img ng-if="profilePhotoUrl" ng-src="{{profilePhotoUrl}}" class="photo-preview-round">
             <div ng-if="!profilePhotoUrl" class="photo-placeholder-round">
-                <span class="photo-placeholder-icon">📷</span>
+                <span class="photo-placeholder-icon"><i class="fa-solid fa-camera"></i></span>
                 <span>Foto de perfil</span>
             </div>
         </div>
@@ -70,7 +70,7 @@
 
     <!-- Tab: Character -->
     <div class="wizard-content" ng-if="tab === 'character'">
-        <div class="wizard-icon">🎨</div>
+        <div class="wizard-icon"><i class="fa-solid fa-palette" style="font-size:48px;color:var(--primary)"></i></div>
         <h2 class="wizard-title">Personagem</h2>
         <p class="wizard-subtitle">Tire uma foto de corpo inteiro com a roupa favorita para criar o personagem de {{child.name}}.</p>
 
@@ -128,7 +128,7 @@
 
     <!-- Tab: Sounds -->
     <div class="wizard-content" ng-if="tab === 'sounds'">
-        <div class="wizard-icon">🔊</div>
+        <div class="wizard-icon"><i class="fa-solid fa-volume-high" style="font-size:48px;color:var(--primary)"></i></div>
         <h2 class="wizard-title">Sons de Feedback</h2>
         <p class="wizard-subtitle">Escolha sons que {{child.name}} ache legais como recompensa ao acertar!</p>
 
@@ -160,7 +160,7 @@
 
     <!-- Tab: Stickers -->
     <div class="wizard-content" ng-if="tab === 'stickers'">
-        <div class="wizard-icon">😂</div>
+        <div class="wizard-icon"><i class="fa-solid fa-face-laugh" style="font-size:48px;color:var(--primary)"></i></div>
         <h2 class="wizard-title">Figurinhas e Memes</h2>
         <p class="wizard-subtitle">Imagens que fazem {{child.name}} rir! Serão usadas como recompensa surpresa.</p>
 

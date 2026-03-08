@@ -4,11 +4,7 @@
         <div class="header-left">
             <span class="header-greeting">Olá, {{parentName}}!</span>
         </div>
-        <div class="header-right">
-            <button class="btn-icon" ng-click="logout()">
-                <span class="icon">↩</span>
-            </button>
-        </div>
+        <div class="header-right"></div>
     </div>
 
     <!-- Children List -->
@@ -31,18 +27,18 @@
                     </div>
                     <span class="child-arrow">›</span>
                 </div>
-                <div class="child-actions-wide">
-                    <button class="btn-child-action-wide" ng-click="captureChild(child, $event)">
-                        <span class="action-icon"><i class="fa-solid fa-camera"></i></span><span class="action-label">Capturar</span>
+                <div class="child-actions-menu">
+                    <button class="btn-child-action-menu" ng-click="captureChild(child, $event)">
+                        <i class="fa-solid fa-camera action-icon-fa"></i><span class="action-label">Capturar</span>
                     </button>
-                    <button class="btn-child-action-wide" ng-click="openExams(child, $event)">
-                        <span class="action-icon"><i class="fa-solid fa-calendar"></i></span><span class="action-label">Provas</span>
+                    <button class="btn-child-action-menu" ng-click="openExams(child, $event)">
+                        <i class="fa-solid fa-calendar action-icon-fa"></i><span class="action-label">Provas</span>
                     </button>
-                    <button class="btn-child-action-wide" ng-click="editChild(child, $event)">
-                        <span class="action-icon"><i class="fa-solid fa-pen"></i></span><span class="action-label">Editar</span>
+                    <button class="btn-child-action-menu" ng-click="editChild(child, $event)">
+                        <i class="fa-solid fa-pen action-icon-fa"></i><span class="action-label">Editar</span>
                     </button>
-                    <button class="btn-child-action-wide btn-action-delete" ng-click="deleteChild(child, $event)">
-                        <span class="action-icon"><i class="fa-solid fa-trash"></i></span><span class="action-label">Excluir</span>
+                    <button class="btn-child-action-menu btn-action-delete" ng-click="deleteChild(child, $event)">
+                        <i class="fa-solid fa-trash action-icon-fa"></i><span class="action-label">Excluir</span>
                     </button>
                 </div>
             </div>

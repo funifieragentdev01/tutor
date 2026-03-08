@@ -93,29 +93,45 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             else { w = w * maxSize / h; h = maxSize; }
             canvas.width = w; canvas.height = h;
             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            var resized = canvas.toDataURL('image/jpeg', 0.8);
             
-            var imageObj = {
-                small: { url: resized, size: 0, width: w, height: h, depth: 0 },
-                medium: { url: resized, size: 0, width: w, height: h, depth: 0 },
-                original: { url: resized, size: 0, width: w, height: h, depth: 0 }
-            };
-            // Use POST /v3/player (not /v3/database/player) to properly save image
-            console.log('[EditChild] Saving profile photo for:', childId);
-            $http.post(CONFIG.API + '/v3/player', {
-                _id: childId,
-                name: $scope.child.name || '',
-                email: childId,
-                image: imageObj
-            }, AuthService.authHeader()).then(function(response) {
-                console.log('[EditChild] Profile photo saved successfully:', response.data);
-                flashSaved();
-                $scope.$applyAsync();
-            }).catch(function(err) {
-                console.error('[EditChild] Failed to save profile photo:', err);
-                $scope.error = 'Erro ao salvar foto do perfil. Tente novamente.';
-                $scope.$applyAsync();
-            });
+            // Convert canvas to blob and upload to Funifier S3
+            canvas.toBlob(function(blob) {
+                var formData = new FormData();
+                formData.append('file', blob, 'profile.jpg');
+                formData.append('extra', JSON.stringify({ session: 'profiles' }));
+                
+                console.log('[EditChild] Uploading profile photo to S3 for:', childId);
+                $http.post(CONFIG.API + '/v3/upload/image', formData, {
+                    headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+                    transformRequest: angular.identity
+                }).then(function(uploadRes) {
+                    var s3Url = uploadRes.data.uploads[0].url;
+                    console.log('[EditChild] Photo uploaded to S3:', s3Url);
+                    
+                    $scope.profilePhotoUrl = s3Url;
+                    
+                    var imageObj = {
+                        small: { url: s3Url, size: 0, width: w, height: h, depth: 0 },
+                        medium: { url: s3Url, size: 0, width: w, height: h, depth: 0 },
+                        original: { url: s3Url, size: 0, width: w, height: h, depth: 0 }
+                    };
+                    
+                    return $http.post(CONFIG.API + '/v3/player', {
+                        _id: childId,
+                        name: $scope.child.name || '',
+                        email: childId,
+                        image: imageObj
+                    }, AuthService.authHeader());
+                }).then(function(response) {
+                    console.log('[EditChild] Profile photo saved successfully:', response.data);
+                    flashSaved();
+                    $scope.$applyAsync();
+                }).catch(function(err) {
+                    console.error('[EditChild] Failed to save profile photo:', err);
+                    $scope.error = 'Erro ao salvar foto do perfil. Tente novamente.';
+                    $scope.$applyAsync();
+                });
+            }, 'image/jpeg', 0.8);
         };
         img.src = dataUrl;
     }
@@ -264,16 +280,14 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         var base64 = photoDataUrl.split(',')[1];
         
         // Use Funifier Public Endpoint as proxy (Freepik API blocks CORS from browser)
-        var prompt = 'Create a flat-design cartoon character based on the reference photo. ' +
-            'Style: Duolingo mascot / Headspace characters. ' +
-            'PROPORTIONS: Very large oversized head (about 40% of total height), small compact body, short stubby legs. Chibi/kawaii proportions. ' +
-            'NO outlines, NO borders, NO strokes around shapes. ' +
-            'Solid flat colors only, no gradients, no shading, no shadows. ' +
-            'Simple geometric shapes, minimal details, big round eyes. ' +
-            'Friendly, cute, child-appropriate. ' +
-            'Full body, front-facing, standing pose. ' +
-            'Solid white background (#FFFFFF). ' +
-            'IMPORTANT: Only ONE character, no duplicates, no mirror images.';
+        var prompt = 'Create a cute cartoon character inspired by the reference photo. ' +
+            'CRITICAL: Preserve the person\'s distinctive features — hair style, hair color, hair length (if curly keep curly, if long keep long), skin tone, clothing colors and style. ' +
+            'Style: Friendly flat-design cartoon, like Duolingo characters. ' +
+            'Slightly larger head proportions (cartoon-style, not extreme). ' +
+            'NO outlines, NO borders. Solid flat colors, no gradients, no shadows. ' +
+            'Simple but recognizable — someone who knows the person should recognize the character. ' +
+            'Full body, front-facing, standing pose. White background (#FFFFFF). ' +
+            'Only ONE character.';
         
         var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
         

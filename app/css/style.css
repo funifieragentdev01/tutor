@@ -484,25 +484,27 @@ body {
 .child-name-lg { font-size: 20px; font-weight: 700; }
 .child-stats-lg { font-size: 14px; color: var(--text-light); margin-top: 4px; }
 .child-arrow { font-size: 28px; color: var(--text-light); font-weight: 300; }
-.child-actions-wide {
+.child-actions-menu {
     display: flex;
+    flex-direction: column;
     border-top: 1px solid var(--border);
 }
-.btn-child-action-wide {
-    flex: 1;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 14px 8px;
+.btn-child-action-menu {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px;
+    height: 52px;
     background: none; border: none;
     font-size: 15px; color: var(--text);
     cursor: pointer; transition: background 0.15s;
-    min-height: 48px;
+    font-family: var(--font);
 }
-.btn-child-action-wide:not(:last-child) { border-right: 1px solid var(--border); }
-.btn-child-action-wide:active { background: var(--bg); }
-.action-icon { font-size: 20px; }
+.btn-child-action-menu:not(:last-child) { border-bottom: 1px solid var(--border); }
+.btn-child-action-menu:active { background: var(--bg); }
+.action-icon-fa { font-size: 18px; width: 24px; text-align: center; color: var(--text-light); }
 .action-label { font-weight: 500; }
 .btn-action-delete { color: #999; }
-.btn-action-delete:active { background: #ffeaea; }
+.btn-action-delete .action-icon-fa { color: #999; }
+.btn-action-delete:active { background: rgba(255,75,75,0.1); }
 .btn-add-child {
     border: 2px dashed var(--border);
     background: transparent;

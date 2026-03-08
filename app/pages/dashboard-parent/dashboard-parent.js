@@ -51,16 +51,21 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     }
     
     function loadChildAvatar(child) {
-        // If player.image not set, try character_url from profile__c
-        if (!child.image || !child.image.small || !child.image.small.url) {
-            ApiService.dbGet('profile__c', child._id).then(function(res) {
-                var profile = res.data || {};
-                if (profile.character_url) {
-                    child.image = { small: { url: profile.character_url }, medium: { url: profile.character_url }, original: { url: profile.character_url } };
-                    $scope.$applyAsync();
-                }
-            }).catch(function() {});
-        }
+        // Check if player.image has a real URL (not data: URI)
+        var hasRealImage = child.image && child.image.small && child.image.small.url && child.image.small.url.indexOf('data:') !== 0;
+        
+        // Always check profile__c for character_url as fallback
+        ApiService.dbGet('profile__c', child._id).then(function(res) {
+            var profile = res.data || {};
+            if (!hasRealImage && profile.character_url) {
+                child.image = { small: { url: profile.character_url }, medium: { url: profile.character_url }, original: { url: profile.character_url } };
+                $scope.$applyAsync();
+            } else if (!hasRealImage && !profile.character_url) {
+                // No image at all — clear so letter initial shows
+                child.image = null;
+                $scope.$applyAsync();
+            }
+        }).catch(function() {});
     }
     
     function loadChildSubjectCount(child) {
