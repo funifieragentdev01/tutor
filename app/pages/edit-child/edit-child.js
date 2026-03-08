@@ -262,42 +262,21 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         
         var base64 = photoDataUrl.split(',')[1];
         
-        // Step 1: Describe the child using GPT-4o-mini Vision
-        var describeBody = {
-            model: 'gpt-4o-mini',
-            messages: [{
-                role: 'user',
-                content: [
-                    { type: 'text', text: 'Describe this child in detail for a character illustration. Include: gender, skin tone, hair type and color, eye color, clothing, and any visible accessories. Reply ONLY with the description in English, in a short paragraph.' },
-                    { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64, detail: 'low' } }
-                ]
-            }],
-            max_tokens: 200
-        };
+        // Single step: Send photo as reference image to Freepik Flux 2 Klein
+        var prompt = 'Turn the person from the reference photo into a simplified cartoon mascot. ' +
+            'Use a cute, playful, child-friendly style consistent with educational apps like Duolingo. ' +
+            'Flat colors, clean outlines, no gradients, no realistic shading. ' +
+            'IMPORTANT: Show only ONE character. Full body, standing pose, white background. ' +
+            'No duplicate characters, no mirror images, no multiple views.';
         
-        fetch('https://api.openai.com/v1/chat/completions', {
+        fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-klein', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.OPENAI_API_KEY },
-            body: JSON.stringify(describeBody)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            var description = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-            if (!description) throw new Error('Sem descricao');
-            
-            // Step 2: Generate character with Freepik Flux 2 Pro (Duolingo style)
-            var prompt = 'Turn the following person into a simplified cartoon mascot. Use a cute, playful, child-friendly style consistent with educational apps like Duolingo. ' +
-                'Flat colors, clean outlines, no gradients, no realistic shading. Single character, full body, standing pose, white background. ' +
-                description;
-            
-            return fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-pro', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-freepik-api-key': CONFIG.FREEPIK_API_KEY },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    image: { size: 'square_1_1' }
-                })
-            });
+            headers: { 'Content-Type': 'application/json', 'x-freepik-api-key': CONFIG.FREEPIK_API_KEY },
+            body: JSON.stringify({
+                prompt: prompt,
+                input_image: base64,
+                aspect_ratio: 'square_1_1'
+            })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -327,7 +306,7 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 attempt++;
                 if (attempt > maxAttempts) return reject(new Error('Timeout gerando personagem'));
                 
-                fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-pro/' + taskId, {
+                fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-klein/' + taskId, {
                     headers: { 'x-freepik-api-key': CONFIG.FREEPIK_API_KEY }
                 })
                 .then(function(r) { return r.json(); })
