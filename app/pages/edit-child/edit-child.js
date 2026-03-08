@@ -372,17 +372,17 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            var inner = data.response || {};
-            // Freepik remove-bg returns data.image.url or data[0].url etc
-            var imgUrl = null;
-            if (inner.data && inner.data.image && inner.data.image.url) {
-                imgUrl = inner.data.image.url;
-            } else if (inner.data && Array.isArray(inner.data) && inner.data[0] && inner.data[0].url) {
-                imgUrl = inner.data[0].url;
-            } else if (inner.image && inner.image.url) {
-                imgUrl = inner.image.url;
+            var inner = data.response || data || {};
+            // Freepik remove-bg API returns: {original, high_resolution, preview}
+            var imgUrl = inner.high_resolution || inner.preview || null;
+            // Also check nested structures
+            if (!imgUrl && inner.data) {
+                var d = inner.data;
+                imgUrl = d.high_resolution || d.preview || (d.image && d.image.url) || null;
+                if (!imgUrl && Array.isArray(d) && d[0]) imgUrl = d[0].url || d[0].high_resolution;
             }
             if (!imgUrl) throw new Error('No URL in remove-bg response: ' + JSON.stringify(data).substring(0, 300));
+            console.log('[EditChild] Background removed, URL:', imgUrl.substring(0, 80));
             return imgUrl;
         });
     }
@@ -464,13 +464,14 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             body: JSON.stringify({ url: imageUrl })
         }).then(function(r) { return r.json(); })
         .then(function(data) {
-            var b64 = data.response && data.response.base64;
+            var b64 = data.base64 || (data.response && data.response.base64);
             if (!b64) throw new Error('Proxy returned no base64: ' + JSON.stringify(data).substring(0, 200));
+            var contentType = data.contentType || 'image/png';
             var byteStr = atob(b64);
             var ab = new ArrayBuffer(byteStr.length);
             var ia = new Uint8Array(ab);
             for (var j = 0; j < byteStr.length; j++) ia[j] = byteStr.charCodeAt(j);
-            return new Blob([ab], { type: 'image/png' });
+            return new Blob([ab], { type: contentType });
         });
     }
     
