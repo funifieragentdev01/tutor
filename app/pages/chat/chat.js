@@ -426,27 +426,29 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             $scope.callStatusText = 'Obtendo chave...';
             $scope.$applyAsync();
             console.log('[Voice] Step 3: Getting ephemeral key...');
-            var ephRes = await fetch('https://api.openai.com/v1/realtime/sessions', {
+            var ephRes = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + sessionData.api_key,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: sessionData.model || 'gpt-4o-realtime-mini-2025-01-21',
-                    voice: sessionData.voice || 'coral',
-                    instructions: instructions,
-                    input_audio_transcription: { model: 'whisper-1' }
+                    session: {
+                        type: 'realtime',
+                        model: sessionData.model || 'gpt-4o-realtime-mini-2025-01-21',
+                        instructions: instructions,
+                        audio: { output: { voice: sessionData.voice || 'coral' } },
+                        input_audio_transcription: { model: 'whisper-1' }
+                    }
                 })
             });
             var ephData = await ephRes.json();
-            console.log('[Voice] Ephemeral response:', ephData.client_secret ? 'OK' : JSON.stringify(ephData).substring(0, 200));
+            console.log('[Voice] Ephemeral response:', (ephData.value || (ephData.client_secret && ephData.client_secret.value)) ? 'OK' : JSON.stringify(ephData).substring(0, 200));
             
-            if (!ephData.client_secret) {
+            var ephemeralKey = ephData.value || (ephData.client_secret && ephData.client_secret.value);
+            if (!ephemeralKey) {
                 throw new Error('No client_secret: ' + JSON.stringify(ephData).substring(0, 100));
             }
-            
-            var ephemeralKey = ephData.client_secret.value;
             
             // 4. Request microphone
             $scope.callStatusText = 'Acessando microfone...';
@@ -498,7 +500,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             await pc.setLocalDescription(offer);
             console.log('[Voice] Step 6: SDP offer created, sending to OpenAI...');
             
-            var sdpRes = await fetch('https://api.openai.com/v1/realtime?model=' + encodeURIComponent(sessionData.model || 'gpt-4o-realtime-mini-2025-01-21'), {
+            var sdpRes = await fetch('https://api.openai.com/v1/realtime/calls', {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + ephemeralKey,
