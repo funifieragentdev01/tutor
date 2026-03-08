@@ -391,21 +391,25 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             '- Seja divertido e use analogias\n' +
             '- A crianca pode pedir para criar novos conteudos — neste caso, encoraje e diga que em breve sera possivel\n' +
             '- Se a crianca parecer desanimada, motive e sugira uma abordagem diferente\n' +
-            '- Quando o aluno disser tchau, que ja entendeu, que pode desligar, ou pedir para encerrar, despeca-se carinhosamente e use a funcao end_call para encerrar a ligacao\n' +
-            '- IMPORTANTE: Sempre chame end_call quando a conversa terminar para nao desperdicar recursos';
+            '- Quando o aluno disser tchau ou pedir para encerrar, despeca-se carinhosamente dizendo "tchau" ou "ate logo"';
         
         return instr;
     }
     
-    // Voice tools — allows Professor to end the call
-    var voiceTools = [
-        {
-            type: 'function',
-            name: 'end_call',
-            description: 'Encerra a ligacao quando o aluno disser tchau, que ja entendeu, que pode desligar, ou quando a conversa naturalmente terminar. Sempre se despeca antes de chamar esta funcao.',
-            parameters: { type: 'object', properties: {}, required: [] }
+    // Auto-hangup: detect farewell patterns in AI transcript
+    var farewellPatterns = /\b(tchau|at[eé] (?:logo|mais|a pr[oó]xima)|bons estudos|boa sorte|foi um prazer|nos vemos|at[eé] breve|falou|bye|adeus)\b/i;
+    var pendingHangup = null;
+
+    function checkAutoHangup(text) {
+        if (!text || pendingHangup) return;
+        if (farewellPatterns.test(text)) {
+            console.log('[Voice] Farewell detected in AI speech:', text.substring(0, 80));
+            pendingHangup = setTimeout(function() {
+                console.log('[Voice] Auto-hanging up after farewell');
+                $scope.endCall();
+            }, 4000); // 4s delay to let farewell finish playing
         }
-    ];
+    }
 
     // Voice call — identical pattern to Orvya fitness Coach (promise chains)
     $scope.startCall = function() {
@@ -444,8 +448,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                         type: 'realtime',
                         model: 'gpt-realtime-mini',
                         instructions: instructions,
-                        tools: voiceTools,
-                        tool_choice: 'auto',
                         audio: { output: { voice: data.voice || 'coral' } }
                     }
                 })
@@ -511,19 +513,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 dc = pc.createDataChannel('oai-events');
                 dc.onopen = function() {
                     console.log('[Voice] Data channel open');
-                    // Send session.update to reinforce tools registration
-                    try {
-                        dc.send(JSON.stringify({
-                            type: 'session.update',
-                            session: {
-                                tools: voiceTools,
-                                tool_choice: 'auto'
-                            }
-                        }));
-                        console.log('[Voice] session.update sent with tools');
-                    } catch(e) {
-                        console.error('[Voice] session.update failed:', e);
-                    }
                 };
                 dc.onmessage = function(e) {
                     try { handleRealtimeEvent(JSON.parse(e.data)); } catch(ex) {}
@@ -552,38 +541,17 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     function handleRealtimeEvent(evt) {
         if (!evt || !evt.type) return;
         
-        // Log all events for debugging
+        // Log non-audio events for debugging
         if (evt.type !== 'response.audio.delta') {
-            console.log('[Voice] Event:', evt.type, evt.name || '');
+            console.log('[Voice] Event:', evt.type);
         }
 
-        // Handle function calls from the AI
-        if (evt.type === 'response.function_call_arguments.done') {
-            console.log('[Voice] Function call received:', evt.name, evt.call_id);
-            if (evt.name === 'end_call') {
-                console.log('[Voice] Professor requested end_call — sending result and hanging up');
-                // Must send function_call_output back, then trigger response, then hang up
-                if (dc && dc.readyState === 'open') {
-                    dc.send(JSON.stringify({
-                        type: 'conversation.item.create',
-                        item: {
-                            type: 'function_call_output',
-                            call_id: evt.call_id,
-                            output: JSON.stringify({ success: true, message: 'Ligacao encerrada' })
-                        }
-                    }));
-                    dc.send(JSON.stringify({ type: 'response.create' }));
-                }
-                // Delay to let farewell audio finish
-                setTimeout(function() {
-                    $scope.endCall();
-                }, 3000);
-            }
+        // Detect farewell in AI's completed transcript
+        if (evt.type === 'response.audio_transcript.done' && evt.transcript) {
+            console.log('[Voice] AI said:', evt.transcript.substring(0, 100));
+            checkAutoHangup(evt.transcript);
         }
 
-        if (evt.type === 'session.created' || evt.type === 'session.updated') {
-            console.log('[Voice]', evt.type, JSON.stringify(evt).substring(0, 300));
-        }
         if (evt.type === 'error') {
             console.error('[Voice] API Error:', JSON.stringify(evt));
         }
@@ -608,6 +576,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     };
     
     $scope.endCall = function() {
+        if (pendingHangup) { clearTimeout(pendingHangup); pendingHangup = null; }
         if (callTimer) { clearInterval(callTimer); callTimer = null; }
         if (localStream) { localStream.getTracks().forEach(function(t) { t.stop(); }); localStream = null; }
         if (dc) { try { dc.close(); } catch(e) {} dc = null; }
