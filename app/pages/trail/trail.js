@@ -178,6 +178,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     
     function updateDuolingoFlag() {
         $scope.showDuolingoTrail = !$scope.isParent && $scope.currentLevel === 'subject';
+        $scope.showSubjectGrid = !$scope.isParent && $scope.currentLevel === 'root';
     }
     
     function loadDuolingoTrail(modules) {

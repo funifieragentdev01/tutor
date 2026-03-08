@@ -85,8 +85,29 @@
         </div>
     </div>
 
-    <!-- ============ ORIGINAL LIST VIEW (parent or non-subject) ============ -->
-    <div class="section-pad" ng-if="!showDuolingoTrail">
+    <!-- ============ SUBJECT GRID VIEW (child + root level) ============ -->
+    <div class="section-pad" ng-if="!showDuolingoTrail && showSubjectGrid">
+        <div class="subject-grid" ng-if="items.length > 0">
+            <div class="subject-card" ng-repeat="item in items | orderBy:'position'" ng-click="openItem(item)">
+                <div class="subject-card-icon" ng-style="{'background-color': getIconColor(item)}">
+                    <i ng-if="isFaIcon(getIcon(item))" class="fa-solid {{getIcon(item)}}"></i>
+                    <span ng-if="!isFaIcon(getIcon(item))">{{getIcon(item)}}</span>
+                </div>
+                <div class="subject-card-title">{{item.title}}</div>
+                <div class="subject-card-progress" ng-if="item.total > 0">{{(item.percent || 0) | number:0}}%</div>
+            </div>
+        </div>
+
+        <!-- Empty state for child root -->
+        <div class="empty-state" ng-if="items.length === 0 && !loading">
+            <div class="empty-icon">📚</div>
+            <h3>Nenhuma disciplina ainda</h3>
+            <p>Peça ao responsável para adicionar conteúdo.</p>
+        </div>
+    </div>
+
+    <!-- ============ ORIGINAL LIST VIEW (parent or non-root-child) ============ -->
+    <div class="section-pad" ng-if="!showDuolingoTrail && !showSubjectGrid">
         <div class="folder-list" ng-if="items.length > 0">
             <div class="folder-item" ng-repeat="item in items | orderBy:'position'" 
                  ng-click="openItem(item)"
