@@ -1,6 +1,6 @@
 app.controller('ParentDashboardController', function($scope, $location, $rootScope, AuthService, ApiService) {
     var CHILDREN_KEY = 'tutor_children';
-    var COLORS = ['#6C5CE7', '#00B894', '#FD79A8', '#FDCB6E', '#74B9FF', '#FF6B6B', '#A29BFE', '#00CEC9'];
+    var COLORS = ['#FF9600', '#00B894', '#FD79A8', '#FDCB6E', '#74B9FF', '#FF6B6B', '#FFB84D', '#00CEC9'];
     
     $scope.parentName = '';
     $scope.children = [];
@@ -38,6 +38,7 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
                 if (child && child._id) {
                     child.color = COLORS[$scope.children.length % COLORS.length];
                     loadChildSubjectCount(child);
+                    loadChildAvatar(child);
                     $scope.children.push(child);
                 }
                 loaded++;
@@ -47,6 +48,19 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
                 if (loaded >= childIds.length) $scope.loading = false;
             });
         });
+    }
+    
+    function loadChildAvatar(child) {
+        // If player.image not set, try character_url from profile__c
+        if (!child.image || !child.image.small || !child.image.small.url) {
+            ApiService.dbGet('profile__c', child._id).then(function(res) {
+                var profile = res.data || {};
+                if (profile.character_url) {
+                    child.image = { small: { url: profile.character_url }, medium: { url: profile.character_url }, original: { url: profile.character_url } };
+                    $scope.$applyAsync();
+                }
+            }).catch(function() {});
+        }
     }
     
     function loadChildSubjectCount(child) {

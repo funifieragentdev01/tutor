@@ -462,7 +462,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         if (item.is_unlocked === false) return '#B2BEC3';
         if (item.percent >= 100) return '#00B894';
         if (item.percent > 0) return '#FDCB6E';
-        var colors = ['#6C5CE7', '#00B894', '#FD79A8', '#74B9FF', '#FF6B6B', '#00CEC9'];
+        var colors = ['#FF9600', '#00B894', '#FD79A8', '#74B9FF', '#FF6B6B', '#00CEC9'];
         var idx = ($scope.items.indexOf(item)) % colors.length;
         return colors[idx];
     };

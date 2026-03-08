@@ -1,5 +1,5 @@
 app.controller('AddChildController', function($scope, $location, $rootScope, AuthService, ApiService) {
-    var COLORS = ['#6C5CE7', '#00B894', '#FD79A8', '#FDCB6E', '#74B9FF', '#FF6B6B', '#A29BFE', '#00CEC9'];
+    var COLORS = ['#FF9600', '#00B894', '#FD79A8', '#FDCB6E', '#74B9FF', '#FF6B6B', '#FFB84D', '#00CEC9'];
     
     $scope.step = 0;
     $scope.steps = ['Dados', 'Foto', 'Sobre'];

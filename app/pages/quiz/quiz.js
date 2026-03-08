@@ -21,7 +21,7 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
     $scope.scorePercent = 0;
     $scope.xpEarned = 0;
     $scope.progressPercent = 0;
-    $scope.progressColor = '#6C5CE7';
+    $scope.progressColor = '#FF9600';
     
     $scope.correctMessages = [
         'Isso aí! 🎉', 'Mandou bem! 💪', 'Certinho! ⭐', 'Arrasou! 🔥',
@@ -108,7 +108,7 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $scope.selectedChoice = null;
         $scope.revealed = false;
         $scope.wrongFeedback = '';
-        $scope.progressColor = '#6C5CE7';
+        $scope.progressColor = '#FF9600';
         
         if ($scope.currentIndex >= $scope.questions.length) {
             // Quiz finished
@@ -207,7 +207,7 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $scope.correctCount = 0;
         $scope.scorePercent = 0;
         $scope.progressPercent = 0;
-        $scope.progressColor = '#6C5CE7';
+        $scope.progressColor = '#FF9600';
         $scope.currentQuestion = $scope.questions[0];
         
         // Shuffle questions for retry

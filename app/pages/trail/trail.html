@@ -135,7 +135,7 @@
                            ng-model="item._pickedColor"
                            ng-change="setModuleColor(item, item._pickedColor)">
                 </label>
-                <button class="btn-delete-item" ng-if="isParent" ng-click="deleteItem(item, $event)" title="Excluir">🗑</button>
+                <button class="btn-delete-item" ng-if="isParent" ng-click="deleteItem(item, $event)" title="Excluir"><i class="fa-solid fa-trash"></i>️</button>
                 <div class="folder-arrow" ng-if="item.is_unlocked !== false && !isParent">›</div>
                 <div class="folder-lock" ng-if="item.is_unlocked === false">🔒</div>
             </div>
@@ -150,8 +150,8 @@
                     <div class="content-title">{{c.title}}</div>
                     <div class="content-type">{{c.type === 'quiz' ? 'Quiz' : c.type}}{{c.percent >= 100 ? ' — Concluído!' : ''}}</div>
                 </div>
-                <button class="btn-clear-progress" ng-if="isParent && c.percent > 0" ng-click="clearProgress(c, $event)" title="Limpar progresso">🔄</button>
-                <button class="btn-delete-item" ng-if="isParent" ng-click="deleteContent(c, $event)" title="Excluir">🗑</button>
+                <button class="btn-clear-progress" ng-if="isParent && c.percent > 0" ng-click="clearProgress(c, $event)" title="Limpar progresso"><i class="fa-solid fa-rotate"></i></button>
+                <button class="btn-delete-item" ng-if="isParent" ng-click="deleteContent(c, $event)" title="Excluir"><i class="fa-solid fa-trash"></i>️</button>
                 <div class="folder-arrow" ng-if="!isParent">›</div>
             </div>
         </div>

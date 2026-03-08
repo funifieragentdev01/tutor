@@ -19,7 +19,7 @@
             <!-- Existing children -->
             <div class="child-card-wide" ng-repeat="child in children">
                 <div class="child-card-main" ng-click="openChild(child)">
-                    <div class="child-avatar-lg" ng-style="{'background-color': child.color || '#6C5CE7'}">
+                    <div class="child-avatar-lg" ng-style="{'background-color': child.color || '#FF9600'}">
                         <img ng-if="child.image && child.image.small && child.image.small.url" ng-src="{{child.image.small.url}}" class="child-avatar-img">
                         <span ng-if="!(child.image && child.image.small && child.image.small.url)">{{child.name.charAt(0).toUpperCase()}}</span>
                     </div>
@@ -33,16 +33,16 @@
                 </div>
                 <div class="child-actions-wide">
                     <button class="btn-child-action-wide" ng-click="captureChild(child, $event)">
-                        <span class="action-icon">📷</span><span class="action-label">Capturar</span>
+                        <span class="action-icon"><i class="fa-solid fa-camera"></i></span><span class="action-label">Capturar</span>
                     </button>
                     <button class="btn-child-action-wide" ng-click="openExams(child, $event)">
-                        <span class="action-icon">📅</span><span class="action-label">Provas</span>
+                        <span class="action-icon"><i class="fa-solid fa-calendar"></i></span><span class="action-label">Provas</span>
                     </button>
                     <button class="btn-child-action-wide" ng-click="editChild(child, $event)">
-                        <span class="action-icon">✏️</span><span class="action-label">Editar</span>
+                        <span class="action-icon"><i class="fa-solid fa-pen"></i></span><span class="action-label">Editar</span>
                     </button>
                     <button class="btn-child-action-wide btn-action-delete" ng-click="deleteChild(child, $event)">
-                        <span class="action-icon">🗑</span><span class="action-label">Excluir</span>
+                        <span class="action-icon"><i class="fa-solid fa-trash"></i></span><span class="action-label">Excluir</span>
                     </button>
                 </div>
             </div>
