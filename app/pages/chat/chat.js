@@ -184,12 +184,13 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 childProfile = profileRes.data || profileRes;
             } catch(e) {}
             
-            // Load root folders (subjects) from folder collection
+            // Load subject folders (children of root folder where root _id = childId)
             try {
-                var fq = JSON.stringify({ player: childId, parent: { $exists: false } });
+                var fq = JSON.stringify({ parent: childId });
                 var fRes = await ApiService.dbQuery('folder', fq, null, 50);
-                folders = fRes.data || [];
-            } catch(e) {}
+                folders = fRes.data || fRes || [];
+                if (!Array.isArray(folders)) folders = [];
+            } catch(e) { folders = []; }
             
             // Load progress for each root folder
             folderProgress = [];
