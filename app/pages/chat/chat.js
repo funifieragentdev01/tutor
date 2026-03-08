@@ -4,18 +4,16 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     var isParent = AuthService.getRole() === 'parent';
     
     $scope.messages = [];
-    $scope.userInput = '';
+    $scope.chat = { input: '' };
     $scope.typing = false;
     $scope.loading = true;
     
-    // Voice mode
-    $scope.mode = 'text'; // 'text' or 'voice'
-    $scope.callStatus = 'idle'; // idle, connecting, connected
+    // Mode: 'select', 'text', 'voice'
+    $scope.mode = 'select';
+    $scope.callStatus = 'idle';
     $scope.callStatusText = '';
     $scope.isMuted = false;
     $scope.callDuration = '00:00';
-    $scope.transcriptLines = [];
-    $scope.currentTeacherText = '';
     
     var pc = null;
     var dc = null;
@@ -28,12 +26,26 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     var childProfile = null;
     var childPlayer = null;
     var folders = [];
+    var folderProgress = [];
+    var exams = [];
     var systemPrompt = '';
+    
+    // Mode selection
+    $scope.selectMode = function(mode) {
+        $scope.mode = mode;
+        if (mode === 'voice') {
+            $scope.startCall();
+        }
+    };
     
     // Go back
     $scope.goBack = function() {
         if ($scope.mode === 'voice') {
             $scope.endCall();
+            return;
+        }
+        if ($scope.mode === 'text') {
+            $scope.mode = 'select';
             return;
         }
         if (isParent) {
@@ -67,19 +79,64 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         }, 50);
     }
     
-    function scrollTranscript() {
-        setTimeout(function() {
-            var el = document.getElementById('callTranscript');
-            if (el) el.scrollTop = el.scrollHeight;
-        }, 50);
+    // Build subjects text for prompts
+    function buildSubjectsText() {
+        if (!folderProgress || folderProgress.length === 0) {
+            if (folders.length > 0) {
+                return 'MATERIAS CADASTRADAS:\n' + folders.map(function(f) {
+                    return '- ' + (f.name || f.title || 'Matéria');
+                }).join('\n');
+            }
+            return '';
+        }
+        
+        var lines = ['MATERIAS CADASTRADAS:'];
+        folderProgress.forEach(function(fp) {
+            var pct = fp.percent != null ? fp.percent : 0;
+            lines.push('- ' + (fp.name || 'Matéria') + ' (' + Math.round(pct) + '% completo)');
+            if (fp.children && fp.children.length > 0) {
+                fp.children.forEach(function(child) {
+                    var cpct = child.percent != null ? child.percent : 0;
+                    var status = cpct >= 100 ? '100% completo' : cpct > 0 ? Math.round(cpct) + '% completo' : '0% - próximo a estudar';
+                    lines.push('  - Módulo: ' + (child.name || 'Módulo') + ' (' + status + ')');
+                });
+            }
+        });
+        return lines.join('\n');
+    }
+    
+    // Build exams text for prompts
+    function buildExamsText() {
+        if (!exams || exams.length === 0) return '';
+        var now = new Date();
+        var upcoming = exams.filter(function(e) {
+            var d = e.date && e.date.$date ? new Date(e.date.$date) : new Date(e.date);
+            return d >= now;
+        }).sort(function(a, b) {
+            var da = a.date && a.date.$date ? new Date(a.date.$date) : new Date(a.date);
+            var db = b.date && b.date.$date ? new Date(b.date.$date) : new Date(b.date);
+            return da - db;
+        });
+        if (upcoming.length === 0) return '';
+        
+        var lines = ['PROVAS AGENDADAS:'];
+        upcoming.forEach(function(e) {
+            var d = e.date && e.date.$date ? new Date(e.date.$date) : new Date(e.date);
+            var days = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+            var dateStr = d.toLocaleDateString('pt-BR');
+            var line = '- ' + (e.subject || 'Matéria') + ': ' + (e.topic || '') + ' — ' + dateStr + ' (em ' + days + ' dias)';
+            if (e.notes) line += ' — ' + e.notes;
+            lines.push(line);
+        });
+        lines.push('\nPRIORIZE matérias com provas próximas!');
+        return lines.join('\n');
     }
     
     // Build system prompt from child data
     function buildSystemPrompt() {
         var name = 'aluno(a)';
         var age = '';
-        var interests = '';
-        var subjects = '';
+        var description = '';
         
         if (childPlayer && childPlayer.extra) {
             name = childPlayer.extra.name__c || childPlayer.name || name;
@@ -88,19 +145,19 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         }
         
         if (childProfile) {
-            if (childProfile.age__c) age = childProfile.age__c;
-            if (childProfile.interests__c) interests = childProfile.interests__c;
+            if (childProfile.age) age = childProfile.age;
+            if (childProfile.description) description = childProfile.description;
         }
         
-        if (folders.length > 0) {
-            subjects = folders.map(function(f) { return f.name || f.title; }).filter(Boolean).join(', ');
-        }
+        var subjectsText = buildSubjectsText();
+        var examsText = buildExamsText();
         
         systemPrompt = 'Você é o Professor Tutor, um professor particular virtual para crianças. ' +
             'Seu nome é Professor Tutor. Fale sempre em Português do Brasil.\n\n' +
             'ALUNO: ' + name + (age ? ' (' + age + ' anos)' : '') + '\n' +
-            (interests ? 'INTERESSES: ' + interests + '\n' : '') +
-            (subjects ? 'MATÉRIAS: ' + subjects + '\n' : '') +
+            (description ? 'DESCRIÇÃO DO ALUNO (escrita pelos pais): ' + description + '\n' : '') +
+            (subjectsText ? '\n' + subjectsText + '\n' : '') +
+            (examsText ? '\n' + examsText + '\n' : '') +
             '\nREGRAS:\n' +
             '- Seja paciente, encorajador e divertido\n' +
             '- Use emojis ocasionalmente para tornar a conversa mais leve\n' +
@@ -115,23 +172,55 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     // Load context data
     async function loadContext() {
         try {
-            try { childPlayer = await ApiService.getPlayer(childId); } catch(e) {}
-            try { childProfile = await ApiService.getProfile(childId); } catch(e) {}
+            // Load player
             try {
-                var q = JSON.stringify({ player: childId, parent: { $exists: false } });
-                folders = await ApiService.dbQuery('folder__c', q);
+                var playerRes = await ApiService.getPlayer(childId);
+                childPlayer = playerRes.data || playerRes;
+            } catch(e) {}
+            
+            // Load profile
+            try {
+                var profileRes = await ApiService.getProfile(childId);
+                childProfile = profileRes.data || profileRes;
+            } catch(e) {}
+            
+            // Load root folders (subjects) from folder collection
+            try {
+                var fq = JSON.stringify({ player: childId, parent: { $exists: false } });
+                var fRes = await ApiService.dbQuery('folder', fq, null, 50);
+                folders = fRes.data || [];
+            } catch(e) {}
+            
+            // Load progress for each root folder
+            folderProgress = [];
+            for (var i = 0; i < folders.length; i++) {
+                try {
+                    var pRes = await ApiService.getFolderProgress(folders[i]._id, childId);
+                    var pData = pRes.data || pRes;
+                    if (pData) {
+                        pData.name = folders[i].name || folders[i].title;
+                        folderProgress.push(pData);
+                    }
+                } catch(e) {
+                    folderProgress.push({ name: folders[i].name || folders[i].title, percent: 0, children: [] });
+                }
+            }
+            
+            // Load exams
+            try {
+                var eq = JSON.stringify({ player: childId });
+                var eRes = await ApiService.dbQuery('exam__c', eq, { date: 1 }, 50);
+                exams = eRes.data || [];
             } catch(e) {}
             
             buildSystemPrompt();
             
+            // Load chat history
             try {
-                var pipeline = [
-                    { $match: { player: childId } },
-                    { $sort: { timestamp: -1 } },
-                    { $limit: 20 }
-                ];
-                var history = await ApiService.dbAggregate('chat_message__c', pipeline);
-                if (history && history.length) {
+                var hq = JSON.stringify({ player: childId });
+                var hRes = await ApiService.dbQuery('chat_message__c', hq, { timestamp: -1 }, 20);
+                var history = hRes.data || [];
+                if (history.length) {
                     $scope.messages = history.reverse();
                 }
             } catch(e) {}
@@ -147,10 +236,10 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     
     // Send message
     $scope.sendMessage = function(text) {
-        var content = text || ($scope.userInput || '').trim();
+        var content = text || ($scope.chat.input || '').trim();
         if (!content || $scope.typing) return;
         
-        $scope.userInput = '';
+        $scope.chat.input = '';
         
         var userMsg = {
             _id: 'msg_' + Date.now() + '_u',
@@ -229,18 +318,52 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         var name = data.player_name || 'aluno';
         var age = '';
         var description = '';
-        var interests = '';
-        var subjects = '';
+        var subjectsText = '';
+        var examsText = '';
         var quizInfo = '';
         
         if (data.profile) {
-            age = data.profile.age || data.profile.age__c || '';
+            age = data.profile.age || '';
             description = data.profile.description || '';
-            interests = data.profile.interests || data.profile.interests__c || '';
         }
         
+        // Build subjects from folder data
         if (data.folders && data.folders.length > 0) {
-            subjects = data.folders.map(function(f) { return f.name || f.title || ''; }).filter(Boolean).join(', ');
+            var sLines = ['MATERIAS CADASTRADAS:'];
+            data.folders.forEach(function(f) {
+                var pct = f.percent != null ? f.percent : 0;
+                sLines.push('- ' + (f.name || f.title || 'Matéria') + ' (' + Math.round(pct) + '% completo)');
+                if (f.children && f.children.length > 0) {
+                    f.children.forEach(function(c) {
+                        var cpct = c.percent != null ? c.percent : 0;
+                        var status = cpct >= 100 ? '100% completo' : cpct > 0 ? Math.round(cpct) + '% completo' : '0% - próximo a estudar';
+                        sLines.push('  - Módulo: ' + (c.name || 'Módulo') + ' (' + status + ')');
+                    });
+                }
+            });
+            subjectsText = sLines.join('\n');
+        }
+        
+        // Build exams
+        if (data.exams && data.exams.length > 0) {
+            var now = new Date();
+            var upcoming = data.exams.filter(function(e) {
+                var d = e.date && e.date.$date ? new Date(e.date.$date) : new Date(e.date);
+                return d >= now;
+            });
+            if (upcoming.length > 0) {
+                var eLines = ['PROVAS AGENDADAS:'];
+                upcoming.forEach(function(e) {
+                    var d = e.date && e.date.$date ? new Date(e.date.$date) : new Date(e.date);
+                    var days = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+                    var dateStr = d.toLocaleDateString('pt-BR');
+                    var line = '- ' + (e.subject || '') + ': ' + (e.topic || '') + ' — ' + dateStr + ' (em ' + days + ' dias)';
+                    if (e.notes) line += ' — ' + e.notes;
+                    eLines.push(line);
+                });
+                eLines.push('\nPRIORIZE materias com provas proximas!');
+                examsText = eLines.join('\n');
+            }
         }
         
         if (data.quiz_results && data.quiz_results.length > 0) {
@@ -256,9 +379,9 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             'ALUNO: ' + name + (age ? ' (' + age + ' anos)' : '') + '\n';
         
         if (description) instr += 'DESCRICAO DO ALUNO (escrita pelos pais): ' + description + '\n';
-        if (interests) instr += 'INTERESSES: ' + interests + '\n';
-        if (subjects) instr += 'MATERIAS QUE ESTUDA: ' + subjects + '\n';
-        if (quizInfo) instr += 'DESEMPENHO RECENTE EM QUIZ: ' + quizInfo + '\n';
+        if (subjectsText) instr += '\n' + subjectsText + '\n';
+        if (examsText) instr += '\n' + examsText + '\n';
+        if (quizInfo) instr += '\nDESEMPENHO RECENTE EM QUIZ: ' + quizInfo + '\n';
         
         instr += '\nREGRAS:\n' +
             '- Adapte explicacoes para a idade\n' +
@@ -272,11 +395,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     }
     
     $scope.startCall = async function() {
-        $scope.mode = 'voice';
         $scope.callStatus = 'connecting';
         $scope.callStatusText = 'Conectando...';
-        $scope.transcriptLines = [];
-        $scope.currentTeacherText = '';
         $scope.$applyAsync();
         
         try {
@@ -298,7 +418,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             // 2. Build instructions
             var instructions = buildVoiceInstructions(sessionData);
             
-            // 3. Get ephemeral key with instructions baked in
+            // 3. Get ephemeral key
             var ephRes = await fetch('https://api.openai.com/v1/realtime/sessions', {
                 method: 'POST',
                 headers: {
@@ -324,20 +444,17 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             // 4. Set up WebRTC
             pc = new RTCPeerConnection();
             
-            // Audio output
             audioEl = document.createElement('audio');
             audioEl.autoplay = true;
             pc.ontrack = function(e) {
                 audioEl.srcObject = e.streams[0];
             };
             
-            // Audio input
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             localStream.getTracks().forEach(function(track) {
                 pc.addTrack(track, localStream);
             });
             
-            // Data channel
             dc = pc.createDataChannel('oai-events');
             dc.onmessage = function(e) {
                 handleRealtimeEvent(JSON.parse(e.data));
@@ -346,7 +463,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 console.log('Data channel open');
             };
             
-            // Connection state
             pc.oniceconnectionstatechange = function() {
                 if (pc.iceConnectionState === 'connected') {
                     $scope.callStatus = 'connected';
@@ -359,7 +475,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 }
             };
             
-            // Create offer and connect
             var offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
             
@@ -379,7 +494,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             console.error('Voice call error:', err);
             $scope.callStatus = 'idle';
             $scope.callStatusText = '';
-            $scope.mode = 'text';
+            $scope.mode = 'select';
             $scope.$applyAsync();
             alert('Não foi possível iniciar a chamada. Verifique o microfone.');
         }
@@ -387,30 +502,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     
     function handleRealtimeEvent(evt) {
         if (!evt || !evt.type) return;
-        
-        if (evt.type === 'response.audio_transcript.delta') {
-            $scope.currentTeacherText += (evt.delta || '');
-            $scope.$applyAsync();
-            scrollTranscript();
-        }
-        
-        if (evt.type === 'response.audio_transcript.done') {
-            if ($scope.currentTeacherText) {
-                $scope.transcriptLines.push({ role: 'teacher', text: $scope.currentTeacherText });
-                $scope.currentTeacherText = '';
-                $scope.$applyAsync();
-                scrollTranscript();
-            }
-        }
-        
-        if (evt.type === 'conversation.item.input_audio_transcription.completed') {
-            var childText = evt.transcript || '';
-            if (childText.trim()) {
-                $scope.transcriptLines.push({ role: 'child', text: childText.trim() });
-                $scope.$applyAsync();
-                scrollTranscript();
-            }
-        }
+        // Log events but don't display transcript
+        console.log('Realtime event:', evt.type);
     }
     
     function updateCallDuration() {
@@ -440,9 +533,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         
         $scope.callStatus = 'idle';
         $scope.callStatusText = '';
-        $scope.mode = 'text';
+        $scope.mode = 'select';
         $scope.isMuted = false;
-        $scope.currentTeacherText = '';
         callStartTime = null;
         $scope.$applyAsync();
     };

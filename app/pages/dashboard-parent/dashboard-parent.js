@@ -64,6 +64,11 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
         $location.path('/parent/child/' + encodeURIComponent(child._id));
     };
     
+    $scope.openExams = function(child, $event) {
+        $event.stopPropagation();
+        $location.path('/parent/child/' + child._id + '/exams');
+    };
+    
     $scope.captureChild = function(child, $event) {
         $event.stopPropagation();
         var ctx = encodeURIComponent(JSON.stringify({

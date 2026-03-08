@@ -1346,3 +1346,168 @@ body.has-bottom-nav .app-version {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.8); }
 }
+
+/* ===== Mode Selection ===== */
+.mode-select {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+}
+
+.mode-select-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 32px;
+}
+
+.mode-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 340px;
+}
+
+.mode-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 24px;
+    border-radius: 20px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s;
+    box-shadow: var(--shadow-lg);
+}
+
+.mode-card:active {
+    transform: scale(0.97);
+}
+
+.mode-card-chat {
+    background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
+    color: #fff;
+}
+
+.mode-card-call {
+    background: linear-gradient(135deg, #00B894 0%, #00CEC9 100%);
+    color: #fff;
+}
+
+.mode-card-icon {
+    font-size: 48px;
+    margin-bottom: 4px;
+}
+
+.mode-card-label {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.mode-card-desc {
+    font-size: 14px;
+    opacity: 0.85;
+    text-align: center;
+}
+
+/* ===== Exam Calendar ===== */
+.exams-page .section-pad { padding: 16px; }
+
+.exam-form-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.exam-form-card .form-group {
+    margin-bottom: 14px;
+}
+
+.exam-form-card label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 4px;
+}
+
+.exam-form-card .form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 15px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.exam-form-card .form-control:focus {
+    border-color: var(--primary);
+}
+
+.exam-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--green);
+}
+
+.exam-card.exam-past {
+    opacity: 0.5;
+}
+
+.exam-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exam-subject {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.exam-topic {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 2px;
+}
+
+.exam-date {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 6px;
+}
+
+.exam-days {
+    font-weight: 700;
+}
+
+.exam-days-past {
+    color: var(--text-muted);
+}
+
+.exam-notes {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.btn-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    padding: 0;
+}

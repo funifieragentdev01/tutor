@@ -7,6 +7,23 @@
         <div class="header-title">🧑‍🏫 Professor Tutor</div>
     </div>
 
+    <!-- MODE SELECT -->
+    <div ng-if="mode === 'select'" class="mode-select">
+        <div class="mode-select-title">Como quer estudar?</div>
+        <div class="mode-cards">
+            <button class="mode-card mode-card-chat" ng-click="selectMode('text')">
+                <div class="mode-card-icon">💬</div>
+                <div class="mode-card-label">Conversar por Chat</div>
+                <div class="mode-card-desc">Digite suas dúvidas e receba explicações</div>
+            </button>
+            <button class="mode-card mode-card-call" ng-click="selectMode('voice')">
+                <div class="mode-card-icon">📞</div>
+                <div class="mode-card-label">Ligar para o Professor</div>
+                <div class="mode-card-desc">Converse por voz em tempo real</div>
+            </button>
+        </div>
+    </div>
+
     <!-- TEXT MODE -->
     <div ng-if="mode === 'text'">
         <!-- Messages -->
@@ -50,12 +67,12 @@
         <!-- Input bar -->
         <div class="chat-input-bar">
             <input type="text" class="chat-input" placeholder="Digite sua mensagem..." 
-                   ng-model="userInput" ng-keypress="onKeyPress($event)" 
+                   ng-model="chat.input" ng-keypress="onKeyPress($event)" 
                    ng-disabled="typing" autocomplete="off">
-            <button class="chat-mic-btn" ng-click="startCall()" title="Ligar para o Professor">
+            <button class="chat-mic-btn" ng-click="selectMode('voice')" title="Ligar para o Professor">
                 🎤
             </button>
-            <button class="chat-send-btn" ng-click="sendMessage()" ng-disabled="!userInput.trim() || typing">
+            <button class="chat-send-btn" ng-click="sendMessage()" ng-disabled="!chat.input.trim() || typing">
                 ➤
             </button>
         </div>
@@ -71,18 +88,6 @@
             {{callStatus === 'connecting' ? 'Conectando...' : callStatus === 'connected' ? 'Conectado' : ''}}
         </div>
         <div class="call-timer" ng-if="callStatus === 'connected'">{{callDuration}}</div>
-
-        <!-- Transcript -->
-        <div class="call-transcript" id="callTranscript">
-            <div ng-repeat="line in transcriptLines track by $index" class="transcript-line" ng-class="line.role">
-                <span class="transcript-role">{{line.role === 'teacher' ? '🧑‍🏫' : '🧒'}}</span>
-                <span class="transcript-text">{{line.text}}</span>
-            </div>
-            <div ng-if="currentTeacherText" class="transcript-line teacher current">
-                <span class="transcript-role">🧑‍🏫</span>
-                <span class="transcript-text">{{currentTeacherText}}</span>
-            </div>
-        </div>
 
         <!-- Call controls -->
         <div class="call-controls">

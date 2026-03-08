@@ -41,6 +41,10 @@ app.config(function($routeProvider, $locationProvider) {
             controller: 'CaptureController',
             reloadOnSearch: false
         })
+        .when('/parent/child/:childId/exams', {
+            templateUrl: 'pages/exams/exams.html',
+            controller: 'ExamsController'
+        })
         .when('/parent/child/:childId/chat', {
             templateUrl: 'pages/chat/chat.html',
             controller: 'ChatController'
