@@ -1,4 +1,4 @@
-app.controller('TrailController', function($scope, $location, $routeParams, AuthService, ApiService) {
+app.controller('TrailController', function($scope, $location, $routeParams, $timeout, AuthService, ApiService) {
     var childId = decodeURIComponent($routeParams.childId || '') || (AuthService.getRole() === 'child' ? AuthService.getUser() : '');
     var folderId = decodeURIComponent($routeParams.folderId || '') || childId; // default to root
     
@@ -14,6 +14,15 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
     $scope.newSubjectName = '';
     $scope.creatingSubject = false;
     
+    // Duolingo trail
+    $scope.showDuolingoTrail = false;
+    $scope.trailItems = []; // flattened: [{type:'module',...}, {type:'lesson',...}, ...]
+    $scope.trailLoading = false;
+    $scope.selectedLesson = null;
+    $scope.selectedLessonStyle = {};
+    $scope.characterUrl = '';
+    $scope.loadingQuiz = false;
+    
     // Empty state messages
     $scope.emptyIcon = '📚';
     $scope.emptyTitle = 'Nada por aqui ainda';
@@ -25,15 +34,28 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         'arte': '🎨', 'educação física': '⚽', 'música': '🎵', 'biologia': '🧬',
         'física': '⚡', 'química': '🧪', 'filosofia': '💭', 'sociologia': '👥'
     };
+
+    var LESSON_ICONS = ['📖', '🎤', '✏️', '🧩', '🎯', '💡', '📝', '🔬'];
+    
+    var MODULE_COLORS = ['#FF9600', '#CE82FF', '#00CD9C', '#1CB0F6', '#FF4B4B', '#FFC800'];
     
     function init() {
         loadFolder(folderId);
+        // Load character URL for child
+        if (!$scope.isParent) {
+            ApiService.dbGet('profile__c', childId).then(function(res) {
+                if (res.data && res.data.character_url) {
+                    $scope.characterUrl = res.data.character_url;
+                }
+            }).catch(function(){});
+        }
     }
     
     function loadFolder(id) {
         $scope.loading = true;
         $scope.items = [];
         $scope.contents = [];
+        $scope.selectedLesson = null;
         
         // Get folder info
         ApiService.dbGet('folder', id).then(function(res) {
@@ -50,17 +72,18 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
             
             updateCanCapture();
             updateEmptyState();
+            updateDuolingoFlag();
         }).catch(function() {
             $scope.currentLevel = 'root';
             $scope.currentTitle = 'Trilha';
             updateCanCapture();
             updateEmptyState();
+            updateDuolingoFlag();
         });
         
-        // Load breadcrumb from API (correct order: root → ... → current)
+        // Load breadcrumb
         ApiService.getFolderBreadcrumb(id).then(function(res) {
             var crumbs = res.data || [];
-            // Remove the last item (current folder) and root folder from breadcrumb display
             $scope.breadcrumb = crumbs.filter(function(c) {
                 return c._id !== id && c._id !== childId;
             });
@@ -70,21 +93,22 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         
         // Get children with player progress
         var playerId = childId;
-        console.log('[Trail] getFolderProgress folder=' + id + ' player=' + playerId);
         ApiService.getFolderProgress(id, playerId).then(function(res) {
             var data = res.data || {};
             var all = data.items || [];
             if (!Array.isArray(all)) all = [];
-            console.log('[Trail] progress items:', all.length, 'total:', data.total, 'done:', data.done, 'percent:', data.percent);
-            all.forEach(function(i) { console.log('[Trail]   item:', i._id, i.title, 'total:', i.total, 'percent:', i.percent, 'folder:', i.folder); });
             
-            // Separate folders from content
             $scope.items = all.filter(function(i) { return i.folder !== false; });
             $scope.contents = all.filter(function(i) { return i.folder === false; });
             $scope.loading = false;
+            
+            updateDuolingoFlag();
+            
+            // If Duolingo trail, load nested data
+            if ($scope.showDuolingoTrail) {
+                loadDuolingoTrail(all);
+            }
         }).catch(function(err) {
-            console.error('[Trail] progress error:', err);
-            // Fallback to inside (no progress)
             ApiService.getFolderInside(id).then(function(res) {
                 var data = res.data || {};
                 var all = data.items || [];
@@ -92,14 +116,209 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
                 $scope.items = all.filter(function(i) { return i.folder !== false; });
                 $scope.contents = all.filter(function(i) { return i.folder === false; });
                 $scope.loading = false;
+                updateDuolingoFlag();
+                if ($scope.showDuolingoTrail) {
+                    loadDuolingoTrail(all);
+                }
             }).catch(function() {
                 $scope.loading = false;
             });
         });
     }
     
+    function updateDuolingoFlag() {
+        $scope.showDuolingoTrail = !$scope.isParent && $scope.currentLevel === 'subject';
+    }
+    
+    function loadDuolingoTrail(modules) {
+        $scope.trailLoading = true;
+        $scope.trailItems = [];
+        
+        var folders = modules.filter(function(i) { return i.folder !== false; });
+        if (folders.length === 0) {
+            $scope.trailLoading = false;
+            return;
+        }
+        
+        var pending = folders.length;
+        var results = [];
+        
+        folders.forEach(function(mod, modIdx) {
+            var moduleEntry = {
+                _type: 'module',
+                _id: mod._id,
+                title: mod.title,
+                percent: mod.percent || 0,
+                color: MODULE_COLORS[modIdx % MODULE_COLORS.length],
+                moduleIndex: modIdx,
+                position: mod.position || modIdx,
+                lessons: []
+            };
+            results.push(moduleEntry);
+            
+            ApiService.getFolderProgress(mod._id, childId).then(function(res) {
+                var data = res.data || {};
+                var lessons = (data.items || []).filter(function(i) { return i.folder !== false; });
+                moduleEntry.lessons = lessons;
+                pending--;
+                if (pending === 0) buildTrail(results);
+            }).catch(function() {
+                pending--;
+                if (pending === 0) buildTrail(results);
+            });
+        });
+    }
+    
+    function buildTrail(modules) {
+        modules.sort(function(a, b) { return (a.position || 0) - (b.position || 0); });
+        
+        var flat = [];
+        var lessonGlobalIdx = 0;
+        
+        modules.forEach(function(mod, modIdx) {
+            flat.push({
+                _type: 'module',
+                _id: mod._id,
+                title: mod.title,
+                percent: mod.percent,
+                color: mod.color,
+                moduleIndex: modIdx
+            });
+            
+            (mod.lessons || []).forEach(function(lesson, lIdx) {
+                flat.push({
+                    _type: 'lesson',
+                    _id: lesson._id,
+                    title: lesson.title,
+                    percent: lesson.percent || 0,
+                    is_unlocked: lesson.is_unlocked,
+                    lessonIndex: lIdx,
+                    globalIndex: lessonGlobalIdx,
+                    moduleIndex: modIdx,
+                    moduleColor: mod.color,
+                    icon: getLessonIcon(lesson, lIdx)
+                });
+                lessonGlobalIdx++;
+            });
+        });
+        
+        $scope.trailItems = flat;
+        $scope.trailLoading = false;
+        $scope.$applyAsync();
+        
+        // Auto-scroll to first available lesson
+        $timeout(function() {
+            var firstAvailable = null;
+            for (var i = 0; i < flat.length; i++) {
+                if (flat[i]._type === 'lesson' && flat[i].is_unlocked !== false && (flat[i].percent || 0) < 100) {
+                    firstAvailable = flat[i];
+                    break;
+                }
+            }
+            if (firstAvailable) {
+                var el = document.getElementById('trail-item-' + firstAvailable._id);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }, 300);
+    }
+    
+    function getLessonIcon(lesson, idx) {
+        if (lesson.is_unlocked === false) return '🔒';
+        if ((lesson.percent || 0) >= 100) return '⭐';
+        // First available (unlocked, not done)
+        if (lesson.is_unlocked !== false && (lesson.percent || 0) < 100) return '▶';
+        return LESSON_ICONS[idx % LESSON_ICONS.length];
+    }
+    
+    $scope.getBubbleStyle = function(item) {
+        if (item._type !== 'lesson') return {};
+        var xOffset = Math.sin(item.lessonIndex * 0.8) * 80;
+        return {
+            'margin-left': 'calc(50% - 30px + ' + xOffset + 'px)'
+        };
+    };
+    
+    $scope.getBubbleClass = function(item) {
+        if (item._type !== 'lesson') return '';
+        var cls = 'duo-bubble';
+        if (item.is_unlocked === false) cls += ' duo-bubble-locked';
+        else if ((item.percent || 0) >= 100) cls += ' duo-bubble-done';
+        else cls += ' duo-bubble-active';
+        return cls;
+    };
+    
+    $scope.getCharacterStyle = function(item) {
+        if (!$scope.characterUrl) return { display: 'none' };
+        var side = item.moduleIndex % 2 === 0 ? 'right' : 'left';
+        var style = {};
+        if (side === 'right') {
+            style['right'] = '10px';
+            style['left'] = 'auto';
+        } else {
+            style['left'] = '10px';
+            style['right'] = 'auto';
+        }
+        return style;
+    };
+    
+    $scope.isCharacterGray = function(item) {
+        return (item.percent || 0) < 100;
+    };
+    
+    $scope.selectLesson = function(item, $event) {
+        if (item._type !== 'lesson') return;
+        $event.stopPropagation();
+        
+        if ($scope.selectedLesson && $scope.selectedLesson._id === item._id) {
+            $scope.selectedLesson = null;
+            return;
+        }
+        
+        $scope.selectedLesson = item;
+    };
+    
+    $scope.closePopup = function() {
+        $scope.selectedLesson = null;
+    };
+    
+    $scope.getLessonStatus = function(item) {
+        if (!item) return 'locked';
+        if (item.is_unlocked === false) return 'locked';
+        if ((item.percent || 0) >= 100) return 'done';
+        return 'available';
+    };
+    
+    $scope.startLesson = function(item) {
+        if (!item || item.is_unlocked === false) return;
+        $scope.loadingQuiz = true;
+        
+        // Find quiz content inside this lesson folder
+        ApiService.getFolderProgress(item._id, childId).then(function(res) {
+            var data = res.data || {};
+            var contents = (data.items || []).filter(function(i) { return i.folder === false; });
+            var quiz = contents.find(function(c) { return c.type === 'quiz'; });
+            if (quiz) {
+                $scope.loadingQuiz = false;
+                $location.path('/quiz/' + encodeURIComponent(quiz.content)).search({ player: childId });
+            } else {
+                // Fallback: try getFolderInside
+                ApiService.getFolderInside(item._id).then(function(res2) {
+                    var all2 = (res2.data && res2.data.items) || [];
+                    var quiz2 = all2.find(function(c) { return c.type === 'quiz' && c.folder === false; });
+                    if (quiz2) {
+                        $location.path('/quiz/' + encodeURIComponent(quiz2.content)).search({ player: childId });
+                    }
+                    $scope.loadingQuiz = false;
+                }).catch(function() { $scope.loadingQuiz = false; });
+            }
+        }).catch(function() {
+            $scope.loadingQuiz = false;
+        });
+    };
+    
     function updateCanCapture() {
-        // Can capture at root (creates subject+module+lessons), subject (creates module+lessons), or module (creates lessons)
         $scope.canCapture = ['root', 'subject', 'module'].indexOf($scope.currentLevel) !== -1;
     }
     
@@ -128,8 +347,6 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         }
     }
     
-    // breadcrumb is now loaded from /v3/folder/breadcrumb API
-    
     $scope.getIcon = function(item) {
         if (item.type === 'subject') {
             var key = (item.title || '').toLowerCase();
@@ -155,7 +372,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
     };
     
     $scope.openItem = function(item) {
-        if (item.is_unlocked === false) return; // locked
+        if (item.is_unlocked === false) return;
         var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(childId) + '/folder/' : '/child/folder/';
         $location.path(base + encodeURIComponent(item._id));
     };
@@ -172,14 +389,12 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
     };
     
     $scope.goBack = function() {
-        // Navigate to parent folder
         ApiService.dbGet('folder', folderId).then(function(res) {
             var folder = res.data;
             if (folder && folder.parent) {
                 var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(childId) + '/folder/' : '/child/folder/';
                 $location.path(base + encodeURIComponent(folder.parent));
             } else {
-                // Back to parent dashboard or child dashboard
                 $location.path($scope.isParent ? '/parent' : '/child');
             }
         }).catch(function() {
@@ -217,12 +432,10 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         });
     };
     
-    // Clear progress (folder_log) for a content item
     $scope.clearProgress = function(c, $event) {
         $event.stopPropagation();
         if (!confirm('Limpar progresso de "' + c.title + '"?\n\nO filho precisará refazer esta atividade.')) return;
         
-        // Delete folder_log for this item + player
         var playerId = childId;
         ApiService.dbDelete('folder_log', 'item:"' + c._id + '",player:"' + playerId + '"').then(function() {
             c.percent = 0;
@@ -234,7 +447,6 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         });
     };
     
-    // Delete a folder item (subject, module, lesson) with confirmation
     $scope.deleteItem = function(item, $event) {
         $event.stopPropagation();
         var typeNames = { subject: 'disciplina', module: 'módulo', lesson: 'aula' };
@@ -243,7 +455,6 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         
         $scope.loading = true;
         ApiService.deleteFolderWithQuizzes(item._id).then(function() {
-            // Remove from local list
             var idx = $scope.items.indexOf(item);
             if (idx !== -1) $scope.items.splice(idx, 1);
             $scope.loading = false;
@@ -255,13 +466,11 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
         });
     };
     
-    // Delete a content item (quiz)
     $scope.deleteContent = function(c, $event) {
         $event.stopPropagation();
         if (!confirm('Excluir esta atividade?\n\nEsta ação não pode ser desfeita.')) return;
         
         $scope.loading = true;
-        // Delete quiz first (cascade: questions), then folder_content
         var p = c.content && c.type === 'quiz' ? ApiService.deleteQuiz(c.content).catch(function(){}) : Promise.resolve();
         p.then(function() {
             return ApiService.deleteFolderContent(c._id);
@@ -278,7 +487,6 @@ app.controller('TrailController', function($scope, $location, $routeParams, Auth
     };
     
     $scope.openCapture = function() {
-        // Navigate to capture page with context
         var ctx = encodeURIComponent(JSON.stringify({
             childId: childId,
             folderId: folderId,

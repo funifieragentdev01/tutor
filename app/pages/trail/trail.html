@@ -1,6 +1,6 @@
-<div class="app-page trail-page">
+<div class="app-page trail-page" ng-class="{'duo-trail-page': showDuolingoTrail}" ng-click="closePopup()">
     <!-- Header with breadcrumb -->
-    <div class="app-header">
+    <div class="app-header" ng-class="{'duo-header': showDuolingoTrail}">
         <button class="btn-icon" ng-click="goBack()">
             <span class="icon">←</span>
         </button>
@@ -14,15 +14,79 @@
     </div>
 
     <!-- Breadcrumb -->
-    <div class="breadcrumb" ng-if="breadcrumb.length > 0">
+    <div class="breadcrumb" ng-if="breadcrumb.length > 0 && !showDuolingoTrail">
         <span ng-repeat="b in breadcrumb" class="breadcrumb-item">
             <a ng-click="navigateTo(b)">{{b.title}}</a>
             <span ng-if="!$last"> › </span>
         </span>
     </div>
 
-    <!-- Folder list -->
-    <div class="section-pad">
+    <!-- ============ DUOLINGO S-CURVE TRAIL (child + subject level) ============ -->
+    <div class="duo-trail-container" ng-if="showDuolingoTrail && !loading">
+        
+        <div class="duo-trail-loading" ng-if="trailLoading">
+            <div class="spinner"></div>
+            <p>Carregando trilha...</p>
+        </div>
+
+        <div class="duo-trail" ng-if="!trailLoading && trailItems.length > 0">
+            <div ng-repeat="item in trailItems" id="trail-item-{{item._id}}">
+                
+                <!-- Module Header -->
+                <div class="duo-module-header" ng-if="item._type === 'module'" ng-style="{'background-color': item.color}">
+                    <div class="duo-module-title">{{item.title}}</div>
+                    <div class="duo-module-progress" ng-if="item.percent > 0">{{item.percent | number:0}}% completo</div>
+                    <!-- Character -->
+                    <div class="duo-character" ng-if="characterUrl" ng-style="getCharacterStyle(item)">
+                        <img ng-src="{{characterUrl}}" ng-class="{'duo-character-gray': isCharacterGray(item)}" alt="personagem">
+                    </div>
+                </div>
+                
+                <!-- Lesson Bubble -->
+                <div class="duo-bubble-wrap" ng-if="item._type === 'lesson'" ng-style="getBubbleStyle(item)">
+                    <div ng-class="getBubbleClass(item)" ng-click="selectLesson(item, $event)"
+                         ng-style="{'border-color': item.percent >= 100 ? '#FFC800' : (item.is_unlocked !== false ? '#58CC02' : '#3C3C3C')}">
+                        <span class="duo-bubble-icon">{{item.icon}}</span>
+                    </div>
+                    
+                    <!-- Lesson Popup -->
+                    <div class="duo-popup" ng-if="selectedLesson._id === item._id" ng-click="$event.stopPropagation()">
+                        <div class="duo-popup-arrow"></div>
+                        <div class="duo-popup-title">{{item.title}}</div>
+                        
+                        <div ng-if="getLessonStatus(item) === 'done'">
+                            <div class="duo-popup-subtitle">✅ Concluído!</div>
+                            <button class="duo-popup-btn duo-popup-btn-green" ng-click="startLesson(item)" ng-disabled="loadingQuiz">
+                                {{loadingQuiz ? 'Carregando...' : 'REVISAR'}}
+                            </button>
+                        </div>
+                        
+                        <div ng-if="getLessonStatus(item) === 'available'">
+                            <div class="duo-popup-subtitle" ng-if="item.percent > 0">{{item.percent | number:0}}% completo</div>
+                            <button class="duo-popup-btn duo-popup-btn-green" ng-click="startLesson(item)" ng-disabled="loadingQuiz">
+                                {{loadingQuiz ? 'Carregando...' : 'COMEÇAR'}}
+                            </button>
+                        </div>
+                        
+                        <div ng-if="getLessonStatus(item) === 'locked'">
+                            <div class="duo-popup-subtitle">Complete as lições acima para desbloquear!</div>
+                            <button class="duo-popup-btn duo-popup-btn-gray" disabled>BLOQUEADA</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty trail -->
+        <div class="empty-state" ng-if="!trailLoading && trailItems.length === 0">
+            <div class="empty-icon">📂</div>
+            <h3>Nenhum módulo ainda</h3>
+            <p>Peça ao responsável para adicionar conteúdo.</p>
+        </div>
+    </div>
+
+    <!-- ============ ORIGINAL LIST VIEW (parent or non-subject) ============ -->
+    <div class="section-pad" ng-if="!showDuolingoTrail">
         <div class="folder-list" ng-if="items.length > 0">
             <div class="folder-item" ng-repeat="item in items | orderBy:'position'" 
                  ng-click="openItem(item)"
