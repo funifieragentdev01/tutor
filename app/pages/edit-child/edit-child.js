@@ -305,15 +305,16 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         .then(function(imageUrl) {
             // Try background removal
             return removeBackground(imageUrl).then(function(transparentUrl) {
-                $scope.pendingCharacterUrl = transparentUrl;
-                $scope.generatingCharacter = false;
-                $scope.$applyAsync();
+                return convertToDataUrl(transparentUrl);
             }).catch(function(err) {
                 console.warn('Background removal failed, using original:', err);
-                $scope.pendingCharacterUrl = imageUrl;
-                $scope.generatingCharacter = false;
-                $scope.$applyAsync();
+                return convertToDataUrl(imageUrl);
             });
+        })
+        .then(function(dataUrl) {
+            $scope.pendingCharacterUrl = dataUrl;
+            $scope.generatingCharacter = false;
+            $scope.$applyAsync();
         })
         .catch(function(err) {
             console.error('Character generation error:', err);
@@ -387,7 +388,8 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     }
     
     function uploadImageToFunifier(imageUrl) {
-        // For external URLs (Freepik etc), use proxy to download since CORS blocks direct fetch
+        // Draw image to canvas to get blob (avoids CORS issues with external URLs)
+        // The image is already loaded/displayed in the browser
         var blobPromise;
         if (imageUrl.indexOf('data:') === 0) {
             var parts = imageUrl.split(',');
@@ -398,30 +400,36 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
             blobPromise = Promise.resolve(new Blob([ab], { type: mime }));
         } else {
-            // Use Funifier proxy to download the image (avoids CORS)
-            var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_download';
-            blobPromise = fetch(proxyUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: imageUrl })
-            }).then(function(r) { return r.json(); })
-            .then(function(data) {
-                // Proxy returns base64
-                var b64 = data.response && data.response.base64;
-                if (!b64) {
-                    // Fallback: try direct fetch
-                    console.warn('Proxy download failed, trying direct fetch');
-                    return fetch(imageUrl).then(function(r) { return r.blob(); });
-                }
-                var byteStr = atob(b64);
-                var ab2 = new ArrayBuffer(byteStr.length);
-                var ia2 = new Uint8Array(ab2);
-                for (var j = 0; j < byteStr.length; j++) ia2[j] = byteStr.charCodeAt(j);
-                return new Blob([ab2], { type: 'image/png' });
+            // Load image into canvas (crossOrigin anonymous) then export as blob
+            blobPromise = new Promise(function(resolve, reject) {
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function() {
+                    try {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                        canvas.toBlob(function(blob) {
+                            if (blob) resolve(blob);
+                            else reject(new Error('Canvas toBlob failed'));
+                        }, 'image/png');
+                    } catch(e) {
+                        console.error('[EditChild] Canvas export failed (CORS?):', e);
+                        // Fallback: use server-side proxy
+                        downloadViaProxy(imageUrl).then(resolve).catch(reject);
+                    }
+                };
+                img.onerror = function() {
+                    console.warn('[EditChild] Image load failed, trying proxy');
+                    downloadViaProxy(imageUrl).then(resolve).catch(reject);
+                };
+                img.src = imageUrl;
             });
         }
         
         return blobPromise.then(function(blob) {
+            console.log('[EditChild] Uploading blob:', blob.size, 'bytes');
             var formData = new FormData();
             formData.append('file', blob, childId.split('@')[0] + '_character.png');
             formData.append('extra', '{"session":"characters"}');
@@ -431,8 +439,38 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 transformRequest: angular.identity
             });
         }).then(function(res) {
-            console.log('[EditChild] Upload response:', res.data);
+            console.log('[EditChild] Upload success:', res.data.uploads[0].url);
             return res.data.uploads[0].url;
+        });
+    }
+    
+    function convertToDataUrl(imageUrl) {
+        if (imageUrl.indexOf('data:') === 0) return Promise.resolve(imageUrl);
+        return downloadViaProxy(imageUrl).then(function(blob) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() { resolve(reader.result); };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        });
+    }
+    
+    function downloadViaProxy(imageUrl) {
+        var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_download';
+        return fetch(proxyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: imageUrl })
+        }).then(function(r) { return r.json(); })
+        .then(function(data) {
+            var b64 = data.response && data.response.base64;
+            if (!b64) throw new Error('Proxy returned no base64: ' + JSON.stringify(data).substring(0, 200));
+            var byteStr = atob(b64);
+            var ab = new ArrayBuffer(byteStr.length);
+            var ia = new Uint8Array(ab);
+            for (var j = 0; j < byteStr.length; j++) ia[j] = byteStr.charCodeAt(j);
+            return new Blob([ab], { type: 'image/png' });
         });
     }
     
