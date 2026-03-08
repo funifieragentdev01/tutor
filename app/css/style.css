@@ -553,6 +553,7 @@ body {
     flex-shrink: 0;
 }
 .folder-icon { font-size: 22px; }
+.folder-icon-fa { font-size: 20px; color: #fff; }
 .folder-info { flex: 1; min-width: 0; }
 .folder-title { font-size: 15px; font-weight: 700; }
 .folder-meta { font-size: 12px; color: var(--text-light); margin-top: 4px; display: flex; align-items: center; gap: 8px; }
@@ -562,13 +563,15 @@ body {
     cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
 }
 .btn-delete-item:hover, .btn-delete-item:active { opacity: 1; }
-.btn-color-pick {
-    width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 50%; padding: 0; cursor: pointer; background: none;
-    -webkit-appearance: none; appearance: none; flex-shrink: 0;
+.color-pick-label {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; cursor: pointer; font-size: 18px;
+    position: relative; flex-shrink: 0;
 }
-.btn-color-pick::-webkit-color-swatch-wrapper { padding: 0; }
-.btn-color-pick::-webkit-color-swatch { border: none; border-radius: 50%; }
+.btn-color-pick-hidden {
+    position: absolute; opacity: 0; width: 100%; height: 100%;
+    cursor: pointer; top: 0; left: 0;
+}
 .btn-clear-progress {
     background: none; border: none; font-size: 14px; padding: 8px;
     cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
@@ -1618,8 +1621,8 @@ body.has-bottom-nav .app-version {
 }
 
 .duo-bubble {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1629,29 +1632,26 @@ body.has-bottom-nav .app-version {
     transition: transform 0.15s, box-shadow 0.15s;
     position: relative;
     z-index: 1;
+    /* 3D disc effect */
+    transform: perspective(200px) rotateX(12deg);
+    background-image: linear-gradient(160deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.15) 100%);
+    background-blend-mode: overlay;
 }
 .duo-bubble:active {
-    transform: scale(0.92);
+    transform: perspective(200px) rotateX(12deg) scale(0.92);
 }
 
 .duo-bubble-active {
-    background: #58CC02;
-    border-color: #58CC02 !important;
-    box-shadow: 0 4px 0 #46A302, 0 6px 16px rgba(88,204,2,0.3);
+    /* colors set dynamically via ng-style */
 }
 .duo-bubble-done {
-    background: #58CC02;
-    border-color: #FFC800 !important;
-    box-shadow: 0 4px 0 #46A302, 0 0 0 3px rgba(255,200,0,0.4), 0 6px 16px rgba(88,204,2,0.3);
+    /* colors set dynamically via ng-style */
 }
 .duo-bubble-locked {
-    background: #3C3C3C;
-    border-color: #3C3C3C !important;
-    box-shadow: 0 4px 0 #2A2A2A;
     cursor: default;
 }
 .duo-bubble-locked:active {
-    transform: none;
+    transform: perspective(200px) rotateX(12deg);
 }
 
 .duo-bubble-icon {

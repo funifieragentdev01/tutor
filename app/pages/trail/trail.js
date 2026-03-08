@@ -29,11 +29,27 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     $scope.emptyText = 'Tire uma foto do caderno para criar conteúdo.';
     
     var SUBJECT_ICONS = {
-        'matemática': '📐', 'português': '📖', 'inglês': '🇬🇧', 'english': '🇬🇧',
-        'história': '🏛️', 'geografia': '🌍', 'ciências': '🔬', 'science': '🔬',
-        'arte': '🎨', 'educação física': '⚽', 'música': '🎵', 'biologia': '🧬',
-        'física': '⚡', 'química': '🧪', 'filosofia': '💭', 'sociologia': '👥'
+        'matemática': 'fa-calculator', 'math': 'fa-calculator', 'mathematics': 'fa-calculator',
+        'português': 'fa-book-open', 'portugues': 'fa-book-open', 'language': 'fa-book-open',
+        'inglês': 'fa-earth-americas', 'ingles': 'fa-earth-americas', 'english': 'fa-earth-americas',
+        'história': 'fa-landmark', 'historia': 'fa-landmark', 'history': 'fa-landmark',
+        'geografia': 'fa-globe', 'geography': 'fa-globe',
+        'ciências': 'fa-flask', 'ciencias': 'fa-flask', 'science': 'fa-flask',
+        'arte': 'fa-palette', 'art': 'fa-palette', 'artes': 'fa-palette',
+        'educação física': 'fa-futbol', 'educacao fisica': 'fa-futbol',
+        'música': 'fa-music', 'musica': 'fa-music', 'music': 'fa-music',
+        'biologia': 'fa-dna', 'biology': 'fa-dna',
+        'física': 'fa-atom', 'fisica': 'fa-atom', 'physics': 'fa-atom',
+        'química': 'fa-vial', 'quimica': 'fa-vial', 'chemistry': 'fa-vial',
+        'filosofia': 'fa-brain', 'philosophy': 'fa-brain',
+        'sociologia': 'fa-users', 'sociology': 'fa-users',
+        'redação': 'fa-pen-fancy', 'redacao': 'fa-pen-fancy',
+        'literatura': 'fa-feather', 'literature': 'fa-feather',
+        'espanhol': 'fa-earth-europe', 'spanish': 'fa-earth-europe',
+        'informática': 'fa-laptop-code', 'informatica': 'fa-laptop-code', 'computing': 'fa-laptop-code',
+        'religião': 'fa-hands-praying', 'religiao': 'fa-hands-praying'
     };
+    var DEFAULT_SUBJECT_ICON = 'fa-book';
 
     var LESSON_ICONS = ['📖', '🎤', '✏️', '🧩', '🎯', '💡', '📝', '🔬'];
     
@@ -285,6 +301,24 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         return cls;
     };
     
+    $scope.getBubbleDynamicStyle = function(item) {
+        if (item.is_unlocked === false) return { 'background': '#3C3C3C', 'border-color': '#3C3C3C' };
+        var color = item.moduleColor || '#58CC02';
+        var darker = darkenColor(color, 0.2);
+        if ((item.percent || 0) >= 100) {
+            return { 'background': color, 'border-color': '#FFC800', 'box-shadow': '0 6px 0 ' + darker + ', 0 0 0 3px rgba(255,200,0,0.4)' };
+        }
+        return { 'background': color, 'border-color': color, 'box-shadow': '0 6px 0 ' + darker };
+    };
+    
+    function darkenColor(hex, amount) {
+        hex = hex.replace('#', '');
+        var r = Math.max(0, parseInt(hex.substring(0, 2), 16) * (1 - amount));
+        var g = Math.max(0, parseInt(hex.substring(2, 4), 16) * (1 - amount));
+        var b = Math.max(0, parseInt(hex.substring(4, 6), 16) * (1 - amount));
+        return '#' + Math.round(r).toString(16).padStart(2, '0') + Math.round(g).toString(16).padStart(2, '0') + Math.round(b).toString(16).padStart(2, '0');
+    }
+    
     $scope.getCharacterStyle = function(item) {
         if (!$scope.characterUrl) return { display: 'none' };
         var side = item.moduleIndex % 2 === 0 ? 'right' : 'left';
@@ -385,17 +419,23 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     
     $scope.getIcon = function(item) {
         if (item.type === 'subject') {
-            var key = (item.title || '').toLowerCase();
-            return SUBJECT_ICONS[key] || '📘';
+            // Check saved icon in extra first
+            if (item.extra && item.extra.icon) return item.extra.icon;
+            var key = (item.title || '').toLowerCase().trim();
+            return SUBJECT_ICONS[key] || DEFAULT_SUBJECT_ICON;
         }
-        if (item.type === 'module') return '📂';
+        if (item.type === 'module') return 'fa-folder';
         if (item.type === 'lesson') {
-            if (item.is_unlocked === false) return '🔒';
-            if (item.percent >= 100) return '⭐';
-            if (item.percent > 0) return '📝';
-            return '📄';
+            if (item.is_unlocked === false) return 'fa-lock';
+            if (item.percent >= 100) return 'fa-star';
+            if (item.percent > 0) return 'fa-pen';
+            return 'fa-file';
         }
-        return '📁';
+        return 'fa-folder';
+    };
+    
+    $scope.isFaIcon = function(icon) {
+        return icon && icon.indexOf('fa-') === 0;
     };
     
     $scope.getIconColor = function(item) {

@@ -45,7 +45,7 @@
                 <!-- Lesson Bubble -->
                 <div class="duo-bubble-wrap" ng-if="item._type === 'lesson'" ng-style="getBubbleStyle(item)">
                     <div ng-class="getBubbleClass(item)" ng-click="selectLesson(item, $event)"
-                         ng-style="{'border-color': item.percent >= 100 ? '#FFC800' : (item.is_unlocked !== false ? '#58CC02' : '#3C3C3C')}">
+                         ng-style="getBubbleDynamicStyle(item)">
                         <span class="duo-bubble-icon">{{item.icon}}</span>
                     </div>
                     
@@ -92,7 +92,8 @@
                  ng-click="openItem(item)"
                  ng-class="{'folder-locked': item.is_unlocked === false}">
                 <div class="folder-icon-wrap" ng-style="{'background-color': getIconColor(item)}">
-                    <span class="folder-icon">{{getIcon(item)}}</span>
+                    <i ng-if="isFaIcon(getIcon(item))" class="fa-solid {{getIcon(item)}} folder-icon-fa"></i>
+                    <span ng-if="!isFaIcon(getIcon(item))" class="folder-icon">{{getIcon(item)}}</span>
                 </div>
                 <div class="folder-info">
                     <div class="folder-title">{{item.title}}</div>
@@ -106,11 +107,13 @@
                         {{item.childCount}} ite{{item.childCount !== 1 ? 'ns' : 'm'}}
                     </div>
                 </div>
-                <input type="color" class="btn-color-pick" ng-if="isParent && item.type === 'module'" 
-                       ng-value="getItemColor(item)" 
-                       ng-model="item._pickedColor"
-                       ng-change="setModuleColor(item, item._pickedColor)" 
-                       title="Cor do módulo">
+                <label class="color-pick-label" ng-if="isParent && item.type === 'module'" ng-click="$event.stopPropagation()">
+                    🎨
+                    <input type="color" class="btn-color-pick-hidden" 
+                           ng-value="getItemColor(item)" 
+                           ng-model="item._pickedColor"
+                           ng-change="setModuleColor(item, item._pickedColor)">
+                </label>
                 <button class="btn-delete-item" ng-if="isParent" ng-click="deleteItem(item, $event)" title="Excluir">🗑</button>
                 <div class="folder-arrow" ng-if="item.is_unlocked !== false && !isParent">›</div>
                 <div class="folder-lock" ng-if="item.is_unlocked === false">🔒</div>
