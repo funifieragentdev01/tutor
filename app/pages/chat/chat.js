@@ -567,18 +567,41 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
 
     function handleRealtimeEvent(evt) {
         if (!evt || !evt.type) return;
-        console.log('[Voice] Event:', evt.type);
+        
+        // Log all events for debugging
+        if (evt.type !== 'response.audio.delta') {
+            console.log('[Voice] Event:', evt.type, evt.name || '');
+        }
 
         // Handle function calls from the AI
         if (evt.type === 'response.function_call_arguments.done') {
-            console.log('[Voice] Function call:', evt.name);
+            console.log('[Voice] Function call received:', evt.name, evt.call_id);
             if (evt.name === 'end_call') {
-                console.log('[Voice] Professor requested end_call — hanging up');
-                // Small delay so the farewell audio finishes playing
+                console.log('[Voice] Professor requested end_call — sending result and hanging up');
+                // Must send function_call_output back, then trigger response, then hang up
+                if (dc && dc.readyState === 'open') {
+                    dc.send(JSON.stringify({
+                        type: 'conversation.item.create',
+                        item: {
+                            type: 'function_call_output',
+                            call_id: evt.call_id,
+                            output: JSON.stringify({ success: true, message: 'Ligacao encerrada' })
+                        }
+                    }));
+                    dc.send(JSON.stringify({ type: 'response.create' }));
+                }
+                // Delay to let farewell audio finish
                 setTimeout(function() {
                     $scope.endCall();
-                }, 2000);
+                }, 3000);
             }
+        }
+
+        if (evt.type === 'session.created' || evt.type === 'session.updated') {
+            console.log('[Voice]', evt.type, JSON.stringify(evt).substring(0, 300));
+        }
+        if (evt.type === 'error') {
+            console.error('[Voice] API Error:', JSON.stringify(evt));
         }
     }
     
