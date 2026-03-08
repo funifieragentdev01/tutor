@@ -10,10 +10,10 @@
 
     <!-- Tabs -->
     <div class="edit-tabs">
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'profile'}" ng-click="tab = 'profile'">👤 Perfil</button>
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'character'}" ng-click="tab = 'character'">🎨 Personagem</button>
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'sounds'}" ng-click="tab = 'sounds'">🔊 Sons</button>
-        <button class="edit-tab" ng-class="{'tab-active': tab === 'stickers'}" ng-click="tab = 'stickers'">😂 Figurinhas</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'profile'}" ng-click="setTab('profile')">👤 Perfil</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'character'}" ng-click="setTab('character')">🎨 Personagem</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'sounds'}" ng-click="setTab('sounds')">🔊 Sons</button>
+        <button class="edit-tab" ng-class="{'tab-active': tab === 'stickers'}" ng-click="setTab('stickers')">😂 Figurinhas</button>
     </div>
 
     <!-- Tab: Profile -->

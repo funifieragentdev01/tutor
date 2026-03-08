@@ -2,6 +2,7 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     var childId = decodeURIComponent($routeParams.childId || '');
     
     $scope.tab = 'profile';
+    $scope.setTab = function(t) { $scope.tab = t; };
     $scope.child = {};
     $scope.loading = true;
     $scope.saving = false;
