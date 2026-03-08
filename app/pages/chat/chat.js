@@ -397,11 +397,12 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     
     $scope.startCall = async function() {
         $scope.callStatus = 'connecting';
-        $scope.callStatusText = 'Conectando...';
+        $scope.callStatusText = 'Carregando dados...';
         $scope.$applyAsync();
         
         try {
             // 1. Get session data from tutor_session endpoint
+            console.log('[Voice] Step 1: Getting session data...');
             var res = await fetch(CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/tutor_session', {
                 method: 'POST',
                 headers: {
@@ -411,15 +412,20 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 body: JSON.stringify({ player_id: childId })
             });
             sessionData = await res.json();
+            console.log('[Voice] Session data:', sessionData.player_name, 'folders:', (sessionData.folders||[]).length);
             
             if (!sessionData || !sessionData.api_key) {
-                throw new Error('Failed to get session data');
+                throw new Error('No API key from tutor_session');
             }
             
             // 2. Build instructions
             var instructions = buildVoiceInstructions(sessionData);
+            console.log('[Voice] Step 2: Instructions built, length:', instructions.length);
             
             // 3. Get ephemeral key
+            $scope.callStatusText = 'Obtendo chave...';
+            $scope.$applyAsync();
+            console.log('[Voice] Step 3: Getting ephemeral key...');
             var ephRes = await fetch('https://api.openai.com/v1/realtime/sessions', {
                 method: 'POST',
                 headers: {
@@ -434,16 +440,28 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 })
             });
             var ephData = await ephRes.json();
+            console.log('[Voice] Ephemeral response:', ephData.client_secret ? 'OK' : JSON.stringify(ephData).substring(0, 200));
             
             if (!ephData.client_secret) {
-                console.error('Ephemeral key error:', ephData);
-                throw new Error('Failed to get ephemeral key');
+                throw new Error('No client_secret: ' + JSON.stringify(ephData).substring(0, 100));
             }
             
             var ephemeralKey = ephData.client_secret.value;
             
-            // 4. Set up WebRTC
-            pc = new RTCPeerConnection();
+            // 4. Request microphone
+            $scope.callStatusText = 'Acessando microfone...';
+            $scope.$applyAsync();
+            console.log('[Voice] Step 4: Requesting microphone...');
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log('[Voice] Microphone OK, tracks:', localStream.getAudioTracks().length);
+            
+            // 5. Set up WebRTC
+            $scope.callStatusText = 'Conectando...';
+            $scope.$applyAsync();
+            console.log('[Voice] Step 5: Setting up WebRTC...');
+            pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
             
             audioEl = document.createElement('audio');
             audioEl.autoplay = true;
@@ -451,21 +469,21 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 audioEl.srcObject = e.streams[0];
             };
             
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             localStream.getTracks().forEach(function(track) {
                 pc.addTrack(track, localStream);
             });
             
             dc = pc.createDataChannel('oai-events');
             dc.onmessage = function(e) {
-                handleRealtimeEvent(JSON.parse(e.data));
+                try { handleRealtimeEvent(JSON.parse(e.data)); } catch(ex) {}
             };
             dc.onopen = function() {
-                console.log('Data channel open');
+                console.log('[Voice] Data channel open');
             };
             
             pc.oniceconnectionstatechange = function() {
-                if (pc.iceConnectionState === 'connected') {
+                console.log('[Voice] ICE state:', pc.iceConnectionState);
+                if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
                     $scope.callStatus = 'connected';
                     $scope.callStatusText = 'Conectado';
                     callStartTime = Date.now();
@@ -478,8 +496,9 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             
             var offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
+            console.log('[Voice] Step 6: SDP offer created, sending to OpenAI...');
             
-            var sdpRes = await fetch('https://api.openai.com/v1/realtime?model=' + (sessionData.model || 'gpt-4o-realtime-mini-2025-01-21'), {
+            var sdpRes = await fetch('https://api.openai.com/v1/realtime?model=' + encodeURIComponent(sessionData.model || 'gpt-4o-realtime-mini-2025-01-21'), {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + ephemeralKey,
@@ -488,16 +507,24 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 body: offer.sdp
             });
             
+            if (!sdpRes.ok) {
+                var errText = await sdpRes.text();
+                console.error('[Voice] SDP response error:', sdpRes.status, errText.substring(0, 200));
+                throw new Error('WebRTC SDP failed: ' + sdpRes.status);
+            }
+            
             var answerSdp = await sdpRes.text();
+            console.log('[Voice] Step 7: Got SDP answer, setting remote description...');
             await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+            console.log('[Voice] WebRTC setup complete, waiting for ICE connection...');
             
         } catch(err) {
-            console.error('Voice call error:', err);
+            console.error('[Voice] FAILED at:', err.message || err);
             $scope.callStatus = 'idle';
             $scope.callStatusText = '';
             $scope.mode = 'select';
             $scope.$applyAsync();
-            alert('Não foi possível iniciar a chamada. Verifique o microfone.');
+            alert('Erro: ' + (err.message || err) + '\n\nVerifique o microfone e tente novamente.');
         }
     };
     
