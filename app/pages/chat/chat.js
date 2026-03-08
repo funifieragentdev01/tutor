@@ -395,93 +395,88 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         return instr;
     }
     
-    $scope.startCall = async function() {
+    // Voice call — identical pattern to Orvya fitness Coach (promise chains)
+    $scope.startCall = function() {
         $scope.callStatus = 'connecting';
         $scope.callStatusText = 'Carregando dados...';
         $scope.$applyAsync();
-        
-        try {
-            // 1. Get session data from tutor_session endpoint
-            console.log('[Voice] Step 1: Getting session data...');
-            var res = await fetch(CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/tutor_session', {
-                method: 'POST',
-                headers: {
-                    'Authorization': CONFIG.BASIC_TOKEN,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ player_id: childId })
-            });
-            sessionData = await res.json();
-            console.log('[Voice] Session data:', sessionData.player_name, 'folders:', (sessionData.folders||[]).length);
-            
-            if (!sessionData || !sessionData.api_key) {
-                throw new Error('No API key from tutor_session');
-            }
-            
-            // 2. Build instructions
-            var instructions = buildVoiceInstructions(sessionData);
+
+        // Step 1: Get session data from tutor_session endpoint
+        console.log('[Voice] Step 1: Getting session data...');
+        fetch(CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/tutor_session', {
+            method: 'POST',
+            headers: {
+                'Authorization': CONFIG.BASIC_TOKEN,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ player_id: childId })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            sessionData = data;
+            console.log('[Voice] Session data:', data.player_name, 'folders:', (data.folders||[]).length);
+            if (!data || !data.api_key) throw new Error('No API key from tutor_session');
+
+            // Step 2: Build instructions and generate ephemeral key WITH instructions
+            var instructions = buildVoiceInstructions(data);
             console.log('[Voice] Step 2: Instructions built, length:', instructions.length);
-            
-            // 3. Get ephemeral key
+
             $scope.callStatusText = 'Obtendo chave...';
             $scope.$applyAsync();
-            console.log('[Voice] Step 3: Getting ephemeral key...');
-            var ephRes = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+
+            return fetch('https://api.openai.com/v1/realtime/client_secrets', {
                 method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + sessionData.api_key,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Authorization': 'Bearer ' + data.api_key, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     session: {
                         type: 'realtime',
-                        model: sessionData.model || 'gpt-4o-realtime-mini-2025-01-21',
+                        model: data.model || 'gpt-realtime-mini',
                         instructions: instructions,
-                        audio: { output: { voice: sessionData.voice || 'coral' } }
+                        audio: { output: { voice: data.voice || 'coral' } }
                     }
                 })
             });
-            var ephData = await ephRes.json();
-            console.log('[Voice] Ephemeral response:', (ephData.value || (ephData.client_secret && ephData.client_secret.value)) ? 'OK' : JSON.stringify(ephData).substring(0, 200));
-            
-            var ephemeralKey = ephData.value || (ephData.client_secret && ephData.client_secret.value);
-            if (!ephemeralKey) {
-                throw new Error('No client_secret: ' + JSON.stringify(ephData).substring(0, 100));
-            }
-            
-            // 4. Request microphone
-            $scope.callStatusText = 'Acessando microfone...';
-            $scope.$applyAsync();
-            console.log('[Voice] Step 4: Requesting microphone...');
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            console.log('[Voice] Microphone OK, tracks:', localStream.getAudioTracks().length);
-            
-            // 5. Set up WebRTC
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var clientSecret = data.value || (data.client_secret && data.client_secret.value);
+            if (!clientSecret) throw new Error('No client secret');
+            console.log('[Voice] Ephemeral key obtained');
+
+            // Step 3: Set up WebRTC
             $scope.callStatusText = 'Conectando...';
             $scope.$applyAsync();
-            console.log('[Voice] Step 5: Setting up WebRTC...');
+            return connectWebRTC(clientSecret);
+        })
+        .then(function() {
+            $scope.$applyAsync(function() {
+                $scope.callStatus = 'connected';
+                $scope.callStatusText = 'Conectado';
+            });
+        })
+        .catch(function(err) {
+            console.error('[Voice] Call failed:', err);
+            $scope.$applyAsync(function() {
+                $scope.callStatus = 'idle';
+                $scope.callStatusText = '';
+                $scope.mode = 'select';
+            });
+            alert('Erro: ' + (err.message || err) + '\n\nVerifique o microfone e tente novamente.');
+        });
+    };
+
+    function connectWebRTC(clientSecret) {
+        return new Promise(function(resolve, reject) {
             pc = new RTCPeerConnection({
                 iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
             });
-            
+
             audioEl = document.createElement('audio');
             audioEl.autoplay = true;
             pc.ontrack = function(e) {
                 audioEl.srcObject = e.streams[0];
             };
-            
-            localStream.getTracks().forEach(function(track) {
-                pc.addTrack(track, localStream);
-            });
-            
-            dc = pc.createDataChannel('oai-events');
-            dc.onmessage = function(e) {
-                try { handleRealtimeEvent(JSON.parse(e.data)); } catch(ex) {}
-            };
-            dc.onopen = function() {
-                console.log('[Voice] Data channel open');
-            };
-            
+
             pc.oniceconnectionstatechange = function() {
                 console.log('[Voice] ICE state:', pc.iceConnectionState);
                 if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
@@ -494,40 +489,38 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                     $scope.endCall();
                 }
             };
-            
-            var offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            console.log('[Voice] Step 6: SDP offer created, sending to OpenAI...');
-            
-            var sdpRes = await fetch('https://api.openai.com/v1/realtime/calls', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + ephemeralKey,
-                    'Content-Type': 'application/sdp'
-                },
-                body: offer.sdp
-            });
-            
-            if (!sdpRes.ok) {
-                var errText = await sdpRes.text();
-                console.error('[Voice] SDP response error:', sdpRes.status, errText.substring(0, 200));
-                throw new Error('WebRTC SDP failed: ' + sdpRes.status);
-            }
-            
-            var answerSdp = await sdpRes.text();
-            console.log('[Voice] Step 7: Got SDP answer, setting remote description...');
-            await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
-            console.log('[Voice] WebRTC setup complete, waiting for ICE connection...');
-            
-        } catch(err) {
-            console.error('[Voice] FAILED at:', err.message || err);
-            $scope.callStatus = 'idle';
-            $scope.callStatusText = '';
-            $scope.mode = 'select';
-            $scope.$applyAsync();
-            alert('Erro: ' + (err.message || err) + '\n\nVerifique o microfone e tente novamente.');
-        }
-    };
+
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+                localStream = stream;
+                stream.getTracks().forEach(function(track) { pc.addTrack(track, stream); });
+
+                dc = pc.createDataChannel('oai-events');
+                dc.onopen = function() {
+                    console.log('[Voice] Data channel open');
+                };
+                dc.onmessage = function(e) {
+                    try { handleRealtimeEvent(JSON.parse(e.data)); } catch(ex) {}
+                };
+
+                return pc.createOffer();
+            }).then(function(offer) {
+                return pc.setLocalDescription(offer);
+            }).then(function() {
+                return fetch('https://api.openai.com/v1/realtime/calls', {
+                    method: 'POST',
+                    body: pc.localDescription.sdp,
+                    headers: { 'Authorization': 'Bearer ' + clientSecret, 'Content-Type': 'application/sdp' }
+                });
+            }).then(function(response) {
+                if (!response.ok) {
+                    return response.text().then(function(t) { throw new Error('WebRTC SDP failed: ' + response.status + ' ' + t.substring(0, 200)); });
+                }
+                return response.text();
+            }).then(function(sdp) {
+                return pc.setRemoteDescription({ type: 'answer', sdp: sdp });
+            }).then(resolve).catch(reject);
+        });
+    }
     
     function handleRealtimeEvent(evt) {
         if (!evt || !evt.type) return;
