@@ -28,14 +28,14 @@
             <form ng-submit="login()" class="auth-form">
             <div class="form-group">
                 <label>E-mail</label>
-                <input type="email" ng-model="email" 
-                       placeholder="{{userType === 'parent' ? 'pai@email.com' : 'aluno@email.com'}}" 
+                <input type="email" ng-model="$parent.email" 
+                       placeholder="{{$parent.userType === 'parent' ? 'pai@email.com' : 'aluno@email.com'}}" 
                        required>
             </div>
             <div class="form-group">
                 <label>Senha</label>
-                <input type="password" ng-model="password" 
-                       placeholder="{{userType === 'parent' ? 'Sua senha' : 'Senha definida pelos pais'}}" 
+                <input type="password" ng-model="$parent.password" 
+                       placeholder="{{$parent.userType === 'parent' ? 'Sua senha' : 'Senha definida pelos pais'}}" 
                        required>
             </div>
             
