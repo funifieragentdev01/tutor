@@ -437,8 +437,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                         type: 'realtime',
                         model: sessionData.model || 'gpt-4o-realtime-mini-2025-01-21',
                         instructions: instructions,
-                        audio: { output: { voice: sessionData.voice || 'coral' } },
-                        input_audio_transcription: { model: 'whisper-1' }
+                        audio: { output: { voice: sessionData.voice || 'coral' } }
                     }
                 })
             });
