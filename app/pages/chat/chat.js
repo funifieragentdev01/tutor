@@ -430,7 +430,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 body: JSON.stringify({
                     session: {
                         type: 'realtime',
-                        model: data.model || 'gpt-realtime-mini',
+                        model: 'gpt-realtime-mini',
                         instructions: instructions,
                         audio: { output: { voice: data.voice || 'coral' } }
                     }
