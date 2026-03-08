@@ -51,7 +51,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     };
     var DEFAULT_SUBJECT_ICON = 'fa-book';
 
-    var LESSON_ICONS = ['📖', '🎤', '✏️', '🧩', '🎯', '💡', '📝', '🔬'];
+    var LESSON_ICONS = ['fa-book-open', 'fa-microphone', 'fa-pencil', 'fa-puzzle-piece', 'fa-bullseye', 'fa-lightbulb', 'fa-pen', 'fa-flask'];
     
     var MODULE_COLORS = ['#FF9600', '#CE82FF', '#00CD9C', '#1CB0F6', '#FF4B4B', '#FFC800'];
     
@@ -277,10 +277,9 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     }
     
     function getLessonIcon(lesson, idx) {
-        if (lesson.is_unlocked === false) return '🔒';
-        if ((lesson.percent || 0) >= 100) return '⭐';
-        // First available (unlocked, not done)
-        if (lesson.is_unlocked !== false && (lesson.percent || 0) < 100) return '▶';
+        if (lesson.is_unlocked === false) return 'fa-lock';
+        if ((lesson.percent || 0) >= 100) return 'fa-star';
+        if (lesson.is_unlocked !== false && (lesson.percent || 0) < 100) return 'fa-play';
         return LESSON_ICONS[idx % LESSON_ICONS.length];
     }
     
@@ -302,13 +301,10 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     };
     
     $scope.getBubbleDynamicStyle = function(item) {
-        if (item.is_unlocked === false) return { 'background': '#3C3C3C', 'border-color': '#3C3C3C' };
+        if (item.is_unlocked === false) return {};
         var color = item.moduleColor || '#58CC02';
-        var darker = darkenColor(color, 0.2);
-        if ((item.percent || 0) >= 100) {
-            return { 'background': color, 'border-color': '#FFC800', 'box-shadow': '0 6px 0 ' + darker + ', 0 0 0 3px rgba(255,200,0,0.4)' };
-        }
-        return { 'background': color, 'border-color': color, 'box-shadow': '0 6px 0 ' + darker };
+        var darker = darkenColor(color, 0.3);
+        return { 'background': color, 'border-bottom-color': darker };
     };
     
     function darkenColor(hex, amount) {

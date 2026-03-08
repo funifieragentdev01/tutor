@@ -38,7 +38,7 @@
                     <div class="duo-module-progress" ng-if="item.percent > 0">{{item.percent | number:0}}% completo</div>
                     <!-- Character -->
                     <div class="duo-character" ng-if="characterUrl" ng-style="getCharacterStyle(item)">
-                        <img ng-src="{{characterUrl}}" ng-class="{'duo-character-gray': isCharacterGray(item)}" alt="personagem">
+                        <img ng-src="{{characterUrl}}" ng-class="{'duo-character-gray': isCharacterGray(item)}" alt="personagem" onerror="this.parentElement.style.display='none'">
                     </div>
                 </div>
                 
@@ -46,7 +46,7 @@
                 <div class="duo-bubble-wrap" ng-if="item._type === 'lesson'" ng-style="getBubbleStyle(item)">
                     <div ng-class="getBubbleClass(item)" ng-click="selectLesson(item, $event)"
                          ng-style="getBubbleDynamicStyle(item)">
-                        <span class="duo-bubble-icon">{{item.icon}}</span>
+                        <i class="fa-solid {{item.icon}} duo-bubble-icon"></i>
                     </div>
                     
                     <!-- Lesson Popup -->
