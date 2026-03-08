@@ -390,25 +390,85 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             '- Elogie o esforco\n' +
             '- Seja divertido e use analogias\n' +
             '- A crianca pode pedir para criar novos conteudos — neste caso, encoraje e diga que em breve sera possivel\n' +
-            '- Se a crianca parecer desanimada, motive e sugira uma abordagem diferente\n' +
-            '- Quando o aluno disser tchau ou pedir para encerrar, despeca-se carinhosamente dizendo "tchau" ou "ate logo"';
+            '- Se a crianca parecer desanimada, motive e sugira uma abordagem diferente';
         
         return instr;
     }
     
-    // Auto-hangup: detect farewell patterns in AI transcript
-    var farewellPatterns = /\b(tchau|at[eé] (?:logo|mais|a pr[oó]xima)|bons estudos|boa sorte|foi um prazer|nos vemos|at[eé] breve|falou|bye|adeus)\b/i;
-    var pendingHangup = null;
-
-    function checkAutoHangup(text) {
-        if (!text || pendingHangup) return;
-        if (farewellPatterns.test(text)) {
-            console.log('[Voice] Farewell detected in AI speech:', text.substring(0, 80));
-            pendingHangup = setTimeout(function() {
-                console.log('[Voice] Auto-hanging up after farewell');
-                $scope.endCall();
-            }, 4000); // 4s delay to let farewell finish playing
+    // Voice tools — end_call allows Professor to hang up
+    var voiceTools = [
+        {
+            type: 'function',
+            name: 'end_call',
+            description: 'Encerra a ligacao quando o aluno disser tchau, que ja entendeu, que pode desligar, ou quando a conversa naturalmente terminar. Sempre se despeca antes de chamar esta funcao.',
+            parameters: { type: 'object', properties: {}, required: [] }
         }
+    ];
+
+    function sendSessionUpdate() {
+        if (!dc || dc.readyState !== 'open') {
+            console.warn('[Voice] sendSessionUpdate: dc not ready');
+            return;
+        }
+
+        var instructions = buildVoiceInstructions(sessionData);
+        instructions += '\n\n=== FERRAMENTAS DISPONIVEIS ===';
+        instructions += '\nVoce tem a ferramenta end_call para encerrar a ligacao.';
+        instructions += '\nQuando o aluno disser tchau, que ja entendeu, ou pedir para desligar, despeca-se e chame end_call.';
+        instructions += '\nUse a ferramenta PROATIVAMENTE quando perceber que a conversa terminou.';
+
+        console.log('[Voice] Sending session.update with tools, instructions length:', instructions.length);
+
+        dc.send(JSON.stringify({
+            type: 'session.update',
+            session: {
+                modalities: ['text', 'audio'],
+                instructions: instructions,
+                voice: sessionData.voice || 'coral',
+                tools: voiceTools,
+                input_audio_transcription: {
+                    model: 'gpt-4o-transcribe'
+                },
+                turn_detection: {
+                    type: 'server_vad',
+                    threshold: 0.5,
+                    prefix_padding_ms: 300,
+                    silence_duration_ms: 500
+                }
+            }
+        }));
+
+        // Trigger initial greeting
+        setTimeout(function() {
+            if (dc && dc.readyState === 'open') {
+                var childName = (sessionData && sessionData.player_name) ? sessionData.player_name : 'aluno';
+                dc.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'message',
+                        role: 'user',
+                        content: [{
+                            type: 'input_text',
+                            text: 'Oi Professor! Acabei de ligar. Me cumprimente pelo nome (' + childName + ') em portugues brasileiro e pergunte como pode me ajudar hoje.'
+                        }]
+                    }
+                }));
+                dc.send(JSON.stringify({ type: 'response.create' }));
+            }
+        }, 500);
+    }
+
+    function sendToolResult(callId, result) {
+        if (!dc || dc.readyState !== 'open') return;
+        dc.send(JSON.stringify({
+            type: 'conversation.item.create',
+            item: {
+                type: 'function_call_output',
+                call_id: callId,
+                output: JSON.stringify(result)
+            }
+        }));
+        dc.send(JSON.stringify({ type: 'response.create' }));
     }
 
     // Voice call — identical pattern to Orvya fitness Coach (promise chains)
@@ -513,6 +573,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                 dc = pc.createDataChannel('oai-events');
                 dc.onopen = function() {
                     console.log('[Voice] Data channel open');
+                    sendSessionUpdate();
                 };
                 dc.onmessage = function(e) {
                     try { handleRealtimeEvent(JSON.parse(e.data)); } catch(ex) {}
@@ -541,19 +602,26 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     function handleRealtimeEvent(evt) {
         if (!evt || !evt.type) return;
         
-        // Log non-audio events for debugging
-        if (evt.type !== 'response.audio.delta') {
-            console.log('[Voice] Event:', evt.type);
-        }
+        switch(evt.type) {
+            case 'session.created':
+            case 'session.updated':
+                console.log('[Voice] ' + evt.type, JSON.stringify(evt).substring(0, 300));
+                break;
 
-        // Detect farewell in AI's completed transcript
-        if (evt.type === 'response.audio_transcript.done' && evt.transcript) {
-            console.log('[Voice] AI said:', evt.transcript.substring(0, 100));
-            checkAutoHangup(evt.transcript);
-        }
+            case 'response.function_call_arguments.done':
+                console.log('[Voice] Function call:', evt.name, evt.call_id, evt.arguments);
+                if (evt.name === 'end_call') {
+                    console.log('[Voice] Professor requested end_call');
+                    sendToolResult(evt.call_id, { success: true });
+                    setTimeout(function() {
+                        $scope.endCall();
+                    }, 3000);
+                }
+                break;
 
-        if (evt.type === 'error') {
-            console.error('[Voice] API Error:', JSON.stringify(evt));
+            case 'error':
+                console.error('[Voice] API Error:', JSON.stringify(evt));
+                break;
         }
     }
     
@@ -576,7 +644,6 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     };
     
     $scope.endCall = function() {
-        if (pendingHangup) { clearTimeout(pendingHangup); pendingHangup = null; }
         if (callTimer) { clearInterval(callTimer); callTimer = null; }
         if (localStream) { localStream.getTracks().forEach(function(t) { t.stop(); }); localStream = null; }
         if (dc) { try { dc.close(); } catch(e) {} dc = null; }
