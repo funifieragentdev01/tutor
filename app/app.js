@@ -110,8 +110,13 @@ app.run(function($rootScope, $location, AuthService) {
 });
 
 // Bottom Navigation Controller
-app.controller('BottomNavController', function($scope, $location, AuthService) {
-    $scope.isParent = AuthService.getRole() === 'parent';
+app.controller('BottomNavController', function($scope, $rootScope, $location, AuthService) {
+    $scope.isParent = AuthService.getRole() !== 'child';
+    
+    // Update on route change (role may have changed after login)
+    $rootScope.$on('$routeChangeSuccess', function() {
+        $scope.isParent = AuthService.getRole() !== 'child';
+    });
     
     $scope.isActive = function(path) {
         return $location.path() === path;
