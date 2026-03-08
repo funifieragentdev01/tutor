@@ -490,6 +490,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         .then(function(r) { return r.json(); })
         .then(function(data) {
             sessionData = data;
+            // Safety net: always use correct model name regardless of backend
+            sessionData.model = 'gpt-realtime-mini';
             console.log('[Voice] Session data:', data.player_name, 'folders:', (data.folders||[]).length);
             if (!data || !data.api_key) throw new Error('No API key from tutor_session');
 
