@@ -1,9 +1,9 @@
 /* ===== Tutor CSS — Duolingo-inspired, playful & clean ===== */
 
 :root {
-    --primary: #6C5CE7;
-    --primary-dark: #5A4BD1;
-    --primary-light: #A29BFE;
+    --primary: #FF9600;
+    --primary-dark: #E08600;
+    --primary-light: #FFB84D;
     --green: #58CC02;
     --green-dark: #46A302;
     --pink: #FD79A8;
@@ -77,7 +77,7 @@ body {
 .landing-page { overflow-x: hidden; }
 
 .hero {
-    background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #E08600 100%);
     color: var(--white);
     padding: 80px 20px 60px;
     text-align: center;
@@ -270,7 +270,7 @@ body {
 
 /* CTA */
 .section-cta {
-    background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #E08600 100%);
     color: var(--white);
     text-align: center;
     padding: 60px 20px;
@@ -792,7 +792,7 @@ body {
 .choice-label { flex: 1; }
 .choice-indicator { font-size: 18px; font-weight: 800; }
 
-.choice-selected { border-color: var(--primary); background: rgba(108,92,231,0.15); }
+.choice-selected { border-color: var(--primary); background: rgba(255,150,0,0.15); }
 .choice-selected .choice-letter { background: var(--primary); color: var(--white); }
 .choice-correct { border-color: var(--green); background: rgba(88,204,2,0.1); }
 .choice-correct .choice-letter { background: var(--green); color: var(--white); }
@@ -832,7 +832,7 @@ body {
 }
 .results-great { background: linear-gradient(135deg, #00B894, #00CEC9); color: var(--white); }
 .results-ok { background: linear-gradient(135deg, #FDCB6E, #F0932B); color: var(--white); }
-.results-low { background: linear-gradient(135deg, #74B9FF, #6C5CE7); color: var(--white); }
+.results-low { background: linear-gradient(135deg, #74B9FF, #FF9600); color: var(--white); }
 .results-emoji { font-size: 64px; margin-bottom: 8px; }
 .results-title { font-size: 28px; font-weight: 900; margin: 0 0 8px; }
 .results-score { font-size: 18px; font-weight: 600; opacity: 0.9; }
@@ -856,8 +856,9 @@ body {
 .tab-active { color: var(--primary); border-bottom-color: var(--primary); }
 
 .extracted-info {
-    background: #F0F4FF; border-radius: var(--radius-sm);
+    background: var(--bg-surface); border-radius: var(--radius-sm);
     padding: 16px; text-align: left; margin: 16px 0;
+    color: var(--text);
 }
 .extracted-info h4 { margin: 0 0 8px; font-size: 14px; }
 .extracted-item { font-size: 13px; margin: 4px 0; }
@@ -980,14 +981,14 @@ body {
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: var(--text-muted);
+    color: rgba(255,255,255,0.4);
     font-size: 12px;
     font-weight: 600;
     transition: color 0.2s;
     gap: 2px;
 }
 .nav-item:hover, .nav-item.active {
-    color: var(--primary);
+    color: #fff;
     text-decoration: none;
 }
 .nav-icon {
@@ -1117,7 +1118,7 @@ body.has-bottom-nav .app-version {
 
 .hint-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; justify-content: center; }
 .chip {
-    background: var(--card); border: 1px solid var(--border);
+    background: var(--bg-surface); border: 1px solid var(--border); color: var(--text);
     padding: 6px 14px; border-radius: 20px; font-size: 13px;
     cursor: pointer; transition: all 0.2s; user-select: none;
 }
@@ -1452,7 +1453,7 @@ body.has-bottom-nav .app-version {
 }
 
 .mode-card-chat {
-    background: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
+    background: linear-gradient(135deg, #FF9600 0%, #FFB84D 100%);
     color: #fff;
 }
 

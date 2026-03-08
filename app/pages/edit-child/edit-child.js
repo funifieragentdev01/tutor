@@ -266,9 +266,10 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         // Use Funifier Public Endpoint as proxy (Freepik API blocks CORS from browser)
         var prompt = 'Create a flat-design cartoon character based on the reference photo. ' +
             'Style: Duolingo mascot / Headspace characters. ' +
+            'PROPORTIONS: Very large oversized head (about 40% of total height), small compact body, short stubby legs. Chibi/kawaii proportions. ' +
             'NO outlines, NO borders, NO strokes around shapes. ' +
             'Solid flat colors only, no gradients, no shading, no shadows. ' +
-            'Simple geometric shapes, minimal details. ' +
+            'Simple geometric shapes, minimal details, big round eyes. ' +
             'Friendly, cute, child-appropriate. ' +
             'Full body, front-facing, standing pose. ' +
             'Solid white background (#FFFFFF). ' +

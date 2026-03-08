@@ -643,8 +643,9 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         var pose = POSE_PROMPTS[item.poseIndex];
         var prompt = 'Create a flat-design cartoon character in this pose: ' + pose + '. ' +
             'Match the character style from the reference image exactly. ' +
+            'PROPORTIONS: Very large oversized head (about 40% of total height), small compact body, short stubby legs. Chibi/kawaii proportions. ' +
             'Style: Duolingo mascot, NO outlines, NO borders, solid flat colors, no gradients. ' +
-            'Simple geometric shapes, minimal details, white background. ' +
+            'Simple geometric shapes, minimal details, big round eyes, white background. ' +
             'Only ONE character, full body.';
         
         // Need to fetch the character image as base64 for the reference
