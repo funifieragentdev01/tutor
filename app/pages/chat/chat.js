@@ -509,7 +509,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
 
                 dc = pc.createDataChannel('oai-events');
                 dc.onopen = function() {
-                    console.log('[Voice] Data channel open');
+                    console.log('[Voice] Data channel open — sending session.update with tools');
+                    sendSessionUpdate();
                 };
                 dc.onmessage = function(e) {
                     try { handleRealtimeEvent(JSON.parse(e.data)); } catch(ex) {}
@@ -535,6 +536,35 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         });
     }
     
+    function sendSessionUpdate() {
+        if (!dc || dc.readyState !== 'open') {
+            console.warn('[Voice] sendSessionUpdate: dc not ready');
+            return;
+        }
+        var instructions = buildVoiceInstructions(sessionData);
+        instructions += '\n\n=== FERRAMENTAS DISPONIVEIS ===';
+        instructions += '\nVoce tem a ferramenta end_call para encerrar a ligacao.';
+        instructions += '\nQuando o aluno disser tchau, que ja entendeu, ou pedir para desligar, despeca-se e chame end_call.';
+        instructions += '\nNUNCA fale o nome da funcao em voz alta. Apenas chame a ferramenta silenciosamente.';
+
+        console.log('[Voice] Sending session.update with tools');
+        dc.send(JSON.stringify({
+            type: 'session.update',
+            session: {
+                modalities: ['text', 'audio'],
+                instructions: instructions,
+                voice: sessionData.voice || 'coral',
+                tools: voiceTools,
+                turn_detection: {
+                    type: 'server_vad',
+                    threshold: 0.5,
+                    prefix_padding_ms: 300,
+                    silence_duration_ms: 500
+                }
+            }
+        }));
+    }
+
     function handleRealtimeEvent(evt) {
         if (!evt || !evt.type) return;
         console.log('[Voice] Event:', evt.type);
