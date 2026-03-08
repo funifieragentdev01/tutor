@@ -41,10 +41,18 @@ app.config(function($routeProvider, $locationProvider) {
             controller: 'CaptureController',
             reloadOnSearch: false
         })
+        .when('/parent/child/:childId/chat', {
+            templateUrl: 'pages/chat/chat.html',
+            controller: 'ChatController'
+        })
         // Child routes
         .when('/child', {
             templateUrl: 'pages/dashboard-child/dashboard-child.html',
             controller: 'ChildDashboardController'
+        })
+        .when('/child/chat', {
+            templateUrl: 'pages/chat/chat.html',
+            controller: 'ChatController'
         })
         .when('/child/folder/:folderId', {
             templateUrl: 'pages/trail/trail.html',

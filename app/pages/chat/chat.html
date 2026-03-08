@@ -1,0 +1,57 @@
+<div class="app-page chat-page">
+    <!-- Header -->
+    <div class="app-header">
+        <button class="btn-icon" ng-click="goBack()">
+            <span class="icon">←</span>
+        </button>
+        <div class="header-title">🧑‍🏫 Professor Tutor</div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chatMessages">
+        <!-- Welcome message -->
+        <div class="chat-bubble assistant" ng-if="messages.length === 0 && !loading">
+            <div class="bubble-avatar">🧑‍🏫</div>
+            <div class="bubble-content">
+                <div class="bubble-text">Olá! 👋 Eu sou o <strong>Professor Tutor</strong>! Estou aqui para te ajudar a aprender. Pode me perguntar qualquer coisa! 🚀</div>
+            </div>
+        </div>
+
+        <!-- Chat history -->
+        <div ng-repeat="msg in messages track by msg._id" class="chat-bubble" ng-class="msg.role">
+            <div class="bubble-avatar" ng-if="msg.role === 'assistant'">🧑‍🏫</div>
+            <div class="bubble-content">
+                <div class="bubble-text" ng-bind-html="formatMessage(msg.content)"></div>
+                <div class="bubble-time">{{formatTime(msg.timestamp)}}</div>
+            </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="chat-bubble assistant" ng-if="typing">
+            <div class="bubble-avatar">🧑‍🏫</div>
+            <div class="bubble-content">
+                <div class="bubble-text typing-indicator">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    Professor está digitando...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suggestion chips -->
+    <div class="chat-chips" ng-if="messages.length === 0 && !loading">
+        <button class="chip-btn" ng-click="sendMessage('Me explica isso de um jeito fácil')">💡 Me explica isso</button>
+        <button class="chip-btn" ng-click="sendMessage('Tenho uma dúvida sobre a aula')">❓ Dúvida sobre a aula</button>
+        <button class="chip-btn" ng-click="sendMessage('Quero praticar exercícios')">🎯 Quero praticar</button>
+    </div>
+
+    <!-- Input bar -->
+    <div class="chat-input-bar">
+        <input type="text" class="chat-input" placeholder="Digite sua mensagem..." 
+               ng-model="userInput" ng-keypress="onKeyPress($event)" 
+               ng-disabled="typing" autocomplete="off">
+        <button class="chat-send-btn" ng-click="sendMessage()" ng-disabled="!userInput.trim() || typing">
+            ➤
+        </button>
+    </div>
+</div>
