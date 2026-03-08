@@ -261,34 +261,25 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         $scope.$applyAsync();
         
         var base64 = photoDataUrl.split(',')[1];
-        console.log('Character gen - base64 length:', base64 ? base64.length : 'null/undefined');
-        console.log('Character gen - FREEPIK_API_KEY:', CONFIG.FREEPIK_API_KEY ? 'set (' + CONFIG.FREEPIK_API_KEY.substring(0,8) + '...)' : 'MISSING');
         
-        // Single step: Send photo as reference image to Freepik Flux 2 Klein
+        // Use Funifier Public Endpoint as proxy (Freepik API blocks CORS from browser)
         var prompt = 'Turn the person from the reference photo into a simplified cartoon mascot. ' +
             'Use a cute, playful, child-friendly style consistent with educational apps like Duolingo. ' +
             'Flat colors, clean outlines, no gradients, no realistic shading. ' +
             'IMPORTANT: Show only ONE character. Full body, standing pose, white background. ' +
             'No duplicate characters, no mirror images, no multiple views.';
         
-        fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-klein', {
+        var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
+        
+        fetch(proxyUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-freepik-api-key': CONFIG.FREEPIK_API_KEY },
-            body: JSON.stringify({
-                prompt: prompt,
-                input_image: base64,
-                aspect_ratio: 'square_1_1'
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64, prompt: prompt })
         })
-        .then(function(r) { 
-            console.log('Freepik create response status:', r.status);
-            return r.json(); 
-        })
+        .then(function(r) { return r.json(); })
         .then(function(data) {
-            console.log('Freepik create response:', JSON.stringify(data).substring(0, 300));
-            var taskId = data.data && data.data.task_id;
+            var taskId = data.response && data.response.data && data.response.data.task_id;
             if (!taskId) throw new Error('Freepik task creation failed: ' + JSON.stringify(data).substring(0, 200));
-            // Poll for result
             return pollFreepikTask(taskId);
         })
         .then(function(imageUrl) {
@@ -305,6 +296,7 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     }
     
     function pollFreepikTask(taskId) {
+        var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_status';
         var maxAttempts = 30;
         var attempt = 0;
         return new Promise(function(resolve, reject) {
@@ -312,14 +304,17 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 attempt++;
                 if (attempt > maxAttempts) return reject(new Error('Timeout gerando personagem'));
                 
-                fetch('https://api.freepik.com/v1/ai/text-to-image/flux-2-klein/' + taskId, {
-                    headers: { 'x-freepik-api-key': CONFIG.FREEPIK_API_KEY }
+                fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task_id: taskId })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    var status = data.data && data.data.status;
+                    var inner = data.response && data.response.data || data.data || {};
+                    var status = inner.status;
                     if (status === 'COMPLETED') {
-                        var generated = data.data.generated;
+                        var generated = inner.generated;
                         if (generated && generated.length > 0) {
                             var img = generated[0];
                             // Can be URL string or object with url
