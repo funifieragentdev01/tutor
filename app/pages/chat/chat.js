@@ -390,11 +390,23 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             '- Elogie o esforco\n' +
             '- Seja divertido e use analogias\n' +
             '- A crianca pode pedir para criar novos conteudos — neste caso, encoraje e diga que em breve sera possivel\n' +
-            '- Se a crianca parecer desanimada, motive e sugira uma abordagem diferente';
+            '- Se a crianca parecer desanimada, motive e sugira uma abordagem diferente\n' +
+            '- Quando o aluno disser tchau, que ja entendeu, que pode desligar, ou pedir para encerrar, despeca-se carinhosamente e use a funcao end_call para encerrar a ligacao\n' +
+            '- IMPORTANTE: Sempre chame end_call quando a conversa terminar para nao desperdicar recursos';
         
         return instr;
     }
     
+    // Voice tools — allows Professor to end the call
+    var voiceTools = [
+        {
+            type: 'function',
+            name: 'end_call',
+            description: 'Encerra a ligacao quando o aluno disser tchau, que ja entendeu, que pode desligar, ou quando a conversa naturalmente terminar. Sempre se despeca antes de chamar esta funcao.',
+            parameters: { type: 'object', properties: {}, required: [] }
+        }
+    ];
+
     // Voice call — identical pattern to Orvya fitness Coach (promise chains)
     $scope.startCall = function() {
         $scope.callStatus = 'connecting';
@@ -432,6 +444,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
                         type: 'realtime',
                         model: 'gpt-realtime-mini',
                         instructions: instructions,
+                        tools: voiceTools,
                         audio: { output: { voice: data.voice || 'coral' } }
                     }
                 })
@@ -524,8 +537,19 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
     
     function handleRealtimeEvent(evt) {
         if (!evt || !evt.type) return;
-        // Log events but don't display transcript
-        console.log('Realtime event:', evt.type);
+        console.log('[Voice] Event:', evt.type);
+
+        // Handle function calls from the AI
+        if (evt.type === 'response.function_call_arguments.done') {
+            console.log('[Voice] Function call:', evt.name);
+            if (evt.name === 'end_call') {
+                console.log('[Voice] Professor requested end_call — hanging up');
+                // Small delay so the farewell audio finishes playing
+                setTimeout(function() {
+                    $scope.endCall();
+                }, 2000);
+            }
+        }
     }
     
     function updateCallDuration() {
