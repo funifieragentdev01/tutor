@@ -103,6 +103,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
             $scope.loading = false;
             
             updateDuolingoFlag();
+            loadModuleColors($scope.items);
             
             // If Duolingo trail, load nested data
             if ($scope.showDuolingoTrail) {
@@ -126,6 +127,24 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         });
     }
     
+    function loadModuleColors(items) {
+        var moduleItems = items.filter(function(i) { return i.type === 'module'; });
+        if (moduleItems.length === 0) return;
+        var ids = moduleItems.map(function(i) { return i._id; });
+        ApiService.dbQuery('folder', '_id:{$in:' + JSON.stringify(ids) + '}', null, ids.length + 1).then(function(res) {
+            var docs = res.data || [];
+            var map = {};
+            docs.forEach(function(d) { if (d.extra && d.extra.color) map[d._id] = d.extra.color; });
+            moduleItems.forEach(function(item) {
+                if (map[item._id]) {
+                    item._savedColor = map[item._id];
+                    item._pickedColor = map[item._id];
+                }
+            });
+            $scope.$applyAsync();
+        }).catch(function() {});
+    }
+    
     function updateDuolingoFlag() {
         $scope.showDuolingoTrail = !$scope.isParent && $scope.currentLevel === 'subject';
     }
@@ -140,16 +159,33 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
             return;
         }
         
+        // Batch fetch module folder docs to get extra.color
+        var moduleIds = folders.map(function(f) { return f._id; });
+        var colorMap = {}; // _id -> color
+        
+        var idsJson = JSON.stringify(moduleIds);
+        ApiService.dbQuery('folder', '_id:{$in:' + idsJson + '}', null, moduleIds.length + 1).then(function(res) {
+            var docs = res.data || [];
+            docs.forEach(function(doc) {
+                if (doc.extra && doc.extra.color) colorMap[doc._id] = doc.extra.color;
+            });
+        }).catch(function() {}).finally(function() {
+            buildModuleEntries(folders, colorMap);
+        });
+    }
+    
+    function buildModuleEntries(folders, colorMap) {
         var pending = folders.length;
         var results = [];
         
         folders.forEach(function(mod, modIdx) {
+            var savedColor = colorMap[mod._id] || null;
             var moduleEntry = {
                 _type: 'module',
                 _id: mod._id,
                 title: mod.title,
                 percent: mod.percent || 0,
-                color: MODULE_COLORS[modIdx % MODULE_COLORS.length],
+                color: savedColor || MODULE_COLORS[modIdx % MODULE_COLORS.length],
                 moduleIndex: modIdx,
                 position: mod.position || modIdx,
                 lessons: []
@@ -363,12 +399,34 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     };
     
     $scope.getIconColor = function(item) {
+        // Use saved color for modules
+        if (item.type === 'module' && item._savedColor) return item._savedColor;
         if (item.is_unlocked === false) return '#B2BEC3';
         if (item.percent >= 100) return '#00B894';
         if (item.percent > 0) return '#FDCB6E';
         var colors = ['#6C5CE7', '#00B894', '#FD79A8', '#74B9FF', '#FF6B6B', '#00CEC9'];
         var idx = ($scope.items.indexOf(item)) % colors.length;
         return colors[idx];
+    };
+    
+    $scope.getItemColor = function(item) {
+        return item._savedColor || item._pickedColor || MODULE_COLORS[($scope.items.indexOf(item)) % MODULE_COLORS.length];
+    };
+    
+    $scope.setModuleColor = function(item, color) {
+        if (!color) return;
+        item._savedColor = color;
+        // Save to folder.extra.color
+        ApiService.dbGet('folder', item._id).then(function(res) {
+            var folder = res.data || {};
+            var extra = folder.extra || {};
+            extra.color = color;
+            return ApiService.updateFolder(item._id, { extra: extra });
+        }).then(function() {
+            console.log('[Trail] Module color saved:', item._id, color);
+        }).catch(function(err) {
+            console.error('[Trail] Failed to save module color:', err);
+        });
     };
     
     $scope.openItem = function(item) {

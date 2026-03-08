@@ -562,6 +562,13 @@ body {
     cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
 }
 .btn-delete-item:hover, .btn-delete-item:active { opacity: 1; }
+.btn-color-pick {
+    width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%; padding: 0; cursor: pointer; background: none;
+    -webkit-appearance: none; appearance: none; flex-shrink: 0;
+}
+.btn-color-pick::-webkit-color-swatch-wrapper { padding: 0; }
+.btn-color-pick::-webkit-color-swatch { border: none; border-radius: 50%; }
 .btn-clear-progress {
     background: none; border: none; font-size: 14px; padding: 8px;
     cursor: pointer; opacity: 0.4; transition: opacity 0.2s;

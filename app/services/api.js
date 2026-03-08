@@ -74,6 +74,14 @@ app.factory('ApiService', function($http, AuthService) {
                 AuthService.authHeader()
             );
         },
+        updateFolder: function(id, data) {
+            data._id = id;
+            return $http.put(
+                API + '/v3/folder',
+                data,
+                AuthService.authHeader()
+            );
+        },
         logFolderItem: function(itemId, playerId, percent) {
             var data = { item: itemId, player: playerId, status: 'done', finished: new Date().toISOString() };
             if (percent !== undefined) data.percent = percent;
