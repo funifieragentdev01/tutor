@@ -38,17 +38,8 @@
         </div>
         <div class="form-group">
             <label>Sobre {{child.name}}</label>
-            <div class="hint-chips">
-                <span class="chip" ng-click="addHint('📚 escola')">📚 escola</span>
-                <span class="chip" ng-click="addHint('🎮 diversão')">🎮 diversão</span>
-                <span class="chip" ng-click="addHint('👫 amigos')">👫 amigos</span>
-                <span class="chip" ng-click="addHint('💪 dificuldades')">💪 dificuldades</span>
-                <span class="chip" ng-click="addHint('🎯 objetivos')">🎯 objetivos</span>
-                <span class="chip" ng-click="addHint('❤️ família')">❤️ família</span>
-                <span class="chip" ng-click="addHint('⭐ ídolos')">⭐ ídolos</span>
-            </div>
             <textarea ng-model="child.description" rows="6"
-                placeholder="Conte sobre seu filho(a)... O que gosta, amigos, escola, dificuldades, objetivos..."></textarea>
+                placeholder="Conte sobre seu filho(a)... Escola, série, o que gosta, amigos, dificuldades, objetivos, personalidade..."></textarea>
         </div>
 
         <div class="extracted-info" ng-if="child.extracted">

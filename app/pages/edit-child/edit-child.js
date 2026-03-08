@@ -387,10 +387,9 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     }
     
     function uploadImageToFunifier(imageUrl) {
-        // Convert image URL or data URL to blob, then upload to Funifier
+        // For external URLs (Freepik etc), use proxy to download since CORS blocks direct fetch
         var blobPromise;
         if (imageUrl.indexOf('data:') === 0) {
-            // data URL -> blob
             var parts = imageUrl.split(',');
             var mime = parts[0].match(/:(.*?);/)[1];
             var byteString = atob(parts[1]);
@@ -399,12 +398,32 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
             blobPromise = Promise.resolve(new Blob([ab], { type: mime }));
         } else {
-            blobPromise = fetch(imageUrl).then(function(r) { return r.blob(); });
+            // Use Funifier proxy to download the image (avoids CORS)
+            var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_download';
+            blobPromise = fetch(proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: imageUrl })
+            }).then(function(r) { return r.json(); })
+            .then(function(data) {
+                // Proxy returns base64
+                var b64 = data.response && data.response.base64;
+                if (!b64) {
+                    // Fallback: try direct fetch
+                    console.warn('Proxy download failed, trying direct fetch');
+                    return fetch(imageUrl).then(function(r) { return r.blob(); });
+                }
+                var byteStr = atob(b64);
+                var ab2 = new ArrayBuffer(byteStr.length);
+                var ia2 = new Uint8Array(ab2);
+                for (var j = 0; j < byteStr.length; j++) ia2[j] = byteStr.charCodeAt(j);
+                return new Blob([ab2], { type: 'image/png' });
+            });
         }
         
         return blobPromise.then(function(blob) {
             var formData = new FormData();
-            formData.append('file', blob, 'character.png');
+            formData.append('file', blob, childId.split('@')[0] + '_character.png');
             formData.append('extra', '{"session":"characters"}');
             
             return $http.post(CONFIG.API + '/v3/upload/image', formData, {
@@ -412,6 +431,7 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 transformRequest: angular.identity
             });
         }).then(function(res) {
+            console.log('[EditChild] Upload response:', res.data);
             return res.data.uploads[0].url;
         });
     }

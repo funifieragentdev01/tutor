@@ -428,10 +428,10 @@ body {
 
 .btn-icon {
     width: 40px; height: 40px;
-    border: none; background: var(--bg);
+    border: none; background: none;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; cursor: pointer;
+    font-size: 18px; cursor: pointer; color: var(--primary);
 }
 .btn-icon .icon { font-size: 20px; }
 
@@ -891,7 +891,7 @@ body {
     position: relative;
 }
 .sound-card:active { transform: scale(0.97); }
-.sound-selected { border-color: var(--primary); background: #F0EDFF; }
+.sound-selected { border-color: var(--primary); background: rgba(255, 150, 0, 0.15); color: var(--text); }
 .sound-emoji { font-size: 32px; margin-bottom: 4px; }
 .sound-name { font-size: 13px; font-weight: 700; }
 .btn-play-sound {
