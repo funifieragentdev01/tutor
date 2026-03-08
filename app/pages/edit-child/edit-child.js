@@ -261,6 +261,8 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         $scope.$applyAsync();
         
         var base64 = photoDataUrl.split(',')[1];
+        console.log('Character gen - base64 length:', base64 ? base64.length : 'null/undefined');
+        console.log('Character gen - FREEPIK_API_KEY:', CONFIG.FREEPIK_API_KEY ? 'set (' + CONFIG.FREEPIK_API_KEY.substring(0,8) + '...)' : 'MISSING');
         
         // Single step: Send photo as reference image to Freepik Flux 2 Klein
         var prompt = 'Turn the person from the reference photo into a simplified cartoon mascot. ' +
@@ -278,10 +280,14 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 aspect_ratio: 'square_1_1'
             })
         })
-        .then(function(r) { return r.json(); })
+        .then(function(r) { 
+            console.log('Freepik create response status:', r.status);
+            return r.json(); 
+        })
         .then(function(data) {
+            console.log('Freepik create response:', JSON.stringify(data).substring(0, 300));
             var taskId = data.data && data.data.task_id;
-            if (!taskId) throw new Error('Freepik task creation failed');
+            if (!taskId) throw new Error('Freepik task creation failed: ' + JSON.stringify(data).substring(0, 200));
             // Poll for result
             return pollFreepikTask(taskId);
         })

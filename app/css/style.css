@@ -473,13 +473,16 @@ body {
 .child-name { font-size: 16px; font-weight: 700; }
 .child-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .child-stats { font-size: 13px; color: var(--text-light); margin-top: 4px; }
-.child-actions { display: flex; gap: 4px; margin-top: 4px; }
+.child-actions { display: flex; gap: 8px; margin-top: 8px; justify-content: center; }
 .btn-child-action {
-    background: none; border: none; font-size: 14px; padding: 4px;
-    cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
+    background: var(--bg-card); border: 2px solid var(--border); border-radius: 12px;
+    font-size: 22px; padding: 8px 14px; cursor: pointer; opacity: 0.85;
+    transition: all 0.2s; min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
 }
-.btn-child-action:hover, .btn-child-action:active { opacity: 1; }
-.btn-child-delete { opacity: 0.25; }
+.btn-child-action:hover, .btn-child-action:active { opacity: 1; background: var(--primary-light); border-color: var(--primary); transform: scale(1.05); }
+.btn-child-delete { opacity: 0.6; }
+.btn-child-delete:hover, .btn-child-delete:active { border-color: #e74c3c; background: #ffeaea; }
 .child-card-add { border: 2px dashed var(--border); background: transparent; box-shadow: none; }
 .add-avatar { background: var(--bg) !important; color: var(--primary) !important; font-size: 32px; }
 
