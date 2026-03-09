@@ -1,5 +1,6 @@
 app.controller('EditChildController', function($scope, $http, $location, $routeParams, AuthService, ApiService) {
-    var childId = decodeURIComponent($routeParams.childId || '');
+    var childId = ''; // resolved below
+    var rootFolder = decodeURIComponent($routeParams.childId || '');
     
     $scope.tab = 'profile';
     $scope.setTab = function(t) { $scope.tab = t; };
@@ -644,5 +645,13 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         $location.path('/parent');
     };
     
-    init();
+    // Resolve root_folder → player
+    ApiService.resolveChild(rootFolder).then(function(player) {
+        childId = player._id;
+        init();
+    }).catch(function() {
+        // Fallback: treat rootFolder as player _id (legacy)
+        childId = rootFolder;
+        init();
+    });
 });

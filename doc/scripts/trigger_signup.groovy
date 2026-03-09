@@ -45,6 +45,7 @@ void trigger(event, entity, player, database) {
     if (parentId != null && parentId.toString().trim().length() > 0) {
         extra.put("parent_id", parentId.toString().trim())
     }
+    extra.put("root_folder", newShortGuid())
     newPlayer.extra = extra
 
     pm.insert(newPlayer)
@@ -52,4 +53,5 @@ void trigger(event, entity, player, database) {
     entity.remove("password")
     entity.put("success", true)
     entity.put("player_id", email.toString().trim())
+    entity.put("root_folder", newPlayer.extra.get("root_folder"))
 }

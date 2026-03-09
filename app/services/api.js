@@ -20,6 +20,24 @@ app.factory('ApiService', function($http, AuthService) {
         readDate: readDate,
         bsonDate: bsonDate,
         
+        // Resolve child by root_folder GUID
+        resolveChild: function(rootFolder) {
+            var q = encodeURIComponent(JSON.stringify({"extra.root_folder": rootFolder}));
+            return $http({
+                method: 'POST',
+                url: API + '/v3/database/player/aggregate?q=' + q + '&strict=true',
+                headers: {
+                    'Authorization': 'Bearer ' + AuthService.getToken(),
+                    'Range': 'items=0-1'
+                },
+                data: []
+            }).then(function(res) {
+                var players = res.data || [];
+                if (players.length > 0) return players[0];
+                throw new Error('Child not found');
+            });
+        },
+        
         // Get player profile
         getPlayer: function(userId) {
             return $http.get(

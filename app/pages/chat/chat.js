@@ -1,6 +1,7 @@
 // Chat Controller — AI Teacher Chat + Voice Call
 app.controller('ChatController', function($scope, $location, $routeParams, $sce, AuthService, ApiService) {
-    var childId = $routeParams.childId || AuthService.getUser();
+    var childId = ''; // resolved below
+    var rootFolder = '';
     var isParent = AuthService.getRole() === 'parent';
     
     $scope.messages = [];
@@ -50,7 +51,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             return;
         }
         if (isParent) {
-            $location.path('/parent/child/' + childId);
+            $location.path('/parent/child/' + (rootFolder || childId));
         } else {
             $location.path('/child');
         }
@@ -718,6 +719,20 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         if ($scope.mode === 'voice') $scope.endCall();
     });
     
-    // Init
-    loadContext();
+    // Resolve root_folder → player
+    var paramChildId = $routeParams.childId || '';
+    if (AuthService.getRole() === 'child') {
+        childId = AuthService.getUser();
+        loadContext();
+    } else {
+        ApiService.resolveChild(decodeURIComponent(paramChildId)).then(function(player) {
+            childId = player._id;
+            rootFolder = paramChildId;
+            loadContext();
+        }).catch(function() {
+            childId = decodeURIComponent(paramChildId);
+            rootFolder = childId;
+            loadContext();
+        });
+    }
 });

@@ -69,8 +69,9 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     }
     
     function loadChildSubjectCount(child) {
-        // Root folder _id = child._id
-        ApiService.getFolderInside(child._id).then(function(res) {
+        // Root folder _id = root_folder GUID (or child._id for legacy)
+        var rootId = childRootFolder(child);
+        ApiService.getFolderInside(rootId).then(function(res) {
             var data = res.data || {};
             var items = data.items || [];
             child.subjectCount = items.filter(function(i) { return i.type === 'subject'; }).length;
@@ -79,20 +80,26 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
         });
     }
     
+    function childRootFolder(child) {
+        return (child.extra && child.extra.root_folder) || child._id;
+    }
+    
     $scope.openChild = function(child) {
-        $location.path('/parent/child/' + encodeURIComponent(child._id));
+        $location.path('/parent/child/' + encodeURIComponent(childRootFolder(child)));
     };
     
     $scope.openExams = function(child, $event) {
         $event.stopPropagation();
-        $location.path('/parent/child/' + child._id + '/exams');
+        $location.path('/parent/child/' + encodeURIComponent(childRootFolder(child)) + '/exams');
     };
     
     $scope.captureChild = function(child, $event) {
         $event.stopPropagation();
+        var rf = childRootFolder(child);
         var ctx = encodeURIComponent(JSON.stringify({
             childId: child._id,
-            folderId: child._id, // root folder
+            rootFolder: rf,
+            folderId: rf, // root folder _id = root_folder GUID
             level: 'root',
             subject: null,
             module: null
@@ -102,7 +109,7 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     
     $scope.editChild = function(child, $event) {
         $event.stopPropagation();
-        $location.path('/parent/edit-child/' + encodeURIComponent(child._id));
+        $location.path('/parent/edit-child/' + encodeURIComponent(childRootFolder(child)));
     };
     
     $scope.openAddChild = function() {

@@ -55,10 +55,11 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
                 }
                 
                 createdChildId = childEmail;
+                var rootFolder = data.root_folder || childEmail;
                 
-                // Create root folder for child
+                // Create root folder for child (use root_folder GUID as _id)
                 ApiService.createFolder({
-                    _id: childEmail,
+                    _id: rootFolder,
                     type: 'root',
                     title: $scope.child.name.trim(),
                     position: 0,
@@ -260,7 +261,15 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
     };
     
     $scope.goToChild = function() {
-        $location.path('/parent/child/' + encodeURIComponent(createdChildId));
+        // Fetch child player to get root_folder for URL
+        ApiService.getPlayer(createdChildId).then(function(res) {
+            var player = res.data || {};
+            var rf = (player.extra && player.extra.root_folder) || createdChildId;
+            $location.path('/parent/child/' + encodeURIComponent(rf));
+            $scope.$applyAsync();
+        }).catch(function() {
+            $location.path('/parent/child/' + encodeURIComponent(createdChildId));
+        });
     };
     
     $scope.goBack = function() {

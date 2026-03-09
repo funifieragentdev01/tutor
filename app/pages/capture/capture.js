@@ -345,7 +345,8 @@ app.controller('CaptureController', function($scope, $location, $routeParams, Au
     };
     
     $scope.goToTrail = function() {
-        $location.path('/parent/child/' + encodeURIComponent(childId) + '/folder/' + encodeURIComponent(parentFolderId)).search({});
+        var rf = ctx.rootFolder || childId;
+        $location.path('/parent/child/' + encodeURIComponent(rf) + '/folder/' + encodeURIComponent(parentFolderId)).search({});
     };
     
     $scope.resetCapture = function() {

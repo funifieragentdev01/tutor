@@ -1,6 +1,7 @@
 app.controller('TrailController', function($scope, $location, $routeParams, $timeout, AuthService, ApiService) {
-    var childId = decodeURIComponent($routeParams.childId || '') || (AuthService.getRole() === 'child' ? AuthService.getUser() : '');
-    var folderId = decodeURIComponent($routeParams.folderId || '') || childId; // default to root
+    var childId = ''; // resolved below
+    var rootFolder = ''; // root_folder GUID
+    var folderId = decodeURIComponent($routeParams.folderId || ''); // may be empty until resolved
     
     $scope.isParent = AuthService.getRole() === 'parent';
     $scope.currentTitle = '';
@@ -82,6 +83,13 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         }
     }
     
+    function initController(resolvedChildId, resolvedRootFolder) {
+        childId = resolvedChildId;
+        rootFolder = resolvedRootFolder || resolvedChildId;
+        if (!folderId) folderId = rootFolder; // default to root folder
+        init();
+    }
+    
     function loadFolder(id) {
         $scope.loading = true;
         $scope.items = [];
@@ -100,7 +108,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
                 } else {
                     $scope.parentModuleColor = null;
                 }
-            } else if (id === childId) {
+            } else if (id === rootFolder || id === childId) {
                 $scope.currentLevel = 'root';
                 $scope.parentModuleColor = null;
                 ApiService.dbGet('profile__c', childId).then(function(pRes) {
@@ -504,7 +512,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     
     $scope.openItem = function(item) {
         if (item.is_unlocked === false) return;
-        var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(childId) + '/folder/' : '/child/folder/';
+        var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(rootFolder) + '/folder/' : '/child/folder/';
         $location.path(base + encodeURIComponent(item._id));
     };
     
@@ -515,7 +523,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     };
     
     $scope.navigateTo = function(b) {
-        var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(childId) + '/folder/' : '/child/folder/';
+        var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(rootFolder) + '/folder/' : '/child/folder/';
         $location.path(base + encodeURIComponent(b._id));
     };
     
@@ -523,7 +531,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         ApiService.dbGet('folder', folderId).then(function(res) {
             var folder = res.data;
             if (folder && folder.parent) {
-                var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(childId) + '/folder/' : '/child/folder/';
+                var base = $scope.isParent ? '/parent/child/' + encodeURIComponent(rootFolder) + '/folder/' : '/child/folder/';
                 $location.path(base + encodeURIComponent(folder.parent));
             } else {
                 $location.path($scope.isParent ? '/parent' : '/child');
@@ -547,7 +555,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         
         ApiService.createFolder({
             type: 'subject',
-            parent: childId,
+            parent: rootFolder,
             title: $scope.newSubjectName.trim(),
             position: $scope.items.length,
             active: true,
@@ -620,6 +628,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     $scope.openCapture = function() {
         var ctx = encodeURIComponent(JSON.stringify({
             childId: childId,
+            rootFolder: rootFolder,
             folderId: folderId,
             level: $scope.currentLevel,
             subject: $scope.currentLevel === 'subject' ? $scope.currentTitle : null,
@@ -773,5 +782,16 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         });
     }
     
-    init();
+    // Resolve root_folder → player
+    var paramChildId = decodeURIComponent($routeParams.childId || '');
+    if (AuthService.getRole() === 'child') {
+        initController(AuthService.getUser(), null);
+    } else {
+        ApiService.resolveChild(paramChildId).then(function(player) {
+            initController(player._id, paramChildId);
+        }).catch(function() {
+            // Fallback: try paramChildId as player _id (legacy)
+            initController(paramChildId, paramChildId);
+        });
+    }
 });
