@@ -89,7 +89,8 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     
     $scope.openExams = function(child, $event) {
         $event.stopPropagation();
-        $location.path('/parent/child/' + encodeURIComponent(childRootFolder(child)) + '/exams');
+        var rf = childRootFolder(child);
+        $location.path('/parent/child/' + encodeURIComponent(rf) + '/exams');
     };
     
     $scope.captureChild = function(child, $event) {
@@ -108,7 +109,7 @@ app.controller('ParentDashboardController', function($scope, $location, $rootSco
     
     $scope.editChild = function(child, $event) {
         $event.stopPropagation();
-        $location.path('/parent/edit-child/' + encodeURIComponent(childRootFolder(child)));
+        $location.path('/parent/edit-child/' + encodeURIComponent(child._id));
     };
     
     $scope.openAddChild = function() {

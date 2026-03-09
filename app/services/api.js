@@ -22,19 +22,24 @@ app.factory('ApiService', function($http, AuthService) {
         
         // Resolve child by root_folder GUID
         resolveChild: function(rootFolder) {
-            var q = encodeURIComponent(JSON.stringify({"extra.root_folder": rootFolder}));
-            return $http({
-                method: 'POST',
-                url: API + '/v3/database/player/aggregate?q=' + q + '&strict=true',
-                headers: {
-                    'Authorization': 'Bearer ' + AuthService.getToken(),
-                    'Range': 'items=0-1'
-                },
-                data: []
-            }).then(function(res) {
-                var players = res.data || [];
-                if (players.length > 0) return players[0];
-                throw new Error('Child not found');
+            // Try as player ID first, then search by root_folder
+            return $http.get(
+                API + '/v3/player/' + encodeURIComponent(rootFolder),
+                { headers: { 'Authorization': 'Bearer ' + AuthService.getToken() } }
+            ).then(function(res) {
+                if (res.data && res.data._id) return res.data;
+                throw new Error('not a player id');
+            }).catch(function() {
+                // Search by extra.root_folder via aggregate
+                return $http.post(
+                    API + '/v3/database/player/aggregate?strict=true',
+                    [{ $match: { "extra.root_folder": rootFolder } }, { $limit: 1 }],
+                    { headers: { 'Authorization': 'Bearer ' + AuthService.getToken() } }
+                ).then(function(res) {
+                    var players = res.data || [];
+                    if (players.length > 0) return players[0];
+                    throw new Error('Child not found');
+                });
             });
         },
         
