@@ -648,7 +648,7 @@ body {
 .content-type { font-size: 12px; color: var(--text-light); }
 
 /* FAB */
-.fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 50; }
+.fab-container { position: fixed; bottom: 80px; right: 24px; z-index: 50; }
 .fab {
     width: 56px; height: 56px;
     border-radius: 50%;
