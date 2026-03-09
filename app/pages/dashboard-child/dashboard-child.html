@@ -19,23 +19,13 @@
     <div class="section-pad">
         <h2 class="section-heading">Minhas Disciplinas</h2>
         
-        <div class="child-trail" ng-if="subjects.length > 0">
-            <div class="trail-node" ng-repeat="subj in subjects" 
-                 ng-click="openSubject(subj)"
-                 ng-class="{'trail-locked': subj.is_unlocked === false}"
-                 ng-style="{'--node-color': getColor($index)}">
-                <div class="trail-node-icon" ng-style="{'background-color': getColor($index)}">
+        <div class="subject-grid" ng-if="subjects.length > 0">
+            <div class="subject-card" ng-repeat="subj in subjects" ng-click="openSubject(subj)">
+                <div class="subject-card-icon" ng-style="{'background-color': getColor($index)}">
                     <span>{{getIcon(subj)}}</span>
                 </div>
-                <div class="trail-node-info">
-                    <div class="trail-node-title">{{subj.title}}</div>
-                    <div class="trail-node-progress" ng-if="subj.total > 0">
-                        <div class="progress-bar-mini">
-                            <div class="progress-fill-mini" ng-style="{'width': (subj.percent || 0) + '%', 'background': getColor($index)}"></div>
-                        </div>
-                        <span class="trail-node-percent">{{(subj.percent || 0) | number:0}}%</span>
-                    </div>
-                </div>
+                <div class="subject-card-title">{{subj.title}}</div>
+                <div class="subject-card-progress" ng-if="subj.total > 0">{{(subj.percent || 0) | number:0}}%</div>
             </div>
         </div>
 
