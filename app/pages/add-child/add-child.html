@@ -18,7 +18,7 @@
 
     <!-- Step 1: Basic Info -->
     <div class="wizard-content" ng-if="step === 0">
-        <div class="wizard-icon">👋</div>
+        <div class="wizard-icon"><i class="fa fa-hand-peace" style="color:#FF9600;font-size:2rem"></i></div>
         <h2 class="wizard-title">Quem é seu filho(a)?</h2>
         <p class="wizard-subtitle">Informações básicas para criar a conta.</p>
         
@@ -48,14 +48,14 @@
 
     <!-- Step 2: Profile Photo -->
     <div class="wizard-content" ng-if="step === 1">
-        <div class="wizard-icon">📸</div>
+        <div class="wizard-icon"><i class="fa fa-camera" style="color:#FF9600;font-size:2rem"></i></div>
         <h2 class="wizard-title">Foto de perfil</h2>
         <p class="wizard-subtitle">Uma foto do rosto de {{child.name}} para o avatar.</p>
         
         <div class="photo-upload-area" ng-click="pickPhoto()">
             <img ng-if="photoPreview" ng-src="{{photoPreview}}" class="photo-preview-round">
             <div ng-if="!photoPreview" class="photo-placeholder-round">
-                <span class="photo-placeholder-icon">📷</span>
+                <span class="photo-placeholder-icon"><i class="fa fa-camera" style="color:#999;font-size:2rem"></i></span>
                 <span>Toque para tirar foto ou escolher da galeria</span>
             </div>
         </div>
@@ -69,18 +69,18 @@
 
     <!-- Step 3: Description -->
     <div class="wizard-content" ng-if="step === 2">
-        <div class="wizard-icon">💬</div>
+        <div class="wizard-icon"><i class="fa fa-comment" style="color:#FF9600;font-size:2rem"></i></div>
         <h2 class="wizard-title">Conte sobre {{child.name}}</h2>
         <p class="wizard-subtitle">Quanto mais você contar, mais personalizada será a experiência.</p>
         
         <div class="hint-chips">
-            <span class="chip" ng-click="addHint('📚 escola')">📚 escola</span>
-            <span class="chip" ng-click="addHint('🎮 diversão')">🎮 diversão</span>
-            <span class="chip" ng-click="addHint('👫 amigos')">👫 amigos</span>
-            <span class="chip" ng-click="addHint('💪 dificuldades')">💪 dificuldades</span>
-            <span class="chip" ng-click="addHint('🎯 objetivos')">🎯 objetivos</span>
-            <span class="chip" ng-click="addHint('❤️ família')">❤️ família</span>
-            <span class="chip" ng-click="addHint('⭐ ídolos')">⭐ ídolos</span>
+            <span class="chip" ng-click="addHint('escola')"><i class="fa fa-book"></i> escola</span>
+            <span class="chip" ng-click="addHint('diversão')"><i class="fa fa-gamepad"></i> diversão</span>
+            <span class="chip" ng-click="addHint('amigos')"><i class="fa fa-users"></i> amigos</span>
+            <span class="chip" ng-click="addHint('dificuldades')"><i class="fa fa-puzzle-piece"></i> dificuldades</span>
+            <span class="chip" ng-click="addHint('objetivos')"><i class="fa fa-bullseye"></i> objetivos</span>
+            <span class="chip" ng-click="addHint('família')"><i class="fa fa-heart"></i> família</span>
+            <span class="chip" ng-click="addHint('ídolos')"><i class="fa fa-star"></i> ídolos</span>
         </div>
         
         <div class="form-group">
@@ -98,7 +98,7 @@
 
     <!-- Done -->
     <div class="wizard-content wizard-done" ng-if="step === 3">
-        <div class="wizard-icon done-icon">🎉</div>
+        <div class="wizard-icon done-icon"><i class="fa fa-check-circle" style="color:#00B894;font-size:2.5rem"></i></div>
         <h2 class="wizard-title">Perfil criado!</h2>
         <p class="wizard-subtitle">{{child.name}} está pronto(a) para aprender.</p>
         
@@ -111,7 +111,7 @@
             <div class="done-email">{{child.email}}</div>
         </div>
         
-        <div class="hint-tip">💡 Dica: Personalize sons e figurinhas em Editar Perfil!</div>
+        <div class="hint-tip"><i class="fa fa-lightbulb-o" style="color:#FF9600"></i> Dica: Personalize sons e figurinhas em Editar Perfil!</div>
         
         <button class="btn btn-primary btn-block btn-lg" ng-click="goToChild()">Ver Trilha de {{child.name}}</button>
         <button class="btn btn-outline btn-block" ng-click="goBack()">Voltar ao Painel</button>

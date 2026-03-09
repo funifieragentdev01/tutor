@@ -252,13 +252,13 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
             current += ' ';
         }
         var hintTexts = {
-            '📚 escola': 'Sobre a escola: ',
-            '🎮 diversão': 'O que gosta de fazer: ',
-            '👫 amigos': 'Amigos: ',
-            '💪 dificuldades': 'Dificuldades: ',
-            '🎯 objetivos': 'Objetivos: ',
-            '❤️ família': 'Família: ',
-            '⭐ ídolos': 'Ídolos/referências: '
+            'escola': 'Sobre a escola: ',
+            'diversão': 'O que gosta de fazer: ',
+            'amigos': 'Amigos: ',
+            'dificuldades': 'Dificuldades: ',
+            'objetivos': 'Objetivos: ',
+            'família': 'Família: ',
+            'ídolos': 'Ídolos/referências: '
         };
         $scope.child.description = current + (hintTexts[hint] || hint + ': ');
         // Focus textarea
