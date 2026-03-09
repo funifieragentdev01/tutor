@@ -148,18 +148,44 @@ app.factory('ApiService', function($http, AuthService) {
             );
         },
         dbQuery: function(collection, query, sort, limit) {
-            var q = encodeURIComponent(query || '');
-            var sortStage = sort ? [{ $sort: sort }] : [];
             var lim = limit || 20;
-            // Range header format: items=skip-limit (NOT start-end)
+            var pipeline = [];
+            
+            // Build $match stage from query (string or object)
+            if (query) {
+                if (typeof query === 'object') {
+                    pipeline.push({ $match: query });
+                } else {
+                    // Parse simple query string like: _id:{$in:["a","b"]} or player:"email"
+                    try {
+                        var matchObj = (new Function('return ({' + query + '})'))();
+                        pipeline.push({ $match: matchObj });
+                    } catch(e) {
+                        // Fallback: pass as q= URL param
+                        console.warn('[dbQuery] Could not parse query, using q= param:', query);
+                        return $http({
+                            method: 'POST',
+                            url: API + '/v3/database/' + collection + '/aggregate?q=' + encodeURIComponent(query) + '&strict=true',
+                            headers: {
+                                'Authorization': 'Bearer ' + AuthService.getToken(),
+                                'Range': 'items=0-' + lim
+                            },
+                            data: sort ? [{ $sort: sort }] : []
+                        });
+                    }
+                }
+            }
+            
+            if (sort) pipeline.push({ $sort: sort });
+            
             return $http({
                 method: 'POST',
-                url: API + '/v3/database/' + collection + '/aggregate?q=' + q + '&strict=true',
+                url: API + '/v3/database/' + collection + '/aggregate?strict=true',
                 headers: {
                     'Authorization': 'Bearer ' + AuthService.getToken(),
                     'Range': 'items=0-' + lim
                 },
-                data: sortStage
+                data: pipeline
             });
         },
         dbDelete: function(collection, query) {

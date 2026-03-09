@@ -36,14 +36,14 @@
                 <div class="duo-module-header" ng-if="item._type === 'module'" ng-style="{'background-color': item.color}">
                     <div class="duo-module-title">{{item.title}}</div>
                     <div class="duo-module-progress" ng-if="item.percent > 0">{{item.percent | number:0}}% completo</div>
-                    <!-- Character -->
-                    <div class="duo-character" ng-if="characterUrl" ng-style="getCharacterStyle(item)">
-                        <img ng-src="{{poseUrls[item._id] || characterUrl}}" ng-class="{'duo-character-gray': isCharacterGray(item)}" alt="personagem" onerror="this.parentElement.style.display='none'">
-                    </div>
                 </div>
                 
                 <!-- Lesson Bubble -->
-                <div class="duo-bubble-wrap" ng-if="item._type === 'lesson'" ng-style="getBubbleStyle(item)">
+                <div class="duo-bubble-wrap" ng-if="item._type === 'lesson'" ng-style="getBubbleStyle(item)" style="position:relative">
+                    <!-- Character variation in the curve belly -->
+                    <div class="trail-variation" ng-if="getVariationForLesson(item)" ng-style="getVariationStyle(item)">
+                        <img ng-src="{{getVariationForLesson(item)}}" class="trail-variation-img" alt="personagem">
+                    </div>
                     <div ng-class="getBubbleClass(item)" ng-click="selectLesson(item, $event)"
                          ng-style="getBubbleDynamicStyle(item)">
                         <i class="fa-solid {{item.icon}} duo-bubble-icon"></i>

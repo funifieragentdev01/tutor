@@ -68,16 +68,20 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     ];
     
     $scope.poseUrls = {}; // moduleId -> url
+    $scope.variationUrls = []; // character variation URLs from profile__c
     var poseGenerationQueue = [];
     var poseGenerating = false;
     
     function init() {
         loadFolder(folderId);
-        // Load character URL for child
+        // Load character URL + variations for child
         if (!$scope.isParent) {
             ApiService.dbGet('profile__c', childId).then(function(res) {
                 if (res.data && res.data.character_url) {
                     $scope.characterUrl = res.data.character_url;
+                }
+                if (res.data && res.data.variations && res.data.variations.length > 0) {
+                    $scope.variationUrls = res.data.variations.map(function(v) { return v.url; });
                 }
             }).catch(function(){});
         }
@@ -326,6 +330,39 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         return {
             'margin-left': 'calc(50% - 30px + ' + xOffset + 'px)'
         };
+    };
+    
+    // Determine if a lesson position should show a character variation
+    // Shows at the "peak" of each S-curve swing (every ~4 lessons) on the opposite side
+    $scope.getVariationForLesson = function(item) {
+        if (item._type !== 'lesson') return null;
+        if (!$scope.variationUrls || $scope.variationUrls.length === 0) return null;
+        
+        // Show a variation every 4 lessons at the widest point of the curve
+        // lessonIndex 2, 6, 10, 14... are where sin() hits peak/valley
+        var idx = item.lessonIndex;
+        if (idx < 2) return null;
+        if ((idx - 2) % 4 !== 0) return null;
+        
+        var varIdx = Math.floor((idx - 2) / 4) % $scope.variationUrls.length;
+        return $scope.variationUrls[varIdx];
+    };
+    
+    $scope.getVariationStyle = function(item) {
+        if (item._type !== 'lesson') return {};
+        // Place on the opposite side of the bubble
+        var xOffset = Math.sin(item.lessonIndex * 0.8) * 80;
+        var style = { 'position': 'absolute', 'top': '-10px' };
+        if (xOffset > 0) {
+            // Bubble is right, character goes left
+            style['left'] = '15px';
+            style['right'] = 'auto';
+        } else {
+            // Bubble is left, character goes right
+            style['right'] = '15px';
+            style['left'] = 'auto';
+        }
+        return style;
     };
     
     $scope.getBubbleClass = function(item) {
