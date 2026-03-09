@@ -333,18 +333,26 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         };
     };
     
-    // Assign variation URLs to specific lessons (displayed alongside, not replacing)
+    // Assign 1 variation per module, at the first S-curve belly (lesson index 2 within each module)
     function assignVariationsToLessons(flat) {
         if (!$scope.variationUrls || $scope.variationUrls.length === 0) return;
         var varIdx = 0;
-        var lessonCount = 0;
+        var currentModule = -1;
+        var lessonInModule = 0;
+        var assignedThisModule = false;
+        
         for (var i = 0; i < flat.length; i++) {
-            if (flat[i]._type === 'lesson') {
-                lessonCount++;
-                // Show variation every 3 lessons starting at lesson 3
-                if (lessonCount >= 3 && (lessonCount - 3) % 3 === 0) {
+            if (flat[i]._type === 'module') {
+                currentModule = flat[i].moduleIndex;
+                lessonInModule = 0;
+                assignedThisModule = false;
+            } else if (flat[i]._type === 'lesson') {
+                lessonInModule++;
+                // First belly of S-curve = ~3rd lesson in module (lessonIndex 2)
+                if (!assignedThisModule && lessonInModule === 3) {
                     flat[i]._variationUrl = $scope.variationUrls[varIdx % $scope.variationUrls.length];
                     varIdx++;
+                    assignedThisModule = true;
                 }
             }
         }
