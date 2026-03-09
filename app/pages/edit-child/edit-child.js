@@ -683,6 +683,17 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     $scope.removeSticker = function(idx, $event) {
         $event.stopPropagation();
         $scope.child.stickers.splice(idx, 1);
+        // Auto-save after removal
+        ApiService.getProfile(childId).then(function(res) {
+            var profile = res.data || { _id: childId };
+            profile.stickers = $scope.child.stickers;
+            return ApiService.dbSave('profile__c', profile);
+        }).then(function() {
+            flashSaved();
+            $scope.$applyAsync();
+        }).catch(function(err) {
+            console.error('[EditChild] Failed to save after sticker removal:', err);
+        });
     };
     
     $scope.saveStickers = function() {

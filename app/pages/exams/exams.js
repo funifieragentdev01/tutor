@@ -1,6 +1,7 @@
 // Exams Controller — Exam Calendar for Parents
 app.controller('ExamsController', function($scope, $location, $routeParams, AuthService, ApiService) {
-    var childId = $routeParams.childId;
+    var rootFolder = decodeURIComponent($routeParams.childId || '');
+    var childId = ''; // resolved from rootFolder
     var parentId = AuthService.getUser();
     
     $scope.childName = '';
@@ -11,7 +12,7 @@ app.controller('ExamsController', function($scope, $location, $routeParams, Auth
     $scope.form = { subject: '', topic: '', date: null, notes: '' };
     
     $scope.goBack = function() {
-        $location.path('/parent/child/' + childId);
+        $location.path('/parent');
     };
     
     $scope.toggleForm = function() {
@@ -41,30 +42,27 @@ app.controller('ExamsController', function($scope, $location, $routeParams, Auth
     
     async function loadData() {
         try {
-            // Load child name
+            // Resolve rootFolder → player
             try {
-                var pRes = await ApiService.getPlayer(childId);
-                var player = pRes.data || pRes;
-                $scope.childName = (player.extra && player.extra.name__c) || player.name || '';
-            } catch(e) {}
+                var resolved = await ApiService.resolveChild(rootFolder);
+                childId = resolved._id;
+                $scope.childName = resolved.name || (resolved.extra && resolved.extra.name__c) || '';
+            } catch(e) {
+                childId = rootFolder; // fallback
+            }
             
             // Load subjects via Folder API (subjects are inside the child's root folder)
             try {
-                var fRes = await ApiService.getFolderInside(childId);
+                var fRes = await ApiService.getFolderInside(rootFolder);
                 var allItems = (fRes.data && fRes.data.items) || [];
                 $scope.subjects = allItems.filter(function(f) { return f.type === 'subject'; });
             } catch(e) {
                 $scope.subjects = [];
             }
             
-            // Load exams
+            // Load exams (stored with player email as key)
             try {
-                var eq = JSON.stringify({ player: childId });
-                var pipeline = [
-                    { $match: { player: childId } },
-                    { $sort: { date: 1 } }
-                ];
-                var eRes = await ApiService.dbQuery('exam__c', eq, { date: 1 }, 100);
+                var eRes = await ApiService.dbQuery('exam__c', 'player:"' + childId + '"', { date: 1 }, 100);
                 var list = eRes.data || [];
                 $scope.exams = list.map(enrichExam);
             } catch(e) {}
