@@ -654,12 +654,20 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         var prompt = 'Você é um diretor de arte criando variações de um personagem infantil para um app educacional.\n\n' +
             'O pai/mãe descreveu o(a) filho(a) ' + name + ' (' + (age || '?') + ' anos) assim:\n"' + description + '"\n\n' +
             'Extraia de 4 a 6 cenas/situações que representem a criança, baseadas na descrição.\n' +
-            'REGRA OBRIGATÓRIA: A primeira cena DEVE ser a criança estudando/lendo um livro.\n' +
-            'As demais devem refletir hobbies, interesses e momentos mencionados na descrição.\n\n' +
+            'REGRAS OBRIGATÓRIAS:\n' +
+            '1. A PRIMEIRA cena DEVE ser a criança feliz estudando/lendo um livro, sentada, corpo inteiro visível.\n' +
+            '2. A SEGUNDA cena DEVE ser a criança comemorando uma conquista — pose de super-herói/campeão, ' +
+            'punho levantado, olhar super confiante, estrelas ou confetti ao redor, como a corujinha do Duolingo celebrando.\n' +
+            '3. As demais (2-4 cenas) devem refletir hobbies e interesses da descrição.\n\n' +
+            'IMPORTANTE para cada prompt_detail:\n' +
+            '- SEMPRE incluir: "full body visible from head to feet, leave empty space margin below feet"\n' +
+            '- SEMPRE incluir: "happy, smiling, joyful expression"\n' +
+            '- SEMPRE incluir: "solid white background #FFFFFF, no scenery, no furniture, no floor"\n' +
+            '- A criança deve estar SEMPRE feliz e sorrindo em todas as cenas.\n' +
+            '- O fundo deve ser SEMPRE branco puro sem cenário (será removido depois).\n\n' +
             'Retorne APENAS um JSON array, sem markdown, sem explicação:\n' +
-            '[{"scene":"titulo curto da cena","prompt_detail":"descrição detalhada em inglês para gerar a imagem, descrevendo pose, cenário, objetos, expressão"}]\n\n' +
-            'O prompt_detail deve ser em inglês e descrever a cena visualmente para um gerador de imagens.\n' +
-            'Cada prompt_detail deve ter no máximo 80 palavras.';
+            '[{"scene":"titulo curto da cena","prompt_detail":"descrição em inglês para gerar a imagem"}]\n\n' +
+            'O prompt_detail deve ser em inglês, max 100 palavras.';
         
         return fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -691,6 +699,18 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         });
     }
     
+    function buildVariationPrompt(sceneDetail) {
+        return 'Create the SAME cartoon character from the reference image in a new pose and scene. ' +
+            'CRITICAL: The character must look IDENTICAL — same face, hair style, hair color, skin tone, body proportions, art style. ' +
+            'Change ONLY the pose, clothing details if needed. ' +
+            'IMPORTANT: Show the COMPLETE full body from head to feet — do NOT crop legs or feet. ' +
+            'Leave empty space/margin below the feet. The character must be HAPPY, SMILING, with a JOYFUL expression. ' +
+            'Scene: ' + sceneDetail + '. ' +
+            'Style: Friendly flat-design cartoon like Duolingo. NO outlines, solid flat colors, no gradients, no shadows. ' +
+            'Solid pure white background (#FFFFFF). NO scenery, NO furniture, NO floor, NO ground. Just the character on white. ' +
+            'Full body, only ONE character.';
+    }
+    
     function generateVariationsSequentially(characterBase64, scenes) {
         var index = 0;
         
@@ -703,12 +723,7 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             $scope.variationProgress = 'Gerando variação ' + (i + 1) + ' de ' + scenes.length + ': ' + scene.scene + '...';
             $scope.$applyAsync();
             
-            var prompt = 'Create the SAME cartoon character from the reference image in a new pose and scene. ' +
-                'CRITICAL: The character must look IDENTICAL — same face, hair style, hair color, skin tone, body proportions, art style. ' +
-                'Change ONLY the pose, clothing details if needed, and background/scene. ' +
-                'Scene: ' + scene.prompt_detail + '. ' +
-                'Style: Friendly flat-design cartoon like Duolingo. NO outlines, solid flat colors, no gradients. ' +
-                'Full body, white background (#FFFFFF). Only ONE character.';
+            var prompt = buildVariationPrompt(scene.prompt_detail);
             
             var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
             
@@ -724,8 +739,16 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 return pollFreepikTask(taskId);
             })
             .then(function(imageUrl) {
-                // Download the generated image before URL expires
-                return downloadViaProxy(imageUrl);
+                // Try to remove background, fallback to original
+                var originalBlobPromise = downloadViaProxy(imageUrl);
+                return originalBlobPromise.then(function(originalBlob) {
+                    return removeBackground(imageUrl).then(function(transparentUrl) {
+                        return downloadViaProxy(transparentUrl);
+                    }).catch(function(err) {
+                        console.warn('[Variations] Remove-bg failed for var ' + i + ', using original:', err.message);
+                        return originalBlob;
+                    });
+                });
             })
             .then(function(blob) {
                 if (!blob || blob.size < 100) throw new Error('Empty image');
@@ -779,12 +802,7 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         $scope.$applyAsync();
         
         getBase64FromUrl($scope.child.character_url).then(function(base64) {
-            var prompt = 'Create the SAME cartoon character from the reference image in a new pose and scene. ' +
-                'CRITICAL: The character must look IDENTICAL — same face, hair style, hair color, skin tone, body proportions, art style. ' +
-                'Change ONLY the pose, clothing details if needed, and background/scene. ' +
-                'Scene: ' + v.prompt_detail + '. ' +
-                'Style: Friendly flat-design cartoon like Duolingo. NO outlines, solid flat colors, no gradients. ' +
-                'Full body, white background (#FFFFFF). Only ONE character.';
+            var prompt = buildVariationPrompt(v.prompt_detail);
             
             var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
             return fetch(proxyUrl, {
@@ -799,7 +817,14 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             if (!taskId) throw new Error('Freepik task creation failed');
             return pollFreepikTask(taskId);
         })
-        .then(function(imageUrl) { return downloadViaProxy(imageUrl); })
+        .then(function(imageUrl) {
+            var originalBlobPromise = downloadViaProxy(imageUrl);
+            return originalBlobPromise.then(function(originalBlob) {
+                return removeBackground(imageUrl).then(function(transparentUrl) {
+                    return downloadViaProxy(transparentUrl);
+                }).catch(function() { return originalBlob; });
+            });
+        })
         .then(function(blob) {
             var formData = new FormData();
             formData.append('file', blob, childId.split('@')[0] + '_var_retry_' + Date.now() + '.png');
