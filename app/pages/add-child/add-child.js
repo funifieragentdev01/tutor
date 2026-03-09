@@ -232,9 +232,12 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
                             original: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 }
                         };
                         
-                        // Use PUT /v3/database/player to update only image (preserves extra, password)
-                        ApiService.dbSave('player', { _id: createdChildId, image: imageObj })
-                            .then(resolve).catch(resolve);
+                        // Read-merge-write player (PUT replaces entire doc)
+                        ApiService.getPlayer(createdChildId).then(function(pRes) {
+                            var p = pRes.data || {};
+                            p.image = imageObj;
+                            return ApiService.dbSave('player', p);
+                        }).then(resolve).catch(resolve);
                     }).catch(resolve);
                 }, 'image/jpeg', 0.8);
             };

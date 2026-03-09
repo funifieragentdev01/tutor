@@ -117,11 +117,12 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                         original: { url: s3Url, size: 0, width: w, height: h, depth: 0 }
                     };
                     
-                    // Use PUT /v3/database/player to update only image (preserves extra, password, etc.)
-                    return $http.put(CONFIG.API + '/v3/database/player', {
-                        _id: childId,
-                        image: imageObj
-                    }, AuthService.authHeader());
+                    // Read current player, merge image, then save (PUT replaces entire doc)
+                    return ApiService.getPlayer(childId).then(function(pRes) {
+                        var player = pRes.data || {};
+                        player.image = imageObj;
+                        return $http.put(CONFIG.API + '/v3/database/player', player, AuthService.authHeader());
+                    });
                 }).then(function(response) {
                     console.log('[EditChild] Profile photo saved successfully:', response.data);
                     flashSaved();
@@ -182,8 +183,13 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             }
             return ApiService.dbSave('profile__c', profileData);
         }).then(function() {
-            // Also update player name
-            ApiService.dbSave('player', { _id: childId, name: $scope.child.name, email: childId });
+            // Also update player name (read-merge-write since PUT replaces entire doc)
+            ApiService.getPlayer(childId).then(function(pRes) {
+                var p = pRes.data || {};
+                p.name = $scope.child.name;
+                p.email = childId;
+                ApiService.dbSave('player', p);
+            });
             $scope.saving = false;
             flashSaved();
             $scope.$applyAsync();
