@@ -91,11 +91,11 @@
     <!-- Step 3: Done -->
     <div class="section-pad" ng-if="step === 'done'">
         <div class="capture-card capture-done">
-            <div class="capture-icon">🎉</div>
+            <div class="capture-icon"><i class="fa fa-check-circle" style="color:#00B894;font-size:2.5rem"></i></div>
             <h3>Trilha criada com sucesso!</h3>
             <p>{{result.lessons.length}} aula{{result.lessons.length !== 1 ? 's' : ''}} com quizzes prontos para {{childName}}.</p>
             <button class="btn btn-primary btn-block" ng-click="goToTrail()">Ver Trilha</button>
-            <button class="btn btn-outline btn-block" ng-click="resetCapture()">📷 Adicionar mais conteúdo</button>
+            <button class="btn btn-outline btn-block" ng-click="resetCapture()"><i class="fa fa-camera"></i> Adicionar mais conteúdo</button>
         </div>
     </div>
 

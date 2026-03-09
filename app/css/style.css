@@ -743,9 +743,10 @@ body {
 }
 .progress-text { font-size: 13px; color: var(--text-light); }
 
-.capture-done { background: linear-gradient(135deg, #00B894 0%, #00CEC9 100%); color: var(--white); }
+.capture-done { background: var(--bg-card); color: var(--white); border: 1px solid var(--border); }
 .capture-done h3 { color: var(--white); }
-.capture-done p { color: rgba(255,255,255,0.9); }
+.capture-done p { color: var(--text-light); }
+.capture-done .btn + .btn { margin-top: 12px; }
 
 /* ===== Quiz Page ===== */
 .quiz-progress-header { flex: 1; }
