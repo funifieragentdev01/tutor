@@ -117,11 +117,12 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                         original: { url: s3Url, size: 0, width: w, height: h, depth: 0 }
                     };
                     
-                    // Read current player, merge image, then save (PUT replaces entire doc)
+                    // Read full player (GET /v3/player), merge image, save (POST /v3/player)
                     return ApiService.getPlayer(childId).then(function(pRes) {
                         var player = pRes.data || {};
+                        player._id = childId;
                         player.image = imageObj;
-                        return $http.put(CONFIG.API + '/v3/database/player', player, AuthService.authHeader());
+                        return $http.post(CONFIG.API + '/v3/player', player, AuthService.authHeader());
                     });
                 }).then(function(response) {
                     console.log('[EditChild] Profile photo saved successfully:', response.data);
@@ -183,12 +184,13 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             }
             return ApiService.dbSave('profile__c', profileData);
         }).then(function() {
-            // Also update player name (read-merge-write since PUT replaces entire doc)
+            // Also update player name (GET /v3/player, merge, POST /v3/player)
             ApiService.getPlayer(childId).then(function(pRes) {
                 var p = pRes.data || {};
+                p._id = childId;
                 p.name = $scope.child.name;
                 p.email = childId;
-                ApiService.dbSave('player', p);
+                $http.post(CONFIG.API + '/v3/player', p, AuthService.authHeader());
             });
             $scope.saving = false;
             flashSaved();

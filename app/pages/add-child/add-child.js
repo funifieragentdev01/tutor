@@ -236,11 +236,13 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
             var imgEntry = { url: url, size: 0, width: 0, height: 0, depth: 0 };
             var imageObj = { small: angular.copy(imgEntry), medium: angular.copy(imgEntry), original: angular.copy(imgEntry) };
             
+            // Read full player (GET /v3/player/{id}), merge image, save back (POST /v3/player)
             return ApiService.getPlayer(createdChildId).then(function(pRes) {
                 var p = pRes.data || {};
+                p._id = createdChildId;
                 p.image = imageObj;
                 console.log('[AddChild] Saving player with S3 URL, keys:', Object.keys(p).join(','));
-                return ApiService.dbSave('player', p);
+                return $http.post(CONFIG.API + '/v3/player', p, AuthService.authHeader());
             });
         }).then(function() {
             console.log('[AddChild] Player photo saved successfully');

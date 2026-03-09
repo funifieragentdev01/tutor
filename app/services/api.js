@@ -41,7 +41,7 @@ app.factory('ApiService', function($http, AuthService) {
         // Get player profile
         getPlayer: function(userId) {
             return $http.get(
-                API + '/v3/database/player/' + encodeURIComponent(userId) + '?strict=true',
+                API + '/v3/player/' + encodeURIComponent(userId),
                 AuthService.authHeader()
             );
         },
