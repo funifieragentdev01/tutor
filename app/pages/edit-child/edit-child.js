@@ -251,25 +251,39 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 else { w = w * maxSize / h; h = maxSize; }
                 canvas.width = w; canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                var resized = canvas.toDataURL('image/jpeg', 0.85);
                 
-                $scope.child.body_photo_url = resized;
-                $scope.bodyPhotoUrl = resized;
-                
-                ApiService.getProfile(childId).then(function(res) {
-                    var profile = res.data || { _id: childId };
-                    profile.body_photo_url = resized;
-                    return ApiService.dbSave('profile__c', profile);
-                }).then(function() {
-                    $scope.saving = false;
-                    flashSaved();
-                    $scope.$applyAsync();
-                    generateCharacter(resized);
-                }).catch(function() {
-                    $scope.error = 'Erro ao salvar foto.';
-                    $scope.saving = false;
-                    $scope.$applyAsync();
-                });
+                // Upload to S3 instead of saving base64
+                canvas.toBlob(function(blob) {
+                    if (!blob) { $scope.saving = false; $scope.$applyAsync(); return; }
+                    var fd = new FormData();
+                    fd.append('file', blob, 'body-' + childId.split('@')[0] + '.jpg');
+                    fd.append('extra', JSON.stringify({ session: 'body-photos' }));
+                    
+                    $http.post(CONFIG.API + '/v3/upload/image', fd, {
+                        headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+                        transformRequest: angular.identity
+                    }).then(function(uploadRes) {
+                        var s3Url = uploadRes.data.uploads[0].url;
+                        $scope.child.body_photo_url = s3Url;
+                        $scope.bodyPhotoUrl = s3Url;
+                        
+                        return ApiService.getProfile(childId).then(function(res) {
+                            var profile = res.data || { _id: childId };
+                            profile.body_photo_url = s3Url;
+                            return ApiService.dbSave('profile__c', profile);
+                        });
+                    }).then(function() {
+                        $scope.saving = false;
+                        flashSaved();
+                        $scope.$applyAsync();
+                        // Pass S3 URL to character generation (it needs base64 internally)
+                        generateCharacter($scope.child.body_photo_url);
+                    }).catch(function() {
+                        $scope.error = 'Erro ao salvar foto.';
+                        $scope.saving = false;
+                        $scope.$applyAsync();
+                    });
+                }, 'image/jpeg', 0.85);
             };
             img.src = $scope.bodyPhotoData;
         } else if ($scope.child.body_photo_url) {
@@ -281,13 +295,38 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     $scope.generatingCharacter = false;
     $scope.pendingCharacterUrl = null;
     
-    function generateCharacter(photoDataUrl) {
+    function generateCharacter(photoUrl) {
         $scope.generatingCharacter = true;
         $scope.pendingCharacterUrl = null;
         $scope.error = '';
         $scope.$applyAsync();
         
-        var base64 = photoDataUrl.split(',')[1];
+        // If it's an S3 URL, download via proxy to get base64; if data URL, extract directly
+        var base64Promise;
+        if (photoUrl.indexOf('data:') === 0) {
+            base64Promise = Promise.resolve(photoUrl.split(',')[1]);
+        } else {
+            base64Promise = downloadViaProxy(photoUrl).then(function(blob) {
+                return new Promise(function(resolve, reject) {
+                    var reader = new FileReader();
+                    reader.onload = function() { resolve(reader.result.split(',')[1]); };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            });
+        }
+        
+        base64Promise.then(function(base64) {
+            return _doGenerateCharacter(base64);
+        }).catch(function(err) {
+            console.error('[EditChild] Failed to get base64 for character generation:', err);
+            $scope.error = 'Erro ao processar foto. Tente novamente.';
+            $scope.generatingCharacter = false;
+            $scope.$applyAsync();
+        });
+    }
+    
+    function _doGenerateCharacter(base64) {
         
         // Use Funifier Public Endpoint as proxy (Freepik API blocks CORS from browser)
         var prompt = 'Create a cute cartoon character inspired by the reference photo. ' +
@@ -606,7 +645,7 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         if (!input.files || !input.files[0]) return;
         var reader = new FileReader();
         reader.onload = function(e) {
-            // Resize sticker
+            // Resize sticker then upload to S3
             var img = new Image();
             img.onload = function() {
                 var canvas = document.createElement('canvas');
@@ -616,10 +655,25 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 else { w = w * maxSize / h; h = maxSize; }
                 canvas.width = w; canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                var resized = canvas.toDataURL('image/jpeg', 0.8);
-                if (!$scope.child.stickers) $scope.child.stickers = [];
-                $scope.child.stickers.push(resized);
-                $scope.$applyAsync();
+                canvas.toBlob(function(blob) {
+                    if (!blob) return;
+                    // Upload to S3
+                    var fd = new FormData();
+                    fd.append('file', blob, 'sticker-' + Date.now() + '.jpg');
+                    fd.append('extra', JSON.stringify({ session: 'stickers' }));
+                    $http.post(CONFIG.API + '/v3/upload/image', fd, {
+                        headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+                        transformRequest: angular.identity
+                    }).then(function(res) {
+                        var url = res.data && res.data.uploads && res.data.uploads[0] && res.data.uploads[0].url;
+                        if (!url) return;
+                        if (!$scope.child.stickers) $scope.child.stickers = [];
+                        $scope.child.stickers.push(url);
+                        $scope.$applyAsync();
+                    }).catch(function(err) {
+                        console.error('[EditChild] Sticker upload failed:', err);
+                    });
+                }, 'image/jpeg', 0.8);
             };
             img.src = e.target.result;
         };
