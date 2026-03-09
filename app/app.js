@@ -1,7 +1,18 @@
 // Tutor App — AngularJS 1.8.2
 var app = angular.module('tutorApp', ['ngRoute']);
 
-app.config(function($routeProvider, $locationProvider) {
+app.config(function($routeProvider, $locationProvider, $httpProvider) {
+    // Cache-busting for templates
+    $httpProvider.interceptors.push(function() {
+        return {
+            request: function(config) {
+                if (config.url && config.url.indexOf('.html') > -1 && config.url.indexOf('http') !== 0) {
+                    config.url += (config.url.indexOf('?') > -1 ? '&' : '?') + 'v=' + (CONFIG.VERSION || '0');
+                }
+                return config;
+            }
+        };
+    });
     $routeProvider
         .when('/landing', {
             templateUrl: 'pages/landing/landing.html',

@@ -229,43 +229,45 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     };
     
     $scope.saveBodyPhoto = function() {
-        if (!$scope.bodyPhotoData) return;
-        $scope.saving = true;
-        $scope.generatingCharacter = false;
-        
-        // Resize body photo
-        var img = new Image();
-        img.onload = function() {
-            var canvas = document.createElement('canvas');
-            var maxSize = 600;
-            var w = img.width, h = img.height;
-            if (w > h) { h = h * maxSize / w; w = maxSize; }
-            else { w = w * maxSize / h; h = maxSize; }
-            canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            var resized = canvas.toDataURL('image/jpeg', 0.85);
+        // If new photo was uploaded, save it first then generate
+        if ($scope.bodyPhotoData) {
+            $scope.saving = true;
+            $scope.generatingCharacter = false;
             
-            $scope.child.body_photo_url = resized;
-            $scope.bodyPhotoUrl = resized;
-            
-            // Save to profile then generate character
-            ApiService.getProfile(childId).then(function(res) {
-                var profile = res.data || { _id: childId };
-                profile.body_photo_url = resized;
-                return ApiService.dbSave('profile__c', profile);
-            }).then(function() {
-                $scope.saving = false;
-                flashSaved();
-                $scope.$applyAsync();
-                // Start character generation
-                generateCharacter(resized);
-            }).catch(function() {
-                $scope.error = 'Erro ao salvar foto.';
-                $scope.saving = false;
-                $scope.$applyAsync();
-            });
-        };
-        img.src = $scope.bodyPhotoData;
+            var img = new Image();
+            img.onload = function() {
+                var canvas = document.createElement('canvas');
+                var maxSize = 600;
+                var w = img.width, h = img.height;
+                if (w > h) { h = h * maxSize / w; w = maxSize; }
+                else { w = w * maxSize / h; h = maxSize; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                var resized = canvas.toDataURL('image/jpeg', 0.85);
+                
+                $scope.child.body_photo_url = resized;
+                $scope.bodyPhotoUrl = resized;
+                
+                ApiService.getProfile(childId).then(function(res) {
+                    var profile = res.data || { _id: childId };
+                    profile.body_photo_url = resized;
+                    return ApiService.dbSave('profile__c', profile);
+                }).then(function() {
+                    $scope.saving = false;
+                    flashSaved();
+                    $scope.$applyAsync();
+                    generateCharacter(resized);
+                }).catch(function() {
+                    $scope.error = 'Erro ao salvar foto.';
+                    $scope.saving = false;
+                    $scope.$applyAsync();
+                });
+            };
+            img.src = $scope.bodyPhotoData;
+        } else if ($scope.child.body_photo_url) {
+            // No new upload — regenerate from existing saved photo
+            generateCharacter($scope.child.body_photo_url);
+        }
     };
     
     $scope.generatingCharacter = false;
@@ -303,16 +305,39 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
             return pollFreepikTask(taskId);
         })
         .then(function(imageUrl) {
-            // Try background removal
-            return removeBackground(imageUrl).then(function(transparentUrl) {
-                return convertToDataUrl(transparentUrl);
-            }).catch(function(err) {
-                console.warn('Background removal failed, using original:', err);
-                return convertToDataUrl(imageUrl);
+            console.log('[EditChild] Generated image URL:', imageUrl ? imageUrl.substring(0, 80) : 'null');
+            // Download original image immediately (before URL expires)
+            var originalBlobPromise = downloadViaProxy(imageUrl);
+            
+            // Try background removal in parallel
+            return originalBlobPromise.then(function(originalBlob) {
+                return removeBackground(imageUrl).then(function(transparentUrl) {
+                    return downloadViaProxy(transparentUrl);
+                }).catch(function(err) {
+                    console.warn('[EditChild] Background removal failed, using original:', err);
+                    return originalBlob;
+                });
             });
         })
-        .then(function(dataUrl) {
-            $scope.pendingCharacterUrl = dataUrl;
+        .then(function(blob) {
+            if (!blob || blob.size < 100) {
+                throw new Error('Imagem gerada está vazia ou inválida');
+            }
+            console.log('[EditChild] Got blob:', blob.size, 'bytes, uploading to Funifier...');
+            // Upload to Funifier immediately so we get a permanent URL
+            var formData = new FormData();
+            formData.append('file', blob, childId.split('@')[0] + '_character_preview.png');
+            formData.append('extra', '{"session":"characters"}');
+            
+            return $http.post(CONFIG.API + '/v3/upload/image', formData, {
+                headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+                transformRequest: angular.identity
+            });
+        })
+        .then(function(uploadRes) {
+            var permanentUrl = uploadRes.data.uploads[0].url;
+            console.log('[EditChild] Uploaded to Funifier:', permanentUrl);
+            $scope.pendingCharacterUrl = permanentUrl;
             $scope.generatingCharacter = false;
             $scope.$applyAsync();
         })
@@ -372,15 +397,24 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            var inner = data.response || data || {};
-            // Freepik remove-bg API returns: {original, high_resolution, preview}
-            var imgUrl = inner.high_resolution || inner.preview || null;
-            // Also check nested structures
-            if (!imgUrl && inner.data) {
-                var d = inner.data;
-                imgUrl = d.high_resolution || d.preview || (d.image && d.image.url) || null;
-                if (!imgUrl && Array.isArray(d) && d[0]) imgUrl = d[0].url || d[0].high_resolution;
+            console.log('[EditChild] Remove-bg raw response:', JSON.stringify(data).substring(0, 500));
+            // Navigate nested Freepik response: {status, response: {data: {image: {high_resolution, preview}}}}
+            var imgUrl = null;
+            
+            // Try all possible paths
+            function extract(obj) {
+                if (!obj || typeof obj !== 'object') return null;
+                if (obj.high_resolution) return obj.high_resolution;
+                if (obj.preview) return obj.preview;
+                if (obj.url) return obj.url;
+                if (obj.image) return extract(obj.image);
+                if (obj.data) return extract(obj.data);
+                if (obj.response) return extract(obj.response);
+                if (Array.isArray(obj) && obj[0]) return extract(obj[0]);
+                return null;
             }
+            
+            imgUrl = extract(data);
             if (!imgUrl) throw new Error('No URL in remove-bg response: ' + JSON.stringify(data).substring(0, 300));
             console.log('[EditChild] Background removed, URL:', imgUrl.substring(0, 80));
             return imgUrl;
@@ -479,23 +513,21 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         $scope.saving = true;
         $scope.error = '';
         
-        var tempUrl = $scope.pendingCharacterUrl;
+        // Image is already uploaded to Funifier (permanent URL)
+        var permanentUrl = $scope.pendingCharacterUrl;
+        $scope.child.character_url = permanentUrl;
         $scope.pendingCharacterUrl = null;
         
-        uploadImageToFunifier(tempUrl).then(function(permanentUrl) {
-            $scope.child.character_url = permanentUrl;
-            
-            return ApiService.getProfile(childId).then(function(res) {
-                var profile = res.data || { _id: childId };
-                profile.character_url = permanentUrl;
-                return ApiService.dbSave('profile__c', profile);
-            });
+        ApiService.getProfile(childId).then(function(res) {
+            var profile = res.data || { _id: childId };
+            profile.character_url = permanentUrl;
+            return ApiService.dbSave('profile__c', profile);
         }).then(function() {
             $scope.saving = false;
             flashSaved();
             $scope.$applyAsync();
         }).catch(function(err) {
-            console.error('Failed to upload character:', err);
+            console.error('Failed to save character:', err);
             $scope.error = 'Erro ao salvar personagem. Tente novamente.';
             $scope.saving = false;
             $scope.$applyAsync();

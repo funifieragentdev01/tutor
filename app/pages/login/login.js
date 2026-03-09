@@ -28,11 +28,12 @@ app.controller('LoginController', function($scope, $location, $rootScope, AuthSe
             }
             
             // Get player data to determine role
-            AuthService.setAuth(token, $scope.email, 'parent');
+            var selectedType = $scope.userType || 'parent';
+            AuthService.setAuth(token, $scope.email, selectedType);
             
             ApiService.getPlayer($scope.email).then(function(playerRes) {
                 var player = playerRes.data;
-                var role = (player && player.extra && player.extra.role) || 'parent';
+                var role = (player && player.extra && player.extra.role) || selectedType;
                 AuthService.setAuth(token, $scope.email, role);
                 $rootScope.player = player;
                 
@@ -42,8 +43,9 @@ app.controller('LoginController', function($scope, $location, $rootScope, AuthSe
                     $location.path('/parent');
                 }
             }).catch(function() {
-                // Default to parent if can't get player
-                $location.path('/parent');
+                // Fallback: use the selected userType from login screen
+                AuthService.setAuth(token, $scope.email, selectedType);
+                $location.path(selectedType === 'child' ? '/child' : '/parent');
             });
             
         }).catch(function(err) {

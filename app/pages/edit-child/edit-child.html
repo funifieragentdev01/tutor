@@ -93,7 +93,8 @@
         <!-- Pending character for approval -->
         <div class="character-approval" ng-if="pendingCharacterUrl">
             <h4>Personagem gerado:</h4>
-            <img ng-src="{{pendingCharacterUrl}}" class="character-img" style="max-width:280px;border-radius:16px;margin:12px 0;">
+            <img ng-src="{{pendingCharacterUrl}}" class="character-img" style="max-width:280px;border-radius:16px;margin:12px 0;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <p style="display:none;color:#e74c3c;text-align:center;">⚠️ Erro ao carregar imagem. Tente gerar novamente.</p>
             <p style="color:var(--text-muted);font-size:13px;">Gostou do resultado?</p>
             <div style="display:flex;gap:12px;justify-content:center;">
                 <button class="btn btn-primary" ng-click="approveCharacter()" ng-disabled="saving">
@@ -112,8 +113,8 @@
         <div class="auth-error" ng-if="error">{{error}}</div>
         <div class="success-msg" ng-if="saved">✅ Foto salva!</div>
 
-        <button class="btn btn-primary btn-block btn-lg" ng-click="saveBodyPhoto()" ng-disabled="saving || generatingCharacter" ng-if="bodyPhotoData">
-            {{saving ? 'Salvando...' : 'Salvar e Gerar Personagem'}}
+        <button class="btn btn-primary btn-block btn-lg" ng-click="saveBodyPhoto()" ng-disabled="saving || generatingCharacter" ng-if="bodyPhotoData || bodyPhotoUrl">
+            {{saving ? 'Salvando...' : (bodyPhotoData ? 'Salvar e Gerar Personagem' : 'Gerar Novo Personagem')}}
         </button>
     </div>
 
