@@ -9,7 +9,7 @@
     <!-- Step 1: Take photo -->
     <div class="section-pad" ng-if="step === 'photo'">
         <div class="capture-card">
-            <div class="capture-icon">📷</div>
+            <div class="capture-icon"><i class="fa fa-camera" style="color:#FF9600;font-size:2.5rem"></i></div>
             <h3>Fotografe o caderno ou livro</h3>
             <p>A IA vai analisar o conteúdo e criar quizzes personalizados para {{childName}}.</p>
             
@@ -19,14 +19,14 @@
             
             <div class="capture-actions">
                 <label class="btn btn-primary btn-block capture-btn">
-                    {{photoPreview ? '📷 Tirar outra foto' : '📷 Tirar Foto'}}
+                    <i class="fa fa-camera"></i> <span ng-if="photoPreview">Tirar outra foto</span><span ng-if="!photoPreview">Tirar Foto</span>
                     <input type="file" accept="image/*" capture="environment" 
                            onchange="angular.element(this).scope().onPhotoSelected(this.files)"
                            style="display:none">
                 </label>
                 
                 <label class="btn btn-outline btn-block" ng-if="!photoPreview">
-                    📁 Escolher da Galeria
+                    <i class="fa fa-folder-open"></i> Escolher da Galeria
                     <input type="file" accept="image/*"
                            onchange="angular.element(this).scope().onPhotoSelected(this.files)"
                            style="display:none">
@@ -47,7 +47,7 @@
     <!-- Step 2: Review AI result -->
     <div class="section-pad" ng-if="step === 'review'">
         <div class="capture-card">
-            <div class="capture-icon">✅</div>
+            <div class="capture-icon"><i class="fa fa-check-circle" style="color:#FF9600;font-size:2.5rem"></i></div>
             <h3>Conteúdo gerado pela IA</h3>
             <p>Revise o que será criado para {{childName}}:</p>
         </div>
@@ -75,7 +75,7 @@
 
         <div class="capture-actions">
             <button class="btn btn-primary btn-block" ng-click="saveTrail()" ng-disabled="saving">
-                {{saving ? 'Criando trilha...' : '✅ Criar Trilha'}}
+                <span ng-if="saving">Criando trilha...</span><span ng-if="!saving"><i class="fa fa-check"></i> Criar Trilha</span>
             </button>
             <button class="btn btn-outline btn-block" ng-click="step = 'photo'">← Voltar e refazer</button>
         </div>
@@ -91,7 +91,7 @@
     <!-- Step 3: Done -->
     <div class="section-pad" ng-if="step === 'done'">
         <div class="capture-card capture-done">
-            <div class="capture-icon"><i class="fa fa-check-circle" style="color:#00B894;font-size:2.5rem"></i></div>
+            <div class="capture-icon"><i class="fa fa-check-circle" style="color:#FF9600;font-size:2.5rem"></i></div>
             <h3>Trilha criada com sucesso!</h3>
             <p>{{result.lessons.length}} aula{{result.lessons.length !== 1 ? 's' : ''}} com quizzes prontos para {{childName}}.</p>
             <button class="btn btn-primary btn-block" ng-click="goToTrail()">Ver Trilha</button>
