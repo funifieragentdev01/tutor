@@ -94,8 +94,15 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
             if (folder && folder.title) {
                 $scope.currentTitle = folder.title;
                 $scope.currentLevel = folder.type || 'root';
+                // If viewing a module, store its color for lessons to inherit
+                if (folder.type === 'module' && folder.extra && folder.extra.color) {
+                    $scope.parentModuleColor = folder.extra.color;
+                } else {
+                    $scope.parentModuleColor = null;
+                }
             } else if (id === childId) {
                 $scope.currentLevel = 'root';
+                $scope.parentModuleColor = null;
                 ApiService.dbGet('profile__c', childId).then(function(pRes) {
                     $scope.currentTitle = (pRes.data && pRes.data.name) || 'Trilha';
                 });
@@ -456,9 +463,13 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         return icon && icon.indexOf('fa-') === 0;
     };
     
+    $scope.parentModuleColor = null; // color of the current module (when viewing lessons)
+    
     $scope.getIconColor = function(item) {
         // Use saved color for modules
         if (item.type === 'module' && item._savedColor) return item._savedColor;
+        // Lessons inherit parent module color
+        if (item.type === 'lesson' && $scope.parentModuleColor) return $scope.parentModuleColor;
         if (item.is_unlocked === false) return '#B2BEC3';
         if (item.percent >= 100) return '#00B894';
         if (item.percent > 0) return '#FDCB6E';
@@ -474,12 +485,16 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     $scope.setModuleColor = function(item, color) {
         if (!color) return;
         item._savedColor = color;
-        // Save to folder.extra.color
+        item._pickedColor = color;
+        // Save to folder.extra.color — send full folder to avoid wiping fields
         ApiService.dbGet('folder', item._id).then(function(res) {
             var folder = res.data || {};
-            var extra = folder.extra || {};
-            extra.color = color;
-            return ApiService.updateFolder(item._id, { extra: extra });
+            if (!folder.extra) folder.extra = {};
+            folder.extra.color = color;
+            // Remove strict-mode date wrappers that would cause issues on save
+            delete folder.updated;
+            delete folder.created;
+            return ApiService.updateFolder(item._id, folder);
         }).then(function() {
             console.log('[Trail] Module color saved:', item._id, color);
         }).catch(function(err) {

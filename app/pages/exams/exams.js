@@ -48,10 +48,10 @@ app.controller('ExamsController', function($scope, $location, $routeParams, Auth
                 $scope.childName = (player.extra && player.extra.name__c) || player.name || '';
             } catch(e) {}
             
-            // Load subjects (folders)
+            // Load subjects (folders whose parent is childId = root folder)
             try {
-                var fq = JSON.stringify({ player: childId, parent: { $exists: false } });
-                var fRes = await ApiService.dbQuery('folder', fq, null, 50);
+                var fq = JSON.stringify({ parent: childId, type: 'subject' });
+                var fRes = await ApiService.dbQuery('folder', fq, { title: 1 }, 50);
                 $scope.subjects = fRes.data || [];
             } catch(e) {}
             
