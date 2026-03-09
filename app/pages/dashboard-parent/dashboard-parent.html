@@ -12,39 +12,50 @@
         <h2 class="section-heading">Seus Filhos</h2>
         
         <div class="children-list">
-            <!-- Existing children -->
-            <div class="child-card-wide" ng-repeat="child in children">
-                <div class="child-card-main" ng-click="openChild(child)">
+            <div class="child-card-v2" ng-repeat="child in children">
+                <!-- Child header -->
+                <div class="child-card-header">
                     <div class="child-avatar-lg" ng-style="{'background-color': child.color || '#FF9600'}">
                         <img ng-if="child.image && child.image.small && child.image.small.url" ng-src="{{child.image.small.url}}" class="child-avatar-img">
                         <span ng-if="!(child.image && child.image.small && child.image.small.url)">{{child.name.charAt(0).toUpperCase()}}</span>
                     </div>
                     <div class="child-info">
                         <div class="child-name-lg">{{child.name}}</div>
-                        <div class="child-stats-lg" ng-if="child.subjectCount !== undefined">
-                            {{child.subjectCount}} disciplina{{child.subjectCount !== 1 ? 's' : ''}}
+                        <div class="child-stats-lg" ng-if="child.subjectCount !== undefined || child.age">
+                            <span ng-if="child.age">{{child.age}} anos</span>
+                            <span ng-if="child.age && child.subjectCount !== undefined"> · </span>
+                            <span ng-if="child.subjectCount !== undefined">{{child.subjectCount}} disciplina{{child.subjectCount !== 1 ? 's' : ''}}</span>
                         </div>
                     </div>
-                    <span class="child-arrow">›</span>
                 </div>
-                <div class="child-actions-menu">
-                    <button class="btn-child-action-menu" ng-click="captureChild(child, $event)">
-                        <i class="fa-solid fa-camera action-icon-fa"></i><span class="action-label">Capturar</span>
+                
+                <!-- Action grid 2x2 -->
+                <div class="child-action-grid">
+                    <button class="child-grid-btn" ng-click="openChild(child)">
+                        <i class="fa-solid fa-book"></i>
+                        <span class="grid-btn-label">Trilha</span>
+                        <span class="grid-btn-sub">Ver aulas</span>
                     </button>
-                    <button class="btn-child-action-menu" ng-click="openExams(child, $event)">
-                        <i class="fa-solid fa-calendar action-icon-fa"></i><span class="action-label">Provas</span>
+                    <button class="child-grid-btn" ng-click="captureChild(child, $event)">
+                        <i class="fa-solid fa-camera"></i>
+                        <span class="grid-btn-label">Escanear</span>
+                        <span class="grid-btn-sub">Livro</span>
                     </button>
-                    <button class="btn-child-action-menu" ng-click="editChild(child, $event)">
-                        <i class="fa-solid fa-pen action-icon-fa"></i><span class="action-label">Editar</span>
+                    <button class="child-grid-btn" ng-click="openExams(child, $event)">
+                        <i class="fa-solid fa-calendar"></i>
+                        <span class="grid-btn-label">Provas</span>
+                        <span class="grid-btn-sub">Calendário</span>
                     </button>
-                    <button class="btn-child-action-menu btn-action-delete" ng-click="deleteChild(child, $event)">
-                        <i class="fa-solid fa-trash action-icon-fa"></i><span class="action-label">Excluir</span>
+                    <button class="child-grid-btn" ng-click="editChild(child, $event)">
+                        <i class="fa-solid fa-user-pen"></i>
+                        <span class="grid-btn-label">Perfil</span>
+                        <span class="grid-btn-sub">Editar</span>
                     </button>
                 </div>
             </div>
         </div>
         
-        <!-- Add child button (only when children exist; empty state has its own) -->
+        <!-- Add child button -->
         <button class="btn btn-secondary btn-block btn-add-child" ng-click="openAddChild()" style="margin-top: 16px;" ng-if="children.length > 0">
             + Adicionar Filho
         </button>

@@ -48,12 +48,14 @@ app.controller('ExamsController', function($scope, $location, $routeParams, Auth
                 $scope.childName = (player.extra && player.extra.name__c) || player.name || '';
             } catch(e) {}
             
-            // Load subjects (folders whose parent is childId = root folder)
+            // Load subjects via Folder API (subjects are inside the child's root folder)
             try {
-                var fq = JSON.stringify({ parent: childId, type: 'subject' });
-                var fRes = await ApiService.dbQuery('folder', fq, { title: 1 }, 50);
-                $scope.subjects = fRes.data || [];
-            } catch(e) {}
+                var fRes = await ApiService.getFolderInside(childId);
+                var allItems = (fRes.data && fRes.data.items) || [];
+                $scope.subjects = allItems.filter(function(f) { return f.type === 'subject'; });
+            } catch(e) {
+                $scope.subjects = [];
+            }
             
             // Load exams
             try {
