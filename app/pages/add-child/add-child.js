@@ -204,56 +204,48 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
     function savePhoto() {
         if (!photoData || !createdChildId) return Promise.resolve();
         
-        // Resize photo, upload to Funifier S3, then update player with URL
-        return new Promise(function(resolve) {
-            var img = new Image();
-            img.onload = function() {
-                var canvas = document.createElement('canvas');
-                var maxSize = 300;
-                var w = img.width, h = img.height;
-                if (w > h) { h = h * maxSize / w; w = maxSize; }
-                else { w = w * maxSize / h; h = maxSize; }
-                canvas.width = w;
-                canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                
-                // Convert canvas to blob for upload
-                canvas.toBlob(function(blob) {
-                    if (!blob) { console.error('[AddChild] Canvas toBlob returned null'); resolve(); return; }
-                    
-                    console.log('[AddChild] Uploading photo blob to S3:', blob.size, 'bytes');
-                    // Upload to Funifier S3
-                    ApiService.uploadImage(blob, createdChildId + '.jpg').then(function(uploadUrl) {
-                        if (!uploadUrl) { console.error('[AddChild] S3 upload returned no URL'); resolve(); return; }
-                        
-                        console.log('[AddChild] S3 upload success:', uploadUrl);
-                        // Update player with S3 URL (NEVER base64)
-                        var imageObj = {
-                            small: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 },
-                            medium: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 },
-                            original: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 }
-                        };
-                        
-                        // Read-merge-write player (PUT replaces entire doc)
-                        ApiService.getPlayer(createdChildId).then(function(pRes) {
-                            var p = pRes.data || {};
-                            p.image = imageObj;
-                            console.log('[AddChild] Saving player with S3 URL, keys:', Object.keys(p).join(','));
-                            return ApiService.dbSave('player', p);
-                        }).then(function() {
-                            console.log('[AddChild] Player photo saved successfully');
-                            resolve();
-                        }).catch(function(err) {
-                            console.error('[AddChild] Failed to save player photo:', err);
-                            resolve();
-                        });
-                    }).catch(function(err) {
-                        console.error('[AddChild] S3 upload FAILED:', err);
-                        resolve(); // Don't save base64 — just skip photo
-                    });
-                }, 'image/jpeg', 0.8);
-            };
-            img.src = photoData;
+        console.log('[AddChild] savePhoto called for:', createdChildId);
+        
+        // Step 1: Upload base64 image to Funifier S3 (same pattern as fitness app)
+        var base64Data = photoData; // data:image/jpeg;base64,...
+        var byteString = atob(base64Data.split(',')[1]);
+        var mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+        var blob = new Blob([ab], { type: mimeString });
+        
+        var formData = new FormData();
+        formData.append('file', blob, 'profile-' + createdChildId.split('@')[0] + '.jpg');
+        formData.append('extra', JSON.stringify({ session: 'images' }));
+        
+        console.log('[AddChild] Uploading photo to S3, blob size:', blob.size);
+        
+        return $http.post(CONFIG.API + '/v3/upload/image', formData, {
+            headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+            transformRequest: angular.identity
+        }).then(function(res) {
+            var url = res.data && res.data.uploads && res.data.uploads[0] && res.data.uploads[0].url;
+            if (!url) {
+                console.error('[AddChild] Upload returned no URL:', JSON.stringify(res.data));
+                return;
+            }
+            console.log('[AddChild] S3 upload success:', url);
+            
+            // Step 2: Read current player, merge image with S3 URL, save back
+            var imgEntry = { url: url, size: 0, width: 0, height: 0, depth: 0 };
+            var imageObj = { small: angular.copy(imgEntry), medium: angular.copy(imgEntry), original: angular.copy(imgEntry) };
+            
+            return ApiService.getPlayer(createdChildId).then(function(pRes) {
+                var p = pRes.data || {};
+                p.image = imageObj;
+                console.log('[AddChild] Saving player with S3 URL, keys:', Object.keys(p).join(','));
+                return ApiService.dbSave('player', p);
+            });
+        }).then(function() {
+            console.log('[AddChild] Player photo saved successfully');
+        }).catch(function(err) {
+            console.error('[AddChild] Photo upload/save FAILED:', err);
         });
     }
     
