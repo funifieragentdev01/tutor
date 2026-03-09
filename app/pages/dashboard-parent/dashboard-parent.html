@@ -44,15 +44,15 @@
             </div>
         </div>
         
-        <!-- Add child button -->
-        <button class="btn btn-secondary btn-block btn-add-child" ng-click="openAddChild()" style="margin-top: 16px;">
+        <!-- Add child button (only when children exist; empty state has its own) -->
+        <button class="btn btn-secondary btn-block btn-add-child" ng-click="openAddChild()" style="margin-top: 16px;" ng-if="children.length > 0">
             + Adicionar Filho
         </button>
     </div>
 
     <!-- Empty state -->
     <div class="empty-state" ng-if="children.length === 0 && !showAddChild && !loading">
-        <div class="empty-icon">👨‍👧‍👦</div>
+        <div class="empty-icon"><i class="fa-solid fa-users" style="font-size: 48px; color: #FF9600;"></i></div>
         <h3>Nenhum filho cadastrado</h3>
         <p>Cadastre seu primeiro filho para começar a criar trilhas de aprendizado personalizadas.</p>
         <button class="btn btn-primary" ng-click="openAddChild()">Cadastrar Filho</button>
