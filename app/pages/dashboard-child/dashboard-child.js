@@ -16,29 +16,39 @@ app.controller('ChildDashboardController', function($scope, $location, AuthServi
     $scope.loading = true;
     
     function init() {
-        // Get child player data
+        // Get child player data + root_folder
         ApiService.getPlayer(childId).then(function(res) {
             var player = res.data || {};
             $scope.childName = player.name || childId.split('@')[0];
             if (player.image && player.image.small && player.image.small.url) {
                 $scope.avatarUrl = player.image.small.url;
             }
+            
+            var rootFolder = (player.extra && player.extra.root_folder) || childId;
+            loadSubjects(rootFolder);
+        }).catch(function() {
+            // Fallback: try with childId
+            loadSubjects(childId);
         });
-        
-        // Load subjects with progress (root folder = childId)
-        ApiService.getFolderProgress(childId, childId).then(function(res) {
+    }
+    
+    function loadSubjects(rootFolder) {
+        ApiService.getFolderProgress(rootFolder, childId).then(function(res) {
             var data = res.data || {};
             var items = data.items || [];
             $scope.subjects = items.filter(function(i) { return i.folder !== false; });
             $scope.loading = false;
+            $scope.$applyAsync();
         }).catch(function() {
             // Fallback to inside
-            ApiService.getFolderInside(childId).then(function(res) {
+            ApiService.getFolderInside(rootFolder).then(function(res) {
                 var data = res.data || {};
                 $scope.subjects = (data.items || []).filter(function(i) { return i.folder !== false; });
                 $scope.loading = false;
+                $scope.$applyAsync();
             }).catch(function() {
                 $scope.loading = false;
+                $scope.$applyAsync();
             });
         });
     }
