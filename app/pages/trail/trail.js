@@ -785,7 +785,14 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     // Resolve root_folder → player
     var paramChildId = decodeURIComponent($routeParams.childId || '');
     if (AuthService.getRole() === 'child') {
-        initController(AuthService.getUser(), null);
+        // For child users, resolve their own root_folder
+        var childUser = AuthService.getUser();
+        ApiService.getPlayer(childUser).then(function(res) {
+            var rf = (res.data && res.data.extra && res.data.extra.root_folder) || childUser;
+            initController(childUser, rf);
+        }).catch(function() {
+            initController(childUser, null);
+        });
     } else {
         ApiService.resolveChild(paramChildId).then(function(player) {
             initController(player._id, paramChildId);

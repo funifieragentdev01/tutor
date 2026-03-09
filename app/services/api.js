@@ -147,6 +147,32 @@ app.factory('ApiService', function($http, AuthService) {
             });
         },
         
+        // Upload image to Funifier S3 (returns URL)
+        uploadImage: function(blob, filename) {
+            var fd = new FormData();
+            fd.append('file', blob, filename || 'image.jpg');
+            fd.append('extra', JSON.stringify({ session: 'images' }));
+            return $http.post(API + '/v3/upload/image', fd, {
+                headers: {
+                    'Authorization': 'Bearer ' + AuthService.getToken(),
+                    'Content-Type': undefined
+                },
+                transformRequest: angular.identity
+            }).then(function(res) {
+                var uploads = res.data && res.data.uploads;
+                return (uploads && uploads.length > 0) ? uploads[0].url : null;
+            });
+        },
+        
+        // Update player via PUT /v3/player/:id
+        updatePlayer: function(playerId, data) {
+            return $http.put(
+                API + '/v3/player/' + encodeURIComponent(playerId),
+                data,
+                AuthService.authHeader()
+            );
+        },
+        
         // Delete player via /v3/player/:id (fires player triggers with full player object)
         deletePlayer: function(playerId) {
             return $http({

@@ -63,8 +63,7 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
                     type: 'root',
                     title: $scope.child.name.trim(),
                     position: 0,
-                    active: true,
-                    extra: { parent: parentId }
+                    active: true
                 }).catch(function() {});
                 
                 // Add child to parent's children list
@@ -205,7 +204,7 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
     function savePhoto() {
         if (!photoData || !createdChildId) return Promise.resolve();
         
-        // Resize photo before saving
+        // Resize photo, upload to Funifier S3, then update player with URL
         return new Promise(function(resolve) {
             var img = new Image();
             img.onload = function() {
@@ -217,21 +216,26 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
                 canvas.width = w;
                 canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                var resized = canvas.toDataURL('image/jpeg', 0.8);
                 
-                // Save as player image
-                var imageObj = {
-                    small: { url: resized, size: 0, width: w, height: h, depth: 0 },
-                    medium: { url: resized, size: 0, width: w, height: h, depth: 0 },
-                    original: { url: resized, size: 0, width: w, height: h, depth: 0 }
-                };
-                
-                ApiService.dbSave('player', {
-                    _id: createdChildId,
-                    name: $scope.child.name.trim(),
-                    email: createdChildId,
-                    image: imageObj
-                }).then(resolve).catch(resolve);
+                // Convert canvas to blob for upload
+                canvas.toBlob(function(blob) {
+                    if (!blob) { resolve(); return; }
+                    
+                    // Upload to Funifier S3
+                    ApiService.uploadImage(blob, createdChildId + '.jpg').then(function(uploadUrl) {
+                        if (!uploadUrl) { resolve(); return; }
+                        
+                        // Update player with S3 URL
+                        var imageObj = {
+                            small: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 },
+                            medium: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 },
+                            original: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 }
+                        };
+                        
+                        ApiService.updatePlayer(createdChildId, { image: imageObj })
+                            .then(resolve).catch(resolve);
+                    }).catch(resolve);
+                }, 'image/jpeg', 0.8);
             };
             img.src = photoData;
         });
