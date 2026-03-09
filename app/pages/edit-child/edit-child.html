@@ -136,6 +136,70 @@
         <button class="btn btn-primary btn-block btn-lg" ng-click="saveBodyPhoto()" ng-disabled="saving || generatingCharacter" ng-if="bodyPhotoData || bodyPhotoUrl">
             {{saving ? 'Salvando...' : (bodyPhotoData ? 'Salvar e Gerar Personagem' : 'Gerar Novo Personagem')}}
         </button>
+
+        <!-- === Variations Section === -->
+        <div class="variations-section" ng-if="child.character_url && !pendingCharacterUrl && !generatingCharacter">
+            <hr style="border-color:var(--border);margin:24px 0">
+            <div class="wizard-icon"><i class="fa-solid fa-images" style="font-size:36px;color:var(--primary)"></i></div>
+            <h3 style="text-align:center;color:var(--text);margin:8px 0 4px">Variações do Personagem</h3>
+            <p class="wizard-subtitle">Gere poses e situações baseadas na descrição de {{child.name}}.</p>
+
+            <!-- Saved variations -->
+            <div class="variations-grid" ng-if="variations.length > 0">
+                <div class="variation-card saved" ng-repeat="v in variations">
+                    <img ng-src="{{v.url}}" class="variation-img">
+                    <div class="variation-label">{{v.scene}}</div>
+                    <button class="variation-remove" ng-click="removeVariation($index)">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pending variations (being generated/reviewed) -->
+            <div class="variations-grid" ng-if="pendingVariations.length > 0">
+                <div class="variation-card" ng-repeat="v in pendingVariations" ng-class="{'var-approved': v.status === 'approved', 'var-rejected': v.status === 'rejected'}">
+                    <!-- Generating spinner -->
+                    <div class="variation-img-placeholder" ng-if="v.status === 'generating' || v.status === 'queued'">
+                        <div class="spinner" style="width:28px;height:28px" ng-if="v.status === 'generating'"></div>
+                        <i class="fa fa-clock" style="color:#666;font-size:24px" ng-if="v.status === 'queued'"></i>
+                    </div>
+                    <!-- Generated image -->
+                    <img ng-if="v.url && v.status !== 'failed'" ng-src="{{v.url}}" class="variation-img">
+                    <!-- Failed -->
+                    <div class="variation-img-placeholder" ng-if="v.status === 'failed'">
+                        <i class="fa fa-exclamation-triangle" style="color:#FF6B6B;font-size:24px"></i>
+                    </div>
+                    <div class="variation-label">{{v.scene}}</div>
+                    <!-- Action buttons -->
+                    <div class="variation-actions" ng-if="v.status === 'ready'">
+                        <button class="btn-var-approve" ng-click="approveVariation(v)"><i class="fa fa-check"></i></button>
+                        <button class="btn-var-reject" ng-click="rejectVariation(v)"><i class="fa fa-times"></i></button>
+                        <button class="btn-var-retry" ng-click="retryVariation(v)"><i class="fa fa-refresh"></i></button>
+                    </div>
+                    <div class="variation-status" ng-if="v.status === 'approved'">
+                        <i class="fa fa-check-circle" style="color:#00B894"></i> Aprovada
+                    </div>
+                    <div class="variation-status" ng-if="v.status === 'rejected'">
+                        <i class="fa fa-times-circle" style="color:#FF6B6B"></i> Rejeitada
+                    </div>
+                    <div class="variation-actions" ng-if="v.status === 'failed'">
+                        <button class="btn-var-retry" ng-click="retryVariation(v)"><i class="fa fa-refresh"></i> Tentar novamente</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="generating-indicator" ng-if="generatingVariations" style="margin-top:12px">
+                <p>{{variationProgress}}</p>
+            </div>
+
+            <!-- Generate button -->
+            <button class="btn btn-primary btn-block" ng-click="startVariations()" 
+                    ng-disabled="generatingVariations || generatingCharacter"
+                    ng-if="!generatingVariations" style="margin-top:16px">
+                <i class="fa fa-wand-magic-sparkles"></i> {{variations.length > 0 ? 'Gerar Mais Variações' : 'Gerar Variações'}}
+            </button>
+        </div>
     </div>
 
     <!-- Tab: Sounds -->

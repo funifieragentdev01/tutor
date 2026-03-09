@@ -1025,6 +1025,55 @@ body {
 }
 .sticker-upload:active { border-color: var(--primary); }
 
+/* Variations */
+.variations-section { margin-top: 8px; }
+.variations-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 16px 0;
+}
+.variation-card {
+    background: var(--bg-card); border-radius: var(--radius);
+    overflow: hidden; position: relative; border: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+.variation-card.saved { border-color: var(--primary); }
+.variation-card.var-approved { border-color: #00B894; }
+.variation-card.var-rejected { opacity: 0.4; border-color: #FF6B6B; }
+.variation-img {
+    width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+}
+.variation-img-placeholder {
+    width: 100%; aspect-ratio: 1; display: flex; align-items: center;
+    justify-content: center; background: var(--bg-darker);
+}
+.variation-label {
+    padding: 8px 10px; font-size: 12px; color: var(--text-light);
+    text-align: center; font-weight: 600;
+}
+.variation-actions {
+    display: flex; justify-content: center; gap: 8px; padding: 0 8px 10px;
+}
+.btn-var-approve {
+    background: #00B894; color: white; border: none; border-radius: 50%;
+    width: 36px; height: 36px; font-size: 16px; cursor: pointer;
+}
+.btn-var-reject {
+    background: #FF6B6B; color: white; border: none; border-radius: 50%;
+    width: 36px; height: 36px; font-size: 16px; cursor: pointer;
+}
+.btn-var-retry {
+    background: var(--bg-darker); color: var(--text-light); border: none;
+    border-radius: 20px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+}
+.variation-status {
+    text-align: center; padding: 4px 8px 10px; font-size: 12px;
+}
+.variation-remove {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(255,107,107,0.9); color: white; border: none;
+    width: 28px; height: 28px; border-radius: 50%; font-size: 12px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
 .parent-test-notice {
     background: #FFF3CD; color: #856404; border-radius: var(--radius-sm);
     padding: 10px 16px; font-size: 13px; font-weight: 600; margin-bottom: 16px;

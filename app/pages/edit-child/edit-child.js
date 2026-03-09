@@ -39,8 +39,10 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                 custom_sound_name: profile.custom_sound_name || null,
                 stickers: profile.stickers || [],
                 body_photo_url: profile.body_photo_url || null,
-                character_url: profile.character_url || null
+                character_url: profile.character_url || null,
+                variations: profile.variations || []
             };
+            $scope.variations = profile.variations || [];
             $scope.bodyPhotoUrl = profile.body_photo_url || null;
             $scope.loading = false;
         }).catch(function() {
@@ -294,6 +296,12 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
     
     $scope.generatingCharacter = false;
     $scope.pendingCharacterUrl = null;
+    
+    // === Variations ===
+    $scope.variations = [];           // saved variations [{url, scene, approved}]
+    $scope.pendingVariations = [];    // being generated/reviewed [{url, scene, status}] status: generating|ready|approved|rejected
+    $scope.generatingVariations = false;
+    $scope.variationProgress = '';    // progress text
     
     function generateCharacter(photoUrl) {
         $scope.generatingCharacter = true;
@@ -588,6 +596,290 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
         } else {
             $scope.pendingCharacterUrl = null;
         }
+    };
+    
+    // === Variations ===
+    
+    $scope.startVariations = function() {
+        if (!$scope.child.character_url) {
+            $scope.error = 'Gere e aprove o personagem primeiro.';
+            return;
+        }
+        if (!$scope.child.description || $scope.child.description.length < 10) {
+            $scope.error = 'Preencha o campo "Sobre" no perfil antes de gerar variações.';
+            return;
+        }
+        
+        $scope.generatingVariations = true;
+        $scope.pendingVariations = [];
+        $scope.variationProgress = 'Analisando descrição...';
+        $scope.error = '';
+        $scope.$applyAsync();
+        
+        // Step 1: Extract scenes from description via GPT
+        extractScenes($scope.child.description, $scope.child.name, $scope.child.age)
+            .then(function(scenes) {
+                if (!scenes || scenes.length === 0) {
+                    throw new Error('Não foi possível extrair cenas da descrição.');
+                }
+                console.log('[Variations] Scenes extracted:', scenes);
+                
+                // Initialize pending variations
+                $scope.pendingVariations = scenes.map(function(s) {
+                    return { scene: s.scene, prompt_detail: s.prompt_detail, url: null, status: 'queued' };
+                });
+                $scope.$applyAsync();
+                
+                // Step 2: Get character base64
+                return getBase64FromUrl($scope.child.character_url).then(function(base64) {
+                    // Step 3: Generate each variation sequentially (rate limit)
+                    return generateVariationsSequentially(base64, scenes);
+                });
+            })
+            .then(function() {
+                $scope.generatingVariations = false;
+                $scope.variationProgress = '';
+                $scope.$applyAsync();
+            })
+            .catch(function(err) {
+                console.error('[Variations] Error:', err);
+                $scope.error = 'Erro ao gerar variações: ' + (err.message || err);
+                $scope.generatingVariations = false;
+                $scope.variationProgress = '';
+                $scope.$applyAsync();
+            });
+    };
+    
+    function extractScenes(description, name, age) {
+        var prompt = 'Você é um diretor de arte criando variações de um personagem infantil para um app educacional.\n\n' +
+            'O pai/mãe descreveu o(a) filho(a) ' + name + ' (' + (age || '?') + ' anos) assim:\n"' + description + '"\n\n' +
+            'Extraia de 4 a 6 cenas/situações que representem a criança, baseadas na descrição.\n' +
+            'REGRA OBRIGATÓRIA: A primeira cena DEVE ser a criança estudando/lendo um livro.\n' +
+            'As demais devem refletir hobbies, interesses e momentos mencionados na descrição.\n\n' +
+            'Retorne APENAS um JSON array, sem markdown, sem explicação:\n' +
+            '[{"scene":"titulo curto da cena","prompt_detail":"descrição detalhada em inglês para gerar a imagem, descrevendo pose, cenário, objetos, expressão"}]\n\n' +
+            'O prompt_detail deve ser em inglês e descrever a cena visualmente para um gerador de imagens.\n' +
+            'Cada prompt_detail deve ter no máximo 80 palavras.';
+        
+        return fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.OPENAI_API_KEY },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.7,
+                max_tokens: 800
+            })
+        }).then(function(r) { return r.json(); })
+        .then(function(data) {
+            var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+            if (!text) return null;
+            text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            try { return JSON.parse(text); } catch(e) { console.error('[Variations] JSON parse error:', text); return null; }
+        });
+    }
+    
+    function getBase64FromUrl(url) {
+        if (url.indexOf('data:') === 0) return Promise.resolve(url.split(',')[1]);
+        return downloadViaProxy(url).then(function(blob) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() { resolve(reader.result.split(',')[1]); };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        });
+    }
+    
+    function generateVariationsSequentially(characterBase64, scenes) {
+        var index = 0;
+        
+        function next() {
+            if (index >= scenes.length) return Promise.resolve();
+            
+            var scene = scenes[index];
+            var i = index;
+            $scope.pendingVariations[i].status = 'generating';
+            $scope.variationProgress = 'Gerando variação ' + (i + 1) + ' de ' + scenes.length + ': ' + scene.scene + '...';
+            $scope.$applyAsync();
+            
+            var prompt = 'Create the SAME cartoon character from the reference image in a new pose and scene. ' +
+                'CRITICAL: The character must look IDENTICAL — same face, hair style, hair color, skin tone, body proportions, art style. ' +
+                'Change ONLY the pose, clothing details if needed, and background/scene. ' +
+                'Scene: ' + scene.prompt_detail + '. ' +
+                'Style: Friendly flat-design cartoon like Duolingo. NO outlines, solid flat colors, no gradients. ' +
+                'Full body, white background (#FFFFFF). Only ONE character.';
+            
+            var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
+            
+            return fetch(proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: characterBase64, prompt: prompt })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var taskId = data.response && data.response.data && data.response.data.task_id;
+                if (!taskId) throw new Error('Freepik task creation failed');
+                return pollFreepikTask(taskId);
+            })
+            .then(function(imageUrl) {
+                // Download the generated image before URL expires
+                return downloadViaProxy(imageUrl);
+            })
+            .then(function(blob) {
+                if (!blob || blob.size < 100) throw new Error('Empty image');
+                // Upload to Funifier S3
+                var formData = new FormData();
+                formData.append('file', blob, childId.split('@')[0] + '_var_' + i + '.png');
+                formData.append('extra', '{"session":"character-variations"}');
+                
+                return $http.post(CONFIG.API + '/v3/upload/image', formData, {
+                    headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+                    transformRequest: angular.identity
+                });
+            })
+            .then(function(uploadRes) {
+                var permanentUrl = uploadRes.data.uploads[0].url;
+                $scope.pendingVariations[i].url = permanentUrl;
+                $scope.pendingVariations[i].status = 'ready';
+                $scope.$applyAsync();
+                
+                index++;
+                // Small delay between generations (rate limit)
+                return new Promise(function(resolve) { setTimeout(resolve, 2000); }).then(next);
+            })
+            .catch(function(err) {
+                console.error('[Variations] Failed to generate variation ' + i + ':', err);
+                $scope.pendingVariations[i].status = 'failed';
+                $scope.pendingVariations[i].error = err.message || 'Erro';
+                $scope.$applyAsync();
+                
+                index++;
+                return new Promise(function(resolve) { setTimeout(resolve, 2000); }).then(next);
+            });
+        }
+        
+        return next();
+    }
+    
+    $scope.approveVariation = function(v) {
+        v.status = 'approved';
+        saveApprovedVariations();
+    };
+    
+    $scope.rejectVariation = function(v) {
+        v.status = 'rejected';
+        // Remove from pending visually
+    };
+    
+    $scope.retryVariation = function(v) {
+        v.status = 'generating';
+        $scope.variationProgress = 'Regenerando: ' + v.scene + '...';
+        $scope.$applyAsync();
+        
+        getBase64FromUrl($scope.child.character_url).then(function(base64) {
+            var prompt = 'Create the SAME cartoon character from the reference image in a new pose and scene. ' +
+                'CRITICAL: The character must look IDENTICAL — same face, hair style, hair color, skin tone, body proportions, art style. ' +
+                'Change ONLY the pose, clothing details if needed, and background/scene. ' +
+                'Scene: ' + v.prompt_detail + '. ' +
+                'Style: Friendly flat-design cartoon like Duolingo. NO outlines, solid flat colors, no gradients. ' +
+                'Full body, white background (#FFFFFF). Only ONE character.';
+            
+            var proxyUrl = CONFIG.API + '/v3/pub/' + CONFIG.API_KEY + '/freepik_generate';
+            return fetch(proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64, prompt: prompt })
+            });
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var taskId = data.response && data.response.data && data.response.data.task_id;
+            if (!taskId) throw new Error('Freepik task creation failed');
+            return pollFreepikTask(taskId);
+        })
+        .then(function(imageUrl) { return downloadViaProxy(imageUrl); })
+        .then(function(blob) {
+            var formData = new FormData();
+            formData.append('file', blob, childId.split('@')[0] + '_var_retry_' + Date.now() + '.png');
+            formData.append('extra', '{"session":"character-variations"}');
+            return $http.post(CONFIG.API + '/v3/upload/image', formData, {
+                headers: { 'Authorization': 'Bearer ' + AuthService.getToken(), 'Content-Type': undefined },
+                transformRequest: angular.identity
+            });
+        })
+        .then(function(uploadRes) {
+            v.url = uploadRes.data.uploads[0].url;
+            v.status = 'ready';
+            $scope.variationProgress = '';
+            $scope.$applyAsync();
+        })
+        .catch(function(err) {
+            v.status = 'failed';
+            v.error = err.message || 'Erro';
+            $scope.variationProgress = '';
+            $scope.$applyAsync();
+        });
+    };
+    
+    $scope.saveAllVariations = function() {
+        saveApprovedVariations();
+    };
+    
+    function saveApprovedVariations() {
+        $scope.saving = true;
+        
+        // Collect approved from pending + existing
+        var approved = [];
+        
+        // Keep previously saved variations
+        ($scope.variations || []).forEach(function(v) {
+            approved.push({ url: v.url, scene: v.scene });
+        });
+        
+        // Add newly approved
+        ($scope.pendingVariations || []).forEach(function(v) {
+            if (v.status === 'approved' && v.url) {
+                approved.push({ url: v.url, scene: v.scene });
+            }
+        });
+        
+        $scope.variations = approved;
+        $scope.child.variations = approved;
+        
+        ApiService.getProfile(childId).then(function(res) {
+            var profile = res.data || { _id: childId };
+            profile.variations = approved;
+            return ApiService.dbSave('profile__c', profile);
+        }).then(function() {
+            // Remove approved from pending
+            $scope.pendingVariations = $scope.pendingVariations.filter(function(v) {
+                return v.status !== 'approved';
+            });
+            $scope.saving = false;
+            flashSaved();
+            $scope.$applyAsync();
+        }).catch(function(err) {
+            console.error('[Variations] Save error:', err);
+            $scope.error = 'Erro ao salvar variações.';
+            $scope.saving = false;
+            $scope.$applyAsync();
+        });
+    }
+    
+    $scope.removeVariation = function(idx) {
+        $scope.variations.splice(idx, 1);
+        $scope.child.variations = $scope.variations;
+        
+        ApiService.getProfile(childId).then(function(res) {
+            var profile = res.data || { _id: childId };
+            profile.variations = $scope.variations;
+            return ApiService.dbSave('profile__c', profile);
+        }).then(function() {
+            flashSaved();
+            $scope.$applyAsync();
+        });
     };
     
     // === Sounds Tab ===
