@@ -45,7 +45,7 @@ void trigger(event, entity, player, database) {
     if (parentId != null && parentId.toString().trim().length() > 0) {
         extra.put("parent_id", parentId.toString().trim())
     }
-    extra.put("root_folder", newShortGuid())
+    extra.put("root_folder", Guid.newShortGuid())
     newPlayer.extra = extra
 
     pm.insert(newPlayer)
