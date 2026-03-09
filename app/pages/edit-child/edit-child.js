@@ -117,10 +117,9 @@ app.controller('EditChildController', function($scope, $http, $location, $routeP
                         original: { url: s3Url, size: 0, width: w, height: h, depth: 0 }
                     };
                     
-                    return $http.post(CONFIG.API + '/v3/player', {
+                    // Use PUT /v3/database/player to update only image (preserves extra, password, etc.)
+                    return $http.put(CONFIG.API + '/v3/database/player', {
                         _id: childId,
-                        name: $scope.child.name || '',
-                        email: childId,
                         image: imageObj
                     }, AuthService.authHeader());
                 }).then(function(response) {
