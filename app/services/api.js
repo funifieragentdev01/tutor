@@ -49,9 +49,18 @@ app.factory('ApiService', function($http, AuthService) {
         // Get/save profile__c (extended profile data)
         getProfile: function(userId) {
             return $http.get(
-                API + '/v3/database/profile__c/' + encodeURIComponent(userId) + '?strict=true',
+                API + "/v3/database/profile__c?strict=true&q=_id:'" + userId + "'",
                 AuthService.authHeader()
-            );
+            ).then(function(res) {
+                // q= returns array, normalize to single object in .data
+                var arr = res.data;
+                if (Array.isArray(arr) && arr.length > 0) {
+                    res.data = arr[0];
+                } else if (Array.isArray(arr)) {
+                    res.data = null;
+                }
+                return res;
+            });
         },
         saveProfile: function(data) {
             return $http.put(
@@ -113,9 +122,18 @@ app.factory('ApiService', function($http, AuthService) {
         // Database generic
         dbGet: function(collection, id) {
             return $http.get(
-                API + '/v3/database/' + collection + '/' + encodeURIComponent(id) + '?strict=true',
+                API + "/v3/database/" + collection + "?strict=true&q=_id:'" + id + "'",
                 AuthService.authHeader()
-            );
+            ).then(function(res) {
+                // q= returns array, normalize to single object
+                var arr = res.data;
+                if (Array.isArray(arr) && arr.length > 0) {
+                    res.data = arr[0];
+                } else if (Array.isArray(arr)) {
+                    res.data = null;
+                }
+                return res;
+            });
         },
         dbSave: function(collection, data) {
             return $http.put(
