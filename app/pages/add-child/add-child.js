@@ -219,13 +219,15 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
                 
                 // Convert canvas to blob for upload
                 canvas.toBlob(function(blob) {
-                    if (!blob) { resolve(); return; }
+                    if (!blob) { console.error('[AddChild] Canvas toBlob returned null'); resolve(); return; }
                     
+                    console.log('[AddChild] Uploading photo blob to S3:', blob.size, 'bytes');
                     // Upload to Funifier S3
                     ApiService.uploadImage(blob, createdChildId + '.jpg').then(function(uploadUrl) {
-                        if (!uploadUrl) { resolve(); return; }
+                        if (!uploadUrl) { console.error('[AddChild] S3 upload returned no URL'); resolve(); return; }
                         
-                        // Update player with S3 URL
+                        console.log('[AddChild] S3 upload success:', uploadUrl);
+                        // Update player with S3 URL (NEVER base64)
                         var imageObj = {
                             small: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 },
                             medium: { url: uploadUrl, size: 0, width: w, height: h, depth: 0 },
@@ -236,9 +238,19 @@ app.controller('AddChildController', function($scope, $location, $rootScope, Aut
                         ApiService.getPlayer(createdChildId).then(function(pRes) {
                             var p = pRes.data || {};
                             p.image = imageObj;
+                            console.log('[AddChild] Saving player with S3 URL, keys:', Object.keys(p).join(','));
                             return ApiService.dbSave('player', p);
-                        }).then(resolve).catch(resolve);
-                    }).catch(resolve);
+                        }).then(function() {
+                            console.log('[AddChild] Player photo saved successfully');
+                            resolve();
+                        }).catch(function(err) {
+                            console.error('[AddChild] Failed to save player photo:', err);
+                            resolve();
+                        });
+                    }).catch(function(err) {
+                        console.error('[AddChild] S3 upload FAILED:', err);
+                        resolve(); // Don't save base64 — just skip photo
+                    });
                 }, 'image/jpeg', 0.8);
             };
             img.src = photoData;
