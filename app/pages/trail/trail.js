@@ -295,7 +295,8 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
             });
         });
         
-        $scope.trailItems = insertVariationsIntoTrail(flat);
+        assignVariationsToLessons(flat);
+        $scope.trailItems = flat;
         $scope.trailLoading = false;
         $scope.$applyAsync();
         
@@ -332,43 +333,36 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         };
     };
     
-    // Build variation trail items — inserted between lessons at S-curve peaks
-    function insertVariationsIntoTrail(flat) {
-        if (!$scope.variationUrls || $scope.variationUrls.length === 0) return flat;
-        
-        var result = [];
+    // Assign variation URLs to specific lessons (displayed alongside, not replacing)
+    function assignVariationsToLessons(flat) {
+        if (!$scope.variationUrls || $scope.variationUrls.length === 0) return;
         var varIdx = 0;
         var lessonCount = 0;
-        
         for (var i = 0; i < flat.length; i++) {
-            result.push(flat[i]);
-            
             if (flat[i]._type === 'lesson') {
                 lessonCount++;
-                // Insert a variation every 3 lessons, starting after lesson 2
-                if (lessonCount >= 2 && (lessonCount - 2) % 3 === 0 && varIdx < $scope.variationUrls.length) {
-                    // Calculate position: opposite side of current lesson
-                    var curOffset = Math.sin(flat[i].lessonIndex * 0.8) * 80;
-                    result.push({
-                        _type: 'variation',
-                        url: $scope.variationUrls[varIdx],
-                        _id: 'var_' + varIdx,
-                        // Mirror: if lesson is right, variation goes left
-                        variationOffset: -curOffset * 0.8
-                    });
+                // Show variation every 3 lessons starting at lesson 3
+                if (lessonCount >= 3 && (lessonCount - 3) % 3 === 0) {
+                    flat[i]._variationUrl = $scope.variationUrls[varIdx % $scope.variationUrls.length];
                     varIdx++;
-                    if (varIdx >= $scope.variationUrls.length) varIdx = 0;
                 }
             }
         }
-        return result;
     }
     
-    $scope.getVariationBubbleStyle = function(item) {
-        if (item._type !== 'variation') return {};
-        return {
-            'margin-left': 'calc(50% - 30px + ' + (item.variationOffset || 0) + 'px)'
-        };
+    $scope.getVariationStyle = function(item) {
+        if (!item._variationUrl) return { display: 'none' };
+        var xOffset = Math.sin(item.lessonIndex * 0.8) * 80;
+        var style = { position: 'absolute', top: '-20px' };
+        // Place on opposite side of the bubble
+        if (xOffset >= 0) {
+            style['right'] = 'auto';
+            style['left'] = 'calc(50% - 30px + ' + xOffset + 'px - 140px)';
+        } else {
+            style['left'] = 'auto';
+            style['right'] = 'calc(50% - 30px - ' + xOffset + 'px - 140px)';
+        }
+        return style;
     };
     
     $scope.getBubbleClass = function(item) {

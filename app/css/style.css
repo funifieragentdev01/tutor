@@ -1074,16 +1074,17 @@ body {
     cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 
-/* Trail Character Variations (Duolingo-style) */
-.trail-variation-node {
-    width: 60px; height: 60px;
-    display: flex; align-items: center; justify-content: center;
+/* Trail Character Variations (alongside bubbles) */
+.trail-variation-float {
+    position: absolute;
+    width: 120px; height: 120px;
+    z-index: 0;
     pointer-events: none;
 }
 .trail-variation-img {
-    width: 60px; height: 60px;
+    width: 120px; height: 120px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
 }
 
 .parent-test-notice {
@@ -1825,16 +1826,17 @@ body.has-bottom-nav .app-version {
 /* Lesson Bubbles */
 .duo-bubble-wrap {
     position: relative;
-    width: 60px;
+    width: 83px;
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: visible;
 }
 
 .duo-bubble {
-    width: 64px;
-    height: 64px;
+    width: 83px;
+    height: 83px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1868,7 +1870,7 @@ body.has-bottom-nav .app-version {
 }
 
 .duo-bubble-icon {
-    font-size: 22px;
+    font-size: 28px;
     line-height: 1;
     user-select: none;
     color: #fff;
