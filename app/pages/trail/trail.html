@@ -38,12 +38,15 @@
                     <div class="duo-module-progress" ng-if="item.percent > 0">{{item.percent | number:0}}% completo</div>
                 </div>
                 
-                <!-- Lesson Bubble -->
-                <div class="duo-bubble-wrap" ng-if="item._type === 'lesson'" ng-style="getBubbleStyle(item)" style="position:relative">
-                    <!-- Character variation in the curve belly -->
-                    <div class="trail-variation" ng-if="getVariationForLesson(item)" ng-style="getVariationStyle(item)">
-                        <img ng-src="{{getVariationForLesson(item)}}" class="trail-variation-img" alt="personagem">
+                <!-- Character Variation (Duolingo-style trail decoration) -->
+                <div class="duo-bubble-wrap" ng-if="item._type === 'variation'" ng-style="getVariationBubbleStyle(item)">
+                    <div class="trail-variation-node">
+                        <img ng-src="{{item.url}}" class="trail-variation-img" alt="personagem">
                     </div>
+                </div>
+                
+                <!-- Lesson Bubble -->
+                <div class="duo-bubble-wrap" ng-if="item._type === 'lesson'" ng-style="getBubbleStyle(item)">
                     <div ng-class="getBubbleClass(item)" ng-click="selectLesson(item, $event)"
                          ng-style="getBubbleDynamicStyle(item)">
                         <i class="fa-solid {{item.icon}} duo-bubble-icon"></i>

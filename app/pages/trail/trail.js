@@ -295,7 +295,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
             });
         });
         
-        $scope.trailItems = flat;
+        $scope.trailItems = insertVariationsIntoTrail(flat);
         $scope.trailLoading = false;
         $scope.$applyAsync();
         
@@ -332,37 +332,43 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         };
     };
     
-    // Determine if a lesson position should show a character variation
-    // Shows at the "peak" of each S-curve swing (every ~4 lessons) on the opposite side
-    $scope.getVariationForLesson = function(item) {
-        if (item._type !== 'lesson') return null;
-        if (!$scope.variationUrls || $scope.variationUrls.length === 0) return null;
+    // Build variation trail items — inserted between lessons at S-curve peaks
+    function insertVariationsIntoTrail(flat) {
+        if (!$scope.variationUrls || $scope.variationUrls.length === 0) return flat;
         
-        // Show a variation every 4 lessons at the widest point of the curve
-        // lessonIndex 2, 6, 10, 14... are where sin() hits peak/valley
-        var idx = item.lessonIndex;
-        if (idx < 2) return null;
-        if ((idx - 2) % 4 !== 0) return null;
+        var result = [];
+        var varIdx = 0;
+        var lessonCount = 0;
         
-        var varIdx = Math.floor((idx - 2) / 4) % $scope.variationUrls.length;
-        return $scope.variationUrls[varIdx];
-    };
-    
-    $scope.getVariationStyle = function(item) {
-        if (item._type !== 'lesson') return {};
-        // Place on the opposite side of the bubble
-        var xOffset = Math.sin(item.lessonIndex * 0.8) * 80;
-        var style = { 'position': 'absolute', 'top': '-10px' };
-        if (xOffset > 0) {
-            // Bubble is right, character goes left
-            style['left'] = '15px';
-            style['right'] = 'auto';
-        } else {
-            // Bubble is left, character goes right
-            style['right'] = '15px';
-            style['left'] = 'auto';
+        for (var i = 0; i < flat.length; i++) {
+            result.push(flat[i]);
+            
+            if (flat[i]._type === 'lesson') {
+                lessonCount++;
+                // Insert a variation every 3 lessons, starting after lesson 2
+                if (lessonCount >= 2 && (lessonCount - 2) % 3 === 0 && varIdx < $scope.variationUrls.length) {
+                    // Calculate position: opposite side of current lesson
+                    var curOffset = Math.sin(flat[i].lessonIndex * 0.8) * 80;
+                    result.push({
+                        _type: 'variation',
+                        url: $scope.variationUrls[varIdx],
+                        _id: 'var_' + varIdx,
+                        // Mirror: if lesson is right, variation goes left
+                        variationOffset: -curOffset * 0.8
+                    });
+                    varIdx++;
+                    if (varIdx >= $scope.variationUrls.length) varIdx = 0;
+                }
+            }
         }
-        return style;
+        return result;
+    }
+    
+    $scope.getVariationBubbleStyle = function(item) {
+        if (item._type !== 'variation') return {};
+        return {
+            'margin-left': 'calc(50% - 30px + ' + (item.variationOffset || 0) + 'px)'
+        };
     };
     
     $scope.getBubbleClass = function(item) {
