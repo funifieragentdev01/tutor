@@ -28,6 +28,9 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         'Perfeito! 🌟', 'Demais! 🚀', 'Incrível! 🏆', 'Show! 👏'
     ];
     $scope.correctMsgIndex = 0;
+    $scope.celebrationUrl = '';  // celebrating variation image
+    $scope.elapsedTime = '';     // mm:ss
+    var quizStartTime = Date.now();
     
     // Sound settings
     $scope.feedbackSound = 'beep'; // default
@@ -39,10 +42,13 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
             var profile = res.data || {};
             $scope.feedbackSound = profile.feedback_sound || 'beep';
             $scope.customSoundUrl = profile.custom_sound_url || null;
-            console.log('[Quiz] Loaded feedback sound:', $scope.feedbackSound, $scope.customSoundUrl);
-        }).catch(function() {
-            console.log('[Quiz] Could not load profile, using default sound');
-        });
+            // Load celebrating variation (2nd variation = celebration, or fallback to character_url)
+            if (profile.variations && profile.variations.length > 1) {
+                $scope.celebrationUrl = profile.variations[1].url; // index 1 = celebrating
+            } else if (profile.character_url) {
+                $scope.celebrationUrl = profile.character_url;
+            }
+        }).catch(function() {});
         
         // Load questions for this quiz
         ApiService.dbQuery('question', 'quiz:"' + quizId + '"', { _id: 1 }, 50).then(function(res) {
@@ -124,6 +130,12 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $scope.scorePercent = Math.round(($scope.correctCount / $scope.questions.length) * 100);
         $scope.xpEarned = $scope.correctCount * 10;
         $scope.progressPercent = 100;
+        
+        // Calculate elapsed time
+        var elapsed = Math.floor((Date.now() - quizStartTime) / 1000);
+        var mins = Math.floor(elapsed / 60);
+        var secs = elapsed % 60;
+        $scope.elapsedTime = mins + ':' + (secs < 10 ? '0' : '') + secs;
         
         // Only log completion when the player is the logged-in user (child playing)
         // Parent testing does NOT register progress for the child
@@ -209,6 +221,7 @@ app.controller('QuizController', function($scope, $location, $routeParams, $time
         $scope.progressPercent = 0;
         $scope.progressColor = '#FF9600';
         $scope.currentQuestion = $scope.questions[0];
+        quizStartTime = Date.now();
         
         // Shuffle questions for retry
         $scope.questions.sort(function() { return Math.random() - 0.5; });

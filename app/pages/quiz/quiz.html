@@ -62,31 +62,37 @@
 
     <!-- Results — Duolingo-style completion screen -->
     <div class="quiz-results" ng-if="finished">
-        <div class="results-card" ng-class="{'results-great': scorePercent >= 80, 'results-ok': scorePercent >= 50 && scorePercent < 80, 'results-low': scorePercent < 50}">
-            <div class="results-emoji">{{scorePercent >= 80 ? '🏆' : scorePercent >= 50 ? '💪' : '📚'}}</div>
-            <h2 class="results-title" ng-if="scorePercent >= 80">Aula concluída!</h2>
-            <h2 class="results-title" ng-if="scorePercent >= 50 && scorePercent < 80">Bom trabalho!</h2>
-            <h2 class="results-title" ng-if="scorePercent < 50">Continue tentando!</h2>
-            <div class="results-score">{{correctCount}}/{{questions.length}} respostas certas</div>
-            <div class="results-percent-ring">
-                <svg viewBox="0 0 100 100" class="percent-ring">
-                    <circle cx="50" cy="50" r="40" stroke="#E0E0E0" stroke-width="8" fill="none"/>
-                    <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="8" fill="none"
-                            stroke-dasharray="251.3" ng-attr-stroke-dashoffset="{{251.3 - (251.3 * scorePercent / 100)}}"
-                            stroke-linecap="round" transform="rotate(-90 50 50)"/>
-                    <text x="50" y="55" text-anchor="middle" font-size="20" font-weight="700" fill="currentColor">{{scorePercent}}%</text>
-                </svg>
-            </div>
-            <div class="results-message">
-                <span ng-if="scorePercent >= 80">Incrível! Você arrasou! 🌟</span>
-                <span ng-if="scorePercent >= 50 && scorePercent < 80">Muito bem! Continue praticando!</span>
-                <span ng-if="scorePercent < 50">Não desista! Pratique mais! 💪</span>
-            </div>
+
+        <!-- Celebration character (100%) -->
+        <div class="results-character" ng-if="celebrationUrl && scorePercent === 100">
+            <img ng-src="{{celebrationUrl}}" class="results-character-img" alt="celebração">
         </div>
 
-        <!-- XP earned -->
-        <div class="xp-earned" ng-if="!isParentTest">
-            <span class="xp-badge">+{{xpEarned}} XP</span>
+        <!-- Title -->
+        <h2 class="results-title-big" ng-if="scorePercent === 100">Quem é você?!</h2>
+        <h2 class="results-title-big" ng-if="scorePercent >= 80 && scorePercent < 100">Aula concluída!</h2>
+        <h2 class="results-title-big" ng-if="scorePercent >= 50 && scorePercent < 80">Bom trabalho!</h2>
+        <h2 class="results-title-big" ng-if="scorePercent < 50">Continue tentando!</h2>
+
+        <!-- Subtitle -->
+        <p class="results-subtitle" ng-if="scorePercent === 100">Nenhum erro. Muito suspeito. Não parece humano.</p>
+        <p class="results-subtitle" ng-if="scorePercent >= 80 && scorePercent < 100">{{correctCount}}/{{questions.length}} respostas certas!</p>
+        <p class="results-subtitle" ng-if="scorePercent < 80">{{correctCount}}/{{questions.length}} respostas certas</p>
+
+        <!-- Stats cards (Duolingo-style) -->
+        <div class="results-stats-row">
+            <div class="results-stat-card stat-xp">
+                <div class="stat-label">TOTAL DE XP</div>
+                <div class="stat-value"><i class="fa-solid fa-bolt"></i> {{xpEarned}}</div>
+            </div>
+            <div class="results-stat-card stat-score">
+                <div class="stat-label">{{scorePercent === 100 ? 'INCRÍVEL' : 'ACERTO'}}</div>
+                <div class="stat-value"><i class="fa-solid fa-bullseye"></i> {{scorePercent}}%</div>
+            </div>
+            <div class="results-stat-card stat-time">
+                <div class="stat-label">VELOZ</div>
+                <div class="stat-value"><i class="fa-solid fa-clock"></i> {{elapsedTime}}</div>
+            </div>
         </div>
         
         <div class="parent-test-notice" ng-if="isParentTest">
