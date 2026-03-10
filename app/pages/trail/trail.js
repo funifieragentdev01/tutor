@@ -367,7 +367,7 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
         if (xOffset >= 0) {
             // Bubble is to the RIGHT → variation goes LEFT
             style['right'] = 'auto';
-            style['left'] = '-200px';
+            style['left'] = '-250px';
         } else {
             // Bubble is to the LEFT → variation goes RIGHT
             style['left'] = 'auto';
