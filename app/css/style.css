@@ -1077,12 +1077,12 @@ body {
 /* Trail Character Variations (alongside bubbles) */
 .trail-variation-float {
     position: absolute;
-    width: 120px; height: 120px;
+    width: 180px; height: 180px;
     z-index: 0;
     pointer-events: none;
 }
 .trail-variation-img {
-    width: 120px; height: 120px;
+    width: 180px; height: 180px;
     object-fit: contain;
     filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
 }

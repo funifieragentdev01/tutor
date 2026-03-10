@@ -360,15 +360,18 @@ app.controller('TrailController', function($scope, $location, $routeParams, $tim
     
     $scope.getVariationStyle = function(item) {
         if (!item._variationUrl) return { display: 'none' };
+        // The bubble's xOffset from center
         var xOffset = Math.sin(item.lessonIndex * 0.8) * 80;
-        var style = { position: 'absolute', top: '-20px' };
-        // Place on opposite side of the bubble
+        var style = { position: 'absolute', top: '-40px' };
+        // Place on OPPOSITE side of bubble — far into the empty space
         if (xOffset >= 0) {
+            // Bubble is to the RIGHT → variation goes LEFT
             style['right'] = 'auto';
-            style['left'] = 'calc(50% - 30px + ' + xOffset + 'px - 140px)';
+            style['left'] = '-200px';
         } else {
+            // Bubble is to the LEFT → variation goes RIGHT
             style['left'] = 'auto';
-            style['right'] = 'calc(50% - 30px - ' + xOffset + 'px - 140px)';
+            style['right'] = '-200px';
         }
         return style;
     };
