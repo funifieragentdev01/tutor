@@ -201,7 +201,7 @@ app.controller('CaptureController', function($scope, $location, $routeParams, Au
                 progress('Criando disciplina: ' + result.subject);
                 return ApiService.createFolder({
                     type: 'subject',
-                    parent: childId,
+                    parent: parentFolderId,
                     title: result.subject,
                     position: 0,
                     active: true,
