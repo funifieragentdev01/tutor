@@ -900,7 +900,7 @@ body {
 
 /* Celebration results */
 .results-character { margin: 20px auto 16px; text-align: center; }
-.results-character-img { width: 200px; height: 200px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }
+.results-character-img { width: 240px; height: 240px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }
 .results-title-big { font-size: 28px; font-weight: 900; color: #fff; margin: 8px 0; }
 .results-subtitle { font-size: 16px; color: var(--text-light); margin: 4px 0 20px; }
 .results-stats-row { display: flex; gap: 10px; justify-content: center; margin: 16px 0; }
