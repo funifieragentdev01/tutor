@@ -813,7 +813,7 @@ body {
     transition: transform 0.3s;
 }
 .question-number { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-.question-text { font-size: 18px; font-weight: 700; line-height: 1.5; }
+.question-text { font-size: 18px; font-weight: 700; line-height: 1.5; color: #fff; }
 
 .shake { animation: shake 0.5s; }
 @keyframes shake {
@@ -843,7 +843,7 @@ body {
     font-weight: 800; font-size: 14px; color: var(--primary);
     flex-shrink: 0;
 }
-.choice-label { flex: 1; }
+.choice-label { flex: 1; color: #fff; }
 .choice-indicator { font-size: 18px; font-weight: 800; }
 
 .choice-selected { border-color: var(--primary); background: rgba(255,150,0,0.15); }
@@ -875,6 +875,7 @@ body {
     border-radius: 0 6px 6px 0;
     font-size: 14px;
     line-height: 1.5;
+    color: #fff;
 }
 
 /* Quiz Results */
