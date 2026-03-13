@@ -1,0 +1,6 @@
+/*.js
+  Cache-Control: no-cache, must-revalidate
+/*.css
+  Cache-Control: no-cache, must-revalidate
+/pages/**/*.js
+  Cache-Control: no-cache, must-revalidate

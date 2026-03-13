@@ -2,7 +2,7 @@
   "name": "Studini",
   "short_name": "Studini",
   "description": "Plataforma de estudos gamificada para crianças",
-  "start_url": "/app/index.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#1A1A2E",
   "theme_color": "#FF9600",
