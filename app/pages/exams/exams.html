@@ -50,7 +50,7 @@
             <div ng-if="exams.length === 0 && !showForm" class="empty-state" style="padding-top: 40px;">
                 <div class="empty-icon">📅</div>
                 <h3>Nenhuma prova cadastrada</h3>
-                <p>Cadastre as provas do seu filho para o Professor Tutor priorizar os estudos!</p>
+                <p>Cadastre as provas do seu filho para o Professor Studini priorizar os estudos!</p>
             </div>
 
             <div ng-repeat="exam in exams track by exam._id" class="exam-card" ng-class="{'exam-past': exam._isPast}" ng-style="{'border-left-color': exam._urgencyColor}">

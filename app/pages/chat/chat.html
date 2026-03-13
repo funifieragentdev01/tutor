@@ -4,7 +4,7 @@
         <button class="btn-icon" ng-click="goBack()">
             <span class="icon">←</span>
         </button>
-        <div class="header-title">🧑‍🏫 Professor Tutor</div>
+        <div class="header-title">🧑‍🏫 Professor Studini</div>
     </div>
 
     <!-- MODE SELECT -->
@@ -43,7 +43,7 @@
             <div class="chat-bubble assistant" ng-if="messages.length === 0 && !loading">
                 <div class="bubble-avatar">🧑‍🏫</div>
                 <div class="bubble-content">
-                    <div class="bubble-text">Olá! 👋 Eu sou o <strong>Professor Tutor</strong>! Estou aqui para te ajudar a aprender. Pode me perguntar qualquer coisa! 🚀</div>
+                    <div class="bubble-text">Olá! 👋 Eu sou o <strong>Professor Studini</strong>! Estou aqui para te ajudar a aprender. Pode me perguntar qualquer coisa! 🚀</div>
                 </div>
             </div>
 
@@ -92,7 +92,7 @@
     <!-- VOICE MODE -->
     <div ng-if="mode === 'voice'" class="call-ui">
         <div class="call-avatar-large">🧑‍🏫</div>
-        <div class="call-name">Professor Tutor</div>
+        <div class="call-name">Professor Studini</div>
         
         <div class="call-status" ng-class="{'pulse': callStatus === 'connecting'}">
             <span class="call-status-dot" ng-class="{'green': callStatus === 'connected', 'yellow': callStatus === 'connecting'}"></span>

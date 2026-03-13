@@ -154,8 +154,8 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
         var subjectsText = buildSubjectsText();
         var examsText = buildExamsText();
         
-        systemPrompt = 'Você é o Professor Tutor, um professor particular virtual para crianças. ' +
-            'Seu nome é Professor Tutor. Fale sempre em Português do Brasil.\n\n' +
+        systemPrompt = 'Você é o Professor Studini, um professor particular virtual para crianças. ' +
+            'Seu nome é Professor Studini. Fale sempre em Português do Brasil.\n\n' +
             'ALUNO: ' + name + (age ? ' (' + age + ' anos)' : '') + '\n' +
             (description ? 'DESCRIÇÃO DO ALUNO (escrita pelos pais): ' + description + '\n' : '') +
             (subjectsText ? '\n' + subjectsText + '\n' : '') +
@@ -397,7 +397,7 @@ app.controller('ChatController', function($scope, $location, $routeParams, $sce,
             }).join('; ');
         }
         
-        var instr = 'Voce eh o Professor Tutor, professor particular virtual para criancas. ' +
+        var instr = 'Voce eh o Professor Studini, professor particular virtual para criancas. ' +
             'IDIOMA: SEMPRE fale em PORTUGUES BRASILEIRO. ' +
             'Tom: paciente, encorajador, divertido, use linguagem adequada para a idade da crianca. ' +
             'Voce ja conhece este aluno. NAO pergunte quem ele eh. Comece cumprimentando pelo nome.\n\n' +

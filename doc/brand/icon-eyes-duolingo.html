@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; }
+html, body { width: 1024px; height: 1024px; overflow: hidden; }
+body { display: flex; justify-content: center; align-items: center; background: #1A1A2E; }
+svg { width: 1024px; height: 1024px; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="110" fill="#1A1A2E"/>
+  
+  <!-- Subtle face silhouette -->
+  <ellipse cx="256" cy="270" rx="180" ry="140" fill="#1E1E3A" opacity="0.5"/>
+  
+  <!-- Left eye outer (white) -->
+  <ellipse cx="178" cy="245" rx="88" ry="82" fill="white"/>
+  <!-- Right eye outer (white) -->
+  <ellipse cx="334" cy="245" rx="88" ry="82" fill="white"/>
+  
+  <!-- Left eye iris (orange gradient) -->
+  <ellipse cx="190" cy="248" rx="50" ry="52" fill="#FF9600"/>
+  <ellipse cx="190" cy="248" rx="42" ry="44" fill="#FF8200"/>
+  <!-- Left eye pupil -->
+  <ellipse cx="196" cy="244" rx="24" ry="26" fill="#1A1A2E"/>
+  <!-- Left eye highlight big -->
+  <circle cx="206" cy="233" r="11" fill="white" opacity="0.95"/>
+  <!-- Left eye highlight small -->
+  <circle cx="182" cy="258" r="5" fill="white" opacity="0.5"/>
+  
+  <!-- Right eye iris (orange gradient) -->
+  <ellipse cx="322" cy="248" rx="50" ry="52" fill="#FF9600"/>
+  <ellipse cx="322" cy="248" rx="42" ry="44" fill="#FF8200"/>
+  <!-- Right eye pupil -->
+  <ellipse cx="316" cy="244" rx="24" ry="26" fill="#1A1A2E"/>
+  <!-- Right eye highlight big -->
+  <circle cx="326" cy="233" r="11" fill="white" opacity="0.95"/>
+  <!-- Right eye highlight small -->
+  <circle cx="302" cy="258" r="5" fill="white" opacity="0.5"/>
+  
+  <!-- Brow / forehead connecting shape -->
+  <path d="M90 225 Q140 165 256 155 Q372 165 422 225 Q370 200 256 195 Q142 200 90 225Z" fill="#2A2A4E"/>
+  
+  <!-- Eyebrow left -->
+  <path d="M115 200 Q155 172 215 180" stroke="#2A2A4E" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- Eyebrow right -->
+  <path d="M397 200 Q357 172 297 180" stroke="#2A2A4E" stroke-width="10" fill="none" stroke-linecap="round"/>
+  
+  <!-- Beak -->
+  <path d="M243 318 Q256 340 269 318 Q256 326 243 318Z" fill="#FF9600"/>
+</svg>
+</body>
+</html>
