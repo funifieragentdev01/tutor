@@ -1059,6 +1059,13 @@ body {
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.5);
     z-index: 1;
+    transition: background 0.6s;
+}
+.login-video-overlay.login-overlay-dim {
+    background: rgba(0,0,0,0.5);
+}
+.login-video-overlay:not(.login-overlay-dim) {
+    background: rgba(0,0,0,0.15);
 }
 .login-container-studini {
     background: rgba(10,10,10,0.8);
@@ -1071,6 +1078,64 @@ body {
     position: relative;
     z-index: 2;
     backdrop-filter: blur(12px);
+    transition: opacity 0.5s, transform 0.5s;
+}
+.login-container-studini.login-hidden {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+}
+/* Magic button */
+.login-magic-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,150,0,0.15);
+    border: 1px solid rgba(255,150,0,0.3);
+    color: #FF9600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+.login-magic-btn:hover {
+    background: rgba(255,150,0,0.3);
+    transform: rotate(15deg) scale(1.1);
+}
+/* Return from magic */
+.login-magic-return {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255,150,0,0.9);
+    border: none;
+    color: #000;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(255,150,0,0.4);
+    transition: transform 0.2s;
+    animation: magic-pulse 2s ease-in-out infinite;
+}
+.login-magic-return:hover {
+    transform: translateX(-50%) scale(1.1);
+}
+@keyframes magic-pulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(255,150,0,0.4); }
+    50% { box-shadow: 0 4px 30px rgba(255,150,0,0.7); }
 }
 .login-logo-studini {
     font-size: 32px;

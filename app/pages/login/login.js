@@ -6,6 +6,30 @@ app.controller('LoginController', function($scope, $location, $rootScope, $timeo
     // Check if coming from landing "Jogar Agora" button
     var typeParam = $location.search().type;
     $scope.userType = (typeParam === 'aluno') ? 'child' : null;
+    $scope.magicMode = false;
+
+    $scope.toggleMagic = function() {
+        $scope.magicMode = !$scope.magicMode;
+        if ($scope.magicMode) {
+            // Confetti burst
+            if (window.confetti) {
+                confetti({
+                    particleCount: 40,
+                    angle: 90,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    shapes: ['square'],
+                    scalar: 2.5,
+                    colors: ['#ff9800', '#ffc107']
+                });
+            }
+            // Magic sound
+            try {
+                var audio = new Audio('audio/magic-sound.mp3');
+                audio.play();
+            } catch(e) {}
+        }
+    };
     
     $scope.selectUserType = function(type) {
         $scope.userType = type;
