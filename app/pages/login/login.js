@@ -3,7 +3,9 @@ app.controller('LoginController', function($scope, $location, $rootScope, AuthSe
     $scope.password = '';
     $scope.error = '';
     $scope.loading = false;
-    $scope.userType = null; // null, 'parent', or 'child'
+    // Check if coming from landing "Jogar Agora" button
+    var typeParam = $location.search().type;
+    $scope.userType = (typeParam === 'aluno') ? 'child' : null; // null, 'parent', or 'child'
     
     $scope.selectUserType = function(type) {
         $scope.userType = type;

@@ -1,5 +1,5 @@
 // Tutor App — AngularJS 1.8.2
-var app = angular.module('tutorApp', ['ngRoute']);
+var app = angular.module('tutorApp', ['ngRoute', 'ngSanitize']);
 
 app.config(function($routeProvider, $locationProvider, $httpProvider) {
     // Cache-busting for templates

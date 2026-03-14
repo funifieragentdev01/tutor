@@ -11,14 +11,9 @@
             <div class="nav-logo">
                 <img src="img/landing/logo.png" alt="Studini" class="nav-logo-img">
             </div>
-            <div class="nav-links">
-                <a href="" ng-click="scrollTo('features')">Recursos</a>
-                <a href="" ng-click="scrollTo('how')">Como funciona</a>
-                <a href="" ng-click="scrollTo('contact')">Contato</a>
-            </div>
             <div class="nav-actions">
-                <a href="" ng-click="goLogin()" class="nav-btn nav-btn-outline">Log in</a>
-                <a href="" ng-click="goSignup()" class="nav-btn nav-btn-primary">Register</a>
+                <a href="" ng-click="goLogin()" class="nav-btn nav-btn-outline">Entrar</a>
+                <a href="" ng-click="goSignup()" class="nav-btn nav-btn-primary">Cadastrar</a>
             </div>
             <button class="nav-mobile-toggle" ng-click="mobileMenu = !mobileMenu">
                 <i class="fas fa-bars"></i>
@@ -27,19 +22,17 @@
 
         <!-- Mobile Menu -->
         <div class="mobile-menu" ng-show="mobileMenu">
-            <a href="" ng-click="scrollTo('features'); mobileMenu=false">Recursos</a>
-            <a href="" ng-click="scrollTo('how'); mobileMenu=false">Como funciona</a>
-            <a href="" ng-click="scrollTo('contact'); mobileMenu=false">Contato</a>
-            <a href="" ng-click="goLogin(); mobileMenu=false" class="nav-btn nav-btn-outline">Log in</a>
-            <a href="" ng-click="goSignup(); mobileMenu=false" class="nav-btn nav-btn-primary">Register</a>
+            <a href="" ng-click="goLogin(); mobileMenu=false" class="nav-btn nav-btn-outline">Entrar</a>
+            <a href="" ng-click="goSignup(); mobileMenu=false" class="nav-btn nav-btn-primary">Cadastrar</a>
         </div>
 
         <!-- Hero Content -->
         <div class="hero-content-studini">
             <h1 class="hero-title-studini">Studini:<br>A Magia do<br>Conhecimento</h1>
+            <p class="hero-subtitle-studini">Transforme os livros escolares em uma aventura mágica com IA</p>
             <div class="hero-buttons">
-                <a href="" ng-click="goSignup()" class="hero-btn hero-btn-primary">Ser bruxinho</a>
-                <a href="" ng-click="goLogin()" class="hero-btn hero-btn-secondary">Bonder maguito</a>
+                <a href="" ng-click="goChildLogin()" class="hero-btn hero-btn-primary"><i class="fas fa-gamepad"></i> Jogar Agora</a>
+                <a href="" ng-click="goLogin()" class="hero-btn hero-btn-secondary"><i class="fas fa-user-shield"></i> Área dos Pais</a>
             </div>
         </div>
     </section>
@@ -52,21 +45,18 @@
                 <h3 class="feature-card-title">Scanner de Livros Mágicos</h3>
                 <p class="feature-card-desc">Escaneie os livros escolares e transforme em uma trilha de estudos gamificada no castelo.</p>
                 <img src="img/landing/card-scanner.png" alt="Scanner de Livros" class="feature-card-img">
-                <a href="" ng-click="goSignup()" class="feature-card-btn">Ver como funciona</a>
             </div>
             <div class="feature-card">
                 <div class="feature-number">2</div>
                 <h3 class="feature-card-title">Avatar Personalizado</h3>
                 <p class="feature-card-desc">Crie um avatar mágico a partir da foto do seu filho. Ele vira o personagem da história!</p>
                 <img src="img/landing/card-avatar.png" alt="Avatar Personalizado" class="feature-card-img">
-                <a href="" ng-click="goSignup()" class="feature-card-btn">Ver como funciona</a>
             </div>
             <div class="feature-card">
                 <div class="feature-number">3</div>
                 <h3 class="feature-card-title">Professor IA Virtual</h3>
                 <p class="feature-card-desc">Um professor virtual inteligente que conhece seu filho e adapta os estudos ao ritmo dele.</p>
                 <img src="img/landing/card-professor.png" alt="Professor IA" class="feature-card-img">
-                <a href="" ng-click="goSignup()" class="feature-card-btn">Ver como funciona</a>
             </div>
         </div>
     </section>
@@ -98,6 +88,61 @@
         </div>
     </section>
 
+    <!-- Pricing Section -->
+    <section class="pricing-studini" id="pricing">
+        <h2 class="section-title-studini">Escolha seu plano</h2>
+        <p class="pricing-intro">Comece gratuitamente e evolua quando quiser.</p>
+        <div class="pricing-cards-studini">
+            <div class="pricing-card-studini">
+                <div class="pricing-card-header-studini">
+                    <h3>Grátis</h3>
+                    <div class="pricing-price-studini">R$ 0<small>/mês</small></div>
+                </div>
+                <ul class="pricing-features-studini">
+                    <li><i class="fas fa-check"></i> 1 criança</li>
+                    <li><i class="fas fa-check"></i> Scanner de livros</li>
+                    <li><i class="fas fa-check"></i> Trilha gamificada</li>
+                    <li><i class="fas fa-check"></i> Quizzes ilimitados</li>
+                    <li><i class="fas fa-check"></i> Avatar personalizado</li>
+                </ul>
+                <a href="" ng-click="goSignup()" class="pricing-btn-studini pricing-btn-outline">Começar Grátis</a>
+            </div>
+            <div class="pricing-card-studini featured">
+                <div class="pricing-badge-studini">Mais popular</div>
+                <div class="pricing-card-header-studini">
+                    <h3>Família</h3>
+                    <div class="pricing-price-studini">R$ 29<span>,90</span><small>/mês</small></div>
+                </div>
+                <ul class="pricing-features-studini">
+                    <li><i class="fas fa-check"></i> Até 5 crianças</li>
+                    <li><i class="fas fa-check"></i> Tudo do Grátis</li>
+                    <li><i class="fas fa-check"></i> Professor IA por voz</li>
+                    <li><i class="fas fa-check"></i> Relatório de desempenho</li>
+                    <li><i class="fas fa-check"></i> Provas e notas</li>
+                    <li><i class="fas fa-check"></i> Variações de avatar</li>
+                    <li><i class="fas fa-check"></i> Suporte prioritário</li>
+                </ul>
+                <a href="" ng-click="goSignup()" class="pricing-btn-studini pricing-btn-primary">Assinar Agora</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-studini" id="faq" ng-if="faqs.length">
+        <h2 class="section-title-studini">Dúvidas Frequentes</h2>
+        <div class="faq-list-studini">
+            <div class="faq-item-studini" ng-repeat="faq in faqs" ng-class="{'faq-open': faqOpen[faq._id]}">
+                <div class="faq-question-studini" ng-click="toggleFaq(faq._id)">
+                    <span>{{faq.question}}</span>
+                    <i class="fas" ng-class="faqOpen[faq._id] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </div>
+                <div class="faq-answer-studini" ng-show="faqOpen[faq._id]">
+                    <p>{{faq.answer}}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA -->
     <section class="cta-studini">
         <h2 class="section-title-studini">Pronto para a aventura?</h2>
@@ -106,11 +151,50 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer-studini" id="contact">
-        <div class="footer-content">
-            <img src="img/landing/logo.png" alt="Studini" style="height:40px;margin-bottom:12px">
-            <p>Studini — A Magia do Conhecimento</p>
-            <p style="margin-top:8px;opacity:0.5">Powered by <a href="https://www.funifier.com" target="_blank" style="color:var(--accent)">Funifier</a></p>
+    <footer class="footer-studini-v2">
+        <div class="footer-inner-studini">
+            <div class="footer-brand-studini">
+                <img src="img/landing/logo.png" alt="Studini" style="height:40px;margin-bottom:12px">
+                <p>Studini — A Magia do Conhecimento</p>
+                <p class="footer-desc-studini">Transforme os livros escolares do seu filho em uma aventura gamificada com inteligência artificial.</p>
+            </div>
+            <div class="footer-links-studini">
+                <h4>Navegação</h4>
+                <ul>
+                    <li><a href="" ng-click="scrollTo('features')">Recursos</a></li>
+                    <li><a href="" ng-click="scrollTo('how')">Como funciona</a></li>
+                    <li><a href="" ng-click="scrollTo('pricing')">Preços</a></li>
+                    <li><a href="" ng-click="scrollTo('faq')">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-links-studini">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="" ng-click="openTerms($event)">Termos de Uso</a></li>
+                    <li><a href="" ng-click="openPrivacy($event)">Política de Privacidade</a></li>
+                    <li><a href="mailto:contato@funifier.com">Contato</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom-studini">
+            <span>© 2026 Funifier Education. Todos os direitos reservados.</span>
         </div>
     </footer>
+</div>
+
+<!-- Terms Modal -->
+<div class="terms-modal-overlay" ng-show="showTermsModal" ng-click="closeTermsModal()">
+    <div class="terms-modal-content" ng-click="$event.stopPropagation()">
+        <div class="terms-modal-header">
+            <div class="terms-tabs">
+                <button ng-class="{'active': termsTab === 'terms'}" ng-click="termsTab = 'terms'">Termos de Uso</button>
+                <button ng-class="{'active': termsTab === 'privacy'}" ng-click="termsTab = 'privacy'">Política de Privacidade</button>
+            </div>
+            <button class="terms-modal-close" ng-click="closeTermsModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="terms-modal-body">
+            <div ng-show="termsTab === 'terms'" ng-bind-html="termsHtml"></div>
+            <div ng-show="termsTab === 'privacy'" ng-bind-html="privacyHtml"></div>
+        </div>
+    </div>
 </div>

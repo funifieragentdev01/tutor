@@ -154,22 +154,33 @@ body {
     background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 60%);
 }
 .hero-title-studini {
-    font-family: 'UnifrakturMaguntia', cursive;
-    font-size: 64px;
+    font-family: var(--font);
+    font-size: 56px;
+    font-weight: 900;
     color: #FF9600;
-    line-height: 1.1;
-    margin-bottom: 32px;
+    line-height: 1.15;
+    margin-bottom: 16px;
     text-shadow: 2px 4px 8px rgba(0,0,0,0.6);
+}
+.hero-subtitle-studini {
+    font-size: 18px;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 32px;
+    font-weight: 600;
+    text-shadow: 1px 2px 4px rgba(0,0,0,0.5);
 }
 .hero-buttons { display: flex; gap: 16px; }
 .hero-btn {
-    padding: 12px 32px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 700;
+    padding: 14px 36px;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 800;
     text-decoration: none;
     transition: all 0.2s;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .hero-btn-primary { color: #000; background: #FF9600; border: 2px solid #FF9600; }
 .hero-btn-primary:hover { background: #e08600; transform: translateY(-2px); }
@@ -214,15 +225,16 @@ body {
     font-size: 16px;
 }
 .feature-card-title {
-    font-family: 'UnifrakturMaguntia', cursive;
-    font-size: 22px;
+    font-family: var(--font);
+    font-size: 20px;
+    font-weight: 800;
     color: #FF9600;
     margin: 8px 0 12px;
 }
 .feature-card-desc {
     font-size: 14px;
     color: rgba(255,255,255,0.7);
-    line-height: 1.5;
+    line-height: 1.6;
     margin-bottom: 16px;
 }
 .feature-card-img {
@@ -230,19 +242,8 @@ body {
     max-width: 280px;
     margin: 0 auto 16px;
     display: block;
+    border-radius: 12px;
 }
-.feature-card-btn {
-    display: inline-block;
-    padding: 10px 24px;
-    background: #FF9600;
-    color: #000;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 14px;
-    text-decoration: none;
-    transition: background 0.2s;
-}
-.feature-card-btn:hover { background: #e08600; }
 
 /* How it works */
 .how-studini {
@@ -250,8 +251,9 @@ body {
     background: #111;
 }
 .section-title-studini {
-    font-family: 'UnifrakturMaguntia', cursive;
-    font-size: 36px;
+    font-family: var(--font);
+    font-size: 32px;
+    font-weight: 900;
     color: #FF9600;
     text-align: center;
     margin-bottom: 40px;
@@ -282,6 +284,135 @@ body {
 .how-step h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #FF9600; }
 .how-step p { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; }
 
+/* Pricing */
+.pricing-studini {
+    padding: 60px 20px;
+    background: #0a0a0a;
+}
+.pricing-intro {
+    text-align: center;
+    color: rgba(255,255,255,0.6);
+    font-size: 16px;
+    margin-top: -24px;
+    margin-bottom: 40px;
+}
+.pricing-cards-studini {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+.pricing-card-studini {
+    background: #111;
+    border: 2px solid #222;
+    border-radius: 16px;
+    padding: 32px 24px;
+    position: relative;
+    transition: transform 0.2s;
+}
+.pricing-card-studini:hover { transform: translateY(-4px); }
+.pricing-card-studini.featured {
+    border-color: #FF9600;
+    background: rgba(255,150,0,0.05);
+}
+.pricing-badge-studini {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #FF9600;
+    color: #000;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.pricing-card-header-studini {
+    text-align: center;
+    margin-bottom: 24px;
+}
+.pricing-card-header-studini h3 {
+    color: white;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+.pricing-price-studini {
+    font-size: 40px;
+    font-weight: 900;
+    color: #FF9600;
+}
+.pricing-price-studini span { font-size: 24px; }
+.pricing-price-studini small { font-size: 14px; color: rgba(255,255,255,0.5); font-weight: 400; }
+.pricing-features-studini {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+}
+.pricing-features-studini li {
+    padding: 8px 0;
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pricing-features-studini li i { color: #FF9600; font-size: 12px; }
+.pricing-btn-studini {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px solid #FF9600;
+}
+.pricing-btn-outline { color: #FF9600; background: transparent; }
+.pricing-btn-outline:hover { background: rgba(255,150,0,0.1); }
+.pricing-btn-primary { color: #000; background: #FF9600; }
+.pricing-btn-primary:hover { background: #e08600; }
+
+/* FAQ */
+.faq-studini {
+    padding: 60px 20px;
+    background: #111;
+}
+.faq-list-studini {
+    max-width: 700px;
+    margin: 0 auto;
+}
+.faq-item-studini {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.faq-question-studini {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 0;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    transition: color 0.2s;
+}
+.faq-question-studini:hover { color: #FF9600; }
+.faq-question-studini i { color: #FF9600; font-size: 14px; flex-shrink: 0; margin-left: 12px; }
+.faq-answer-studini {
+    padding: 0 0 18px;
+}
+.faq-answer-studini p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+}
+
 /* CTA */
 .cta-studini {
     padding: 60px 20px;
@@ -290,7 +421,64 @@ body {
 }
 .cta-desc { color: rgba(255,255,255,0.7); font-size: 16px; margin-bottom: 24px; }
 
-/* Footer */
+/* Footer v2 */
+.footer-studini-v2 {
+    background: #050505;
+    border-top: 1px solid rgba(255,150,0,0.2);
+    padding: 48px 20px 24px;
+}
+.footer-inner-studini {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 32px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+.footer-brand-studini p {
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    font-weight: 600;
+}
+.footer-desc-studini {
+    color: rgba(255,255,255,0.4) !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+.footer-links-studini h4 {
+    color: #FF9600;
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+.footer-links-studini ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.footer-links-studini li {
+    padding: 4px 0;
+}
+.footer-links-studini a {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.2s;
+    cursor: pointer;
+}
+.footer-links-studini a:hover { color: #FF9600; }
+.footer-bottom-studini {
+    text-align: center;
+    padding-top: 24px;
+    margin-top: 32px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.3);
+    font-size: 12px;
+}
+
+/* Old footer (keep for compatibility) */
 .footer-studini {
     padding: 32px 20px;
     text-align: center;
@@ -298,6 +486,72 @@ body {
     border-top: 1px solid rgba(255,150,0,0.2);
 }
 .footer-content { color: rgba(255,255,255,0.5); font-size: 13px; }
+
+/* Terms Modal */
+.terms-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.terms-modal-content {
+    background: #1a1a1a;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.terms-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.terms-tabs {
+    display: flex;
+    gap: 4px;
+}
+.terms-tabs button {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.terms-tabs button.active {
+    background: #FF9600;
+    color: #000;
+}
+.terms-modal-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 20px;
+    cursor: pointer;
+}
+.terms-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    line-height: 1.7;
+}
+.terms-modal-body h1, .terms-modal-body h2, .terms-modal-body h3 {
+    color: #FF9600;
+    margin: 16px 0 8px;
+}
 
 /* Mobile responsive */
 @media (max-width: 768px) {
@@ -313,12 +567,15 @@ body {
         padding: 40px 20px 60px;
         background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
     }
-    .hero-title-studini { font-size: 40px; }
+    .hero-title-studini { font-size: 36px; }
+    .hero-subtitle-studini { font-size: 15px; }
     .hero-buttons { flex-direction: column; width: 100%; }
-    .hero-btn { text-align: center; }
+    .hero-btn { text-align: center; justify-content: center; }
     
     .feature-cards { grid-template-columns: 1fr; max-width: 400px; }
     .how-steps { grid-template-columns: repeat(2, 1fr); }
+    .pricing-cards-studini { grid-template-columns: 1fr; max-width: 400px; }
+    .footer-inner-studini { grid-template-columns: 1fr; text-align: center; }
 }
 
 /* Old hero (keep for compatibility) */
