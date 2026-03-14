@@ -74,8 +74,254 @@ body {
 .btn-block { display: block; width: 100%; }
 
 /* ===== Landing Page ===== */
-.landing-page { overflow-x: hidden; }
+.landing-page { overflow-x: hidden; background: #0a0a0a; }
 
+/* ===== Studini Landing ===== */
+.hero-studini {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    overflow: hidden;
+}
+.hero-video {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+.hero-video-fallback {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('../img/landing/bg.jpg') center/cover no-repeat;
+    z-index: -1;
+}
+
+/* Navigation */
+.landing-nav {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+}
+.nav-logo-img { height: 40px; }
+.nav-links { display: flex; gap: 24px; }
+.nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s; }
+.nav-links a:hover { color: #FF9600; }
+.nav-actions { display: flex; gap: 12px; }
+.nav-btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.nav-btn-outline { color: #FF9600; border: 2px solid #FF9600; background: transparent; }
+.nav-btn-outline:hover { background: rgba(255,150,0,0.15); }
+.nav-btn-primary { color: #000; background: #FF9600; border: 2px solid #FF9600; }
+.nav-btn-primary:hover { background: #e08600; }
+.nav-mobile-toggle { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+.mobile-menu {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 24px;
+    background: rgba(0,0,0,0.9);
+    position: relative;
+    z-index: 10;
+}
+.mobile-menu a { color: white; text-decoration: none; font-size: 16px; padding: 8px 0; }
+
+/* Hero Content */
+.hero-content-studini {
+    position: relative;
+    z-index: 5;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 40px 40px 80px;
+    text-align: right;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 60%);
+}
+.hero-title-studini {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 64px;
+    color: #FF9600;
+    line-height: 1.1;
+    margin-bottom: 32px;
+    text-shadow: 2px 4px 8px rgba(0,0,0,0.6);
+}
+.hero-buttons { display: flex; gap: 16px; }
+.hero-btn {
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.hero-btn-primary { color: #000; background: #FF9600; border: 2px solid #FF9600; }
+.hero-btn-primary:hover { background: #e08600; transform: translateY(-2px); }
+.hero-btn-secondary { color: #FF9600; border: 2px solid #FF9600; background: rgba(0,0,0,0.5); }
+.hero-btn-secondary:hover { background: rgba(255,150,0,0.15); }
+
+/* Feature Cards */
+.features-studini {
+    padding: 60px 20px;
+    background: #0a0a0a;
+}
+.feature-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 960px;
+    margin: 0 auto;
+}
+.feature-card {
+    background: rgba(255,150,0,0.05);
+    border: 2px solid #FF9600;
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s;
+}
+.feature-card:hover { transform: translateY(-4px); }
+.feature-number {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px; height: 32px;
+    background: #FF9600;
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 16px;
+}
+.feature-card-title {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 22px;
+    color: #FF9600;
+    margin: 8px 0 12px;
+}
+.feature-card-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+.feature-card-img {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto 16px;
+    display: block;
+}
+.feature-card-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background: #FF9600;
+    color: #000;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.feature-card-btn:hover { background: #e08600; }
+
+/* How it works */
+.how-studini {
+    padding: 60px 20px;
+    background: #111;
+}
+.section-title-studini {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 36px;
+    color: #FF9600;
+    text-align: center;
+    margin-bottom: 40px;
+}
+.how-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+.how-step {
+    text-align: center;
+    color: white;
+}
+.how-step-icon {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(255,150,0,0.15);
+    border: 2px solid #FF9600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 24px;
+    color: #FF9600;
+}
+.how-step h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #FF9600; }
+.how-step p { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+
+/* CTA */
+.cta-studini {
+    padding: 60px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #1a0a00 0%, #0a0a0a 100%);
+}
+.cta-desc { color: rgba(255,255,255,0.7); font-size: 16px; margin-bottom: 24px; }
+
+/* Footer */
+.footer-studini {
+    padding: 32px 20px;
+    text-align: center;
+    background: #050505;
+    border-top: 1px solid rgba(255,150,0,0.2);
+}
+.footer-content { color: rgba(255,255,255,0.5); font-size: 13px; }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .nav-links, .nav-actions { display: none; }
+    .nav-mobile-toggle { display: block; }
+    .mobile-menu { display: flex; }
+    .mobile-menu[ng-show="mobileMenu"] { display: none; }
+    .mobile-menu.ng-hide-remove, .mobile-menu:not(.ng-hide) { display: flex; }
+    
+    .hero-content-studini {
+        align-items: center;
+        text-align: center;
+        padding: 40px 20px 60px;
+        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+    }
+    .hero-title-studini { font-size: 40px; }
+    .hero-buttons { flex-direction: column; width: 100%; }
+    .hero-btn { text-align: center; }
+    
+    .feature-cards { grid-template-columns: 1fr; max-width: 400px; }
+    .how-steps { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Old hero (keep for compatibility) */
 .hero {
     background: linear-gradient(135deg, var(--primary) 0%, #E08600 100%);
     color: var(--white);
