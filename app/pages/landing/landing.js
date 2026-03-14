@@ -19,6 +19,9 @@ app.controller('LandingController', function($scope, $location, $http, $sce) {
     $scope.goChildLogin = function() {
         $location.path('/login').search({ type: 'aluno' });
     };
+    $scope.goContact = function() {
+        $location.path('/contact');
+    };
     $scope.scrollTo = function(id) {
         var el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: 'smooth' });

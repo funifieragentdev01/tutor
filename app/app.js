@@ -18,6 +18,10 @@ app.config(function($routeProvider, $locationProvider, $httpProvider) {
             templateUrl: 'pages/landing/landing.html',
             controller: 'LandingController'
         })
+        .when('/contact', {
+            templateUrl: 'pages/contact/contact.html',
+            controller: 'ContactController'
+        })
         .when('/login', {
             templateUrl: 'pages/login/login.html',
             controller: 'LoginController'

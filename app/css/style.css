@@ -90,13 +90,14 @@ body {
     top: 0; left: 0;
     width: 100%; height: 100%;
     object-fit: cover;
+    object-position: 25% center;
     z-index: 0;
 }
 .hero-video-fallback {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: url('../img/landing/bg.jpg') center/cover no-repeat;
+    background: url('../img/landing/bg.jpg') 25% center/cover no-repeat;
     z-index: -1;
 }
 
@@ -485,6 +486,122 @@ body {
     font-size: 12px;
 }
 
+/* Origin Story */
+.story-studini {
+    padding: 60px 20px;
+    background: #111;
+}
+.story-content {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+    align-items: center;
+}
+.story-paragraph {
+    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+.story-img {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 16px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Contact Page */
+.contact-screen-studini {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 0 16px 40px;
+}
+.contact-header-studini {
+    text-align: center;
+    padding: 60px 0 24px;
+    position: relative;
+}
+.contact-back-studini {
+    position: absolute;
+    left: 0;
+    top: 60px;
+    color: #FF9600;
+    font-size: 20px;
+    cursor: pointer;
+}
+.contact-header-studini h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+}
+.contact-header-studini p {
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+.contact-form-card-studini {
+    max-width: 500px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 24px;
+}
+.contact-form-card-studini .form-group {
+    margin-bottom: 16px;
+}
+.contact-form-card-studini label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.contact-form-card-studini .form-input {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+    font-family: var(--font);
+}
+.contact-form-card-studini select.form-input {
+    appearance: auto;
+}
+.contact-form-card-studini textarea.form-input {
+    resize: vertical;
+    min-height: 100px;
+}
+.contact-form-card-studini .form-input:focus {
+    border-color: #FF9600;
+}
+.contact-success-studini {
+    max-width: 400px;
+    margin: 60px auto 0;
+    text-align: center;
+}
+.contact-success-icon-studini {
+    font-size: 56px;
+    color: #4CAF50;
+    margin-bottom: 16px;
+}
+.contact-success-studini h2 {
+    color: #fff;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+.contact-success-studini p {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
 /* Old footer (keep for compatibility) */
 .footer-studini {
     padding: 32px 20px;
@@ -583,6 +700,8 @@ body {
     .how-steps { grid-template-columns: repeat(2, 1fr); }
     .pricing-cards-studini { grid-template-columns: 1fr; max-width: 400px; }
     .footer-inner-studini { grid-template-columns: 1fr; text-align: center; }
+    .story-content { grid-template-columns: 1fr; }
+    .story-img { max-width: 240px; }
 }
 
 /* Old hero (keep for compatibility) */
