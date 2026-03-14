@@ -46,6 +46,7 @@ app.controller('LoginController', function($scope, $location, $rootScope, $timeo
                 confetti({ particleCount: 60, spread: 100, origin: { y: 0.5 }, colors: ['#FF9600', '#FFB84D', '#E08600', '#FFC266', '#FF8200'] });
             }, 300);
         }
+        try { new Audio('audio/beep.mp3').play(); } catch(e) {}
     }
     
     $scope.login = function() {
