@@ -1042,6 +1042,149 @@ body {
 }
 .auth-link a { color: var(--primary); font-weight: 700; text-decoration: none; }
 
+/* ===== Login Page (Studini themed) ===== */
+.login-page-studini {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #0a0a0a;
+    position: relative;
+}
+.login-container-studini {
+    background: #111;
+    border: 1px solid rgba(255,150,0,0.15);
+    border-radius: 20px;
+    padding: 40px 32px;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+.login-owl-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 3px solid #FF9600;
+}
+.login-logo-studini {
+    font-size: 32px;
+    font-weight: 900;
+    color: #FF9600;
+    margin-bottom: 20px;
+}
+.login-subtitle-studini {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+}
+.login-type-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.login-type-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: rgba(255,150,0,0.05);
+    border: 2px solid rgba(255,150,0,0.2);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font);
+    text-align: left;
+}
+.login-type-btn:hover {
+    border-color: #FF9600;
+    background: rgba(255,150,0,0.1);
+}
+.login-type-btn-icon {
+    font-size: 28px;
+    color: #FF9600;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,150,0,0.1);
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+.login-type-btn-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: white;
+}
+.login-type-btn-desc {
+    display: block;
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+}
+.login-form-studini {
+    text-align: center;
+}
+.login-field {
+    margin-bottom: 16px;
+    text-align: left;
+}
+.login-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: rgba(255,255,255,0.7);
+}
+.login-field input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: var(--font);
+    outline: none;
+    background: #1a1a1a;
+    color: white;
+    transition: border 0.2s;
+    box-sizing: border-box;
+}
+.login-field input:focus { border-color: #FF9600; }
+.login-field input::placeholder { color: rgba(255,255,255,0.3); }
+.login-submit-studini {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 800;
+    font-family: var(--font);
+    background: #FF9600;
+    color: #000;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+}
+.login-submit-studini:hover { background: #e08600; }
+.login-submit-studini:disabled { opacity: 0.6; cursor: not-allowed; }
+.login-link-studini {
+    margin-top: 16px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+}
+.login-link-studini a {
+    color: #FF9600;
+    font-weight: 700;
+    text-decoration: none;
+}
+
 /* ===== App Pages (shared) ===== */
 .app-page { min-height: calc(100vh - 40px); background: var(--bg); padding-bottom: 40px; }
 .section-pad { padding: 16px 20px; }
@@ -1764,21 +1907,17 @@ body {
 }
 
 /* Confetti */
+/* Confetti canvas */
+.confetti-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 9999;
+}
+/* Legacy confetti (quiz) — keep for compat */
 .confetti-container {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     pointer-events: none; z-index: 999;
     overflow: hidden;
-}
-.confetti-container::before {
-    content: '🎉';
-    position: absolute;
-    font-size: 40px;
-    animation: confetti-fall 1.5s ease-out forwards;
-    left: 50%;
-}
-@keyframes confetti-fall {
-    0% { top: -20px; opacity: 1; transform: translateX(-50%) rotate(0deg); }
-    100% { top: 60vh; opacity: 0; transform: translateX(-50%) rotate(360deg); }
 }
 
 /* ===== Version Footer ===== */

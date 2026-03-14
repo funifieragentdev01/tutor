@@ -1,58 +1,67 @@
-<div class="auth-page">
-    <div class="auth-container">
-        <h1 class="auth-logo">Studini</h1>
+<div class="login-page-studini">
+    <!-- Confetti canvas for child login -->
+    <canvas id="confetti-canvas" class="confetti-canvas" ng-if="showConfetti"></canvas>
+
+    <div class="login-container-studini">
+        <!-- Owl icon -->
+        <img src="img/icon.jpg" alt="Studini" class="login-owl-icon">
+        <h1 class="login-logo-studini">Studini</h1>
         
         <!-- User Type Selection -->
-        <div ng-if="!userType" class="user-type-selection">
-            <h2 class="auth-title">Como você quer entrar?</h2>
+        <div ng-if="!userType" class="login-type-selection">
+            <h2 class="login-subtitle-studini">Como você quer entrar?</h2>
             
-            <button class="btn-user-type" ng-click="selectUserType('parent')">
-                <span class="user-type-icon"><i class="fa-solid fa-user-shield" style="font-size: 36px; color: #FF9600;"></i></span>
-                <span class="user-type-label">Sou Pai/Mãe</span>
-                <span class="user-type-desc">Vou acompanhar o aprendizado do meu filho</span>
+            <button class="login-type-btn" ng-click="selectUserType('parent')">
+                <span class="login-type-btn-icon"><i class="fa-solid fa-user-shield"></i></span>
+                <div>
+                    <span class="login-type-btn-label">Sou Pai/Mãe</span>
+                    <span class="login-type-btn-desc">Acompanhar o aprendizado do meu filho</span>
+                </div>
             </button>
             
-            <button class="btn-user-type" ng-click="selectUserType('child')">
-                <span class="user-type-icon"><i class="fa-solid fa-graduation-cap" style="font-size: 36px; color: #FF9600;"></i></span>
-                <span class="user-type-label">Sou Aluno(a)</span>
-                <span class="user-type-desc">Vou fazer quizzes e aprender</span>
+            <button class="login-type-btn" ng-click="selectUserType('child')">
+                <span class="login-type-btn-icon"><i class="fa-solid fa-gamepad"></i></span>
+                <div>
+                    <span class="login-type-btn-label">Sou Aluno(a)</span>
+                    <span class="login-type-btn-desc">Vou jogar e aprender</span>
+                </div>
             </button>
         </div>
         
         <!-- Login Form -->
-        <div ng-if="userType" class="login-form-section">
-            <h2 class="auth-title">
+        <div ng-if="userType" class="login-form-studini">
+            <h2 class="login-subtitle-studini">
                 {{userType === 'parent' ? 'Entrar como Pai/Mãe' : 'Entrar como Aluno(a)'}}
             </h2>
             
-            <form ng-submit="login()" class="auth-form">
-            <div class="form-group">
-                <label>E-mail</label>
-                <input type="email" ng-model="$parent.email" 
-                       placeholder="{{$parent.userType === 'parent' ? 'pai@email.com' : 'aluno@email.com'}}" 
-                       required>
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" ng-model="$parent.password" 
-                       placeholder="{{$parent.userType === 'parent' ? 'Sua senha' : 'Senha definida pelos pais'}}" 
-                       required>
-            </div>
+            <form ng-submit="login()">
+                <div class="login-field">
+                    <label>E-mail</label>
+                    <input type="email" ng-model="$parent.email" 
+                           placeholder="{{$parent.userType === 'parent' ? 'pai@email.com' : 'aluno@email.com'}}" 
+                           required>
+                </div>
+                <div class="login-field">
+                    <label>Senha</label>
+                    <input type="password" ng-model="$parent.password" 
+                           placeholder="{{$parent.userType === 'parent' ? 'Sua senha' : 'Senha definida pelos pais'}}" 
+                           required>
+                </div>
+                
+                <div class="auth-error" ng-show="error">{{error}}</div>
+                
+                <button type="submit" class="login-submit-studini" ng-disabled="loading">
+                    {{loading ? 'Entrando...' : 'Entrar'}}
+                </button>
+            </form>
             
-            <div class="auth-error" ng-show="error">{{error}}</div>
-            
-            <button type="submit" class="btn btn-primary btn-block" ng-disabled="loading">
-                {{loading ? 'Entrando...' : 'Entrar'}}
-            </button>
-        </form>
-        
-        <p class="auth-link">
-            Não tem conta? <a href="" ng-click="goSignup()">Criar conta</a>
-        </p>
-        <p class="auth-link">
-            <a href="" ng-click="userType = null">← Voltar</a> |
-            <a href="" ng-click="goLanding()">Página inicial</a>
-        </p>
+            <p class="login-link-studini">
+                Não tem conta? <a href="" ng-click="goSignup()">Criar conta</a>
+            </p>
+            <p class="login-link-studini">
+                <a href="" ng-click="userType = null">← Voltar</a> |
+                <a href="" ng-click="goLanding()">Página inicial</a>
+            </p>
         </div>
     </div>
 </div>
