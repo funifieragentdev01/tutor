@@ -40,7 +40,7 @@
         <div class="magic-subject-grid" ng-if="subjects.length > 0">
             <div class="magic-subject-card" ng-repeat="subj in subjects" ng-click="openSubject(subj)">
                 <div class="magic-card-icon-wrap">
-                    <img class="magic-card-icon-img" ng-src="img/magic/icon-{{magicIcons[$index % magicIcons.length]}}.jpg">
+                    <img class="magic-card-icon-img" ng-src="img/magic/icon-{{magicIcons[$index % magicIcons.length].name}}.{{magicIcons[$index % magicIcons.length].ext}}">
                 </div>
                 <div class="magic-card-title">{{subj.title}}</div>
                 <div class="magic-card-progress-wrap">
@@ -65,7 +65,7 @@
         <div class="magic-speech-bubble">
             <span>{{mascotPhrase}}</span>
         </div>
-        <img src="img/landing/logo.png" class="magic-mascot-img">
+        <img src="img/magic/mascot.png" class="magic-mascot-img">
     </div>
 
     <!-- Loading -->

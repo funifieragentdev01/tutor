@@ -3102,7 +3102,7 @@ body.has-bottom-nav .app-version {
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     width: 420px; height: 420px;
-    background: url('../img/magic/runes-2.jpg') center/contain no-repeat;
+    background: url('../img/magic/runes-bg.png') center/cover repeat;
     opacity: 0.06;
     pointer-events: none;
     z-index: 0;

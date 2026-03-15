@@ -13,7 +13,12 @@ app.controller('ChildDashboardController', function($scope, $location, AuthServi
     $scope.dailyStreak = 0;
     
     // Magical icon mapping
-    $scope.magicIcons = ['book', 'potion', 'crystal', 'portal', 'cauldron', 'wand', 'hourglass', 'scroll'];
+    $scope.magicIcons = [
+        {name: 'book', ext: 'png'}, {name: 'portal', ext: 'png'},
+        {name: 'crystal', ext: 'jpg'}, {name: 'potion', ext: 'jpg'},
+        {name: 'cauldron', ext: 'jpg'}, {name: 'wand', ext: 'jpg'},
+        {name: 'hourglass', ext: 'jpg'}, {name: 'scroll', ext: 'jpg'}
+    ];
     
     // Mascot phrases
     var PHRASES = [
