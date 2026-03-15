@@ -2804,3 +2804,287 @@ body.has-bottom-nav .app-version {
 .duo-popup-btn-gray:active {
     transform: none;
 }
+
+/* ============================================================
+   PHASE 1 — MAGICAL ATMOSPHERE
+   Background particles, glow effects, animations, consistency
+   ============================================================ */
+
+/* --- Magic Particle Background (CSS-only stars/sparkles) --- */
+@keyframes twinkle {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.6; }
+}
+@keyframes twinkle2 {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.45; }
+}
+@keyframes drift {
+    0% { transform: translateY(0) translateX(0); }
+    50% { transform: translateY(-8px) translateX(4px); }
+    100% { transform: translateY(0) translateX(0); }
+}
+@keyframes fadeInPage {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 8px rgba(255, 150, 0, 0.15); }
+    50% { box-shadow: 0 0 20px rgba(255, 150, 0, 0.35); }
+}
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+/* Starfield pseudo-element on all internal app-pages */
+.app-page::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,200,100,0.4), transparent),
+        radial-gradient(1px 1px at 25% 35%, rgba(255,200,100,0.3), transparent),
+        radial-gradient(1.5px 1.5px at 40% 8%, rgba(255,150,0,0.35), transparent),
+        radial-gradient(1px 1px at 55% 45%, rgba(255,220,130,0.25), transparent),
+        radial-gradient(1px 1px at 70% 20%, rgba(255,200,100,0.3), transparent),
+        radial-gradient(1.5px 1.5px at 85% 55%, rgba(255,150,0,0.3), transparent),
+        radial-gradient(1px 1px at 15% 65%, rgba(255,220,130,0.2), transparent),
+        radial-gradient(1px 1px at 35% 80%, rgba(255,200,100,0.25), transparent),
+        radial-gradient(1.5px 1.5px at 60% 70%, rgba(255,150,0,0.3), transparent),
+        radial-gradient(1px 1px at 80% 85%, rgba(255,220,130,0.2), transparent),
+        radial-gradient(1px 1px at 5% 90%, rgba(255,200,100,0.3), transparent),
+        radial-gradient(1px 1px at 90% 10%, rgba(255,150,0,0.25), transparent),
+        radial-gradient(1px 1px at 50% 50%, rgba(255,200,100,0.15), transparent),
+        radial-gradient(1px 1px at 75% 40%, rgba(255,220,130,0.2), transparent),
+        radial-gradient(1.5px 1.5px at 20% 50%, rgba(255,150,0,0.2), transparent),
+        radial-gradient(1px 1px at 95% 75%, rgba(255,200,100,0.25), transparent);
+    animation: twinkle 4s ease-in-out infinite;
+}
+/* Second starfield layer — different timing for depth */
+.app-page::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(1px 1px at 8% 25%, rgba(200,180,255,0.2), transparent),
+        radial-gradient(1px 1px at 30% 12%, rgba(200,180,255,0.15), transparent),
+        radial-gradient(1.5px 1.5px at 45% 60%, rgba(180,160,255,0.2), transparent),
+        radial-gradient(1px 1px at 65% 30%, rgba(200,180,255,0.15), transparent),
+        radial-gradient(1px 1px at 82% 70%, rgba(180,160,255,0.18), transparent),
+        radial-gradient(1px 1px at 18% 85%, rgba(200,180,255,0.12), transparent),
+        radial-gradient(1px 1px at 55% 15%, rgba(180,160,255,0.15), transparent),
+        radial-gradient(1px 1px at 72% 92%, rgba(200,180,255,0.12), transparent);
+    animation: twinkle2 6s ease-in-out infinite;
+}
+
+/* Ensure page content stays above starfield */
+.app-page > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Subtle magical gradient overlay at the top */
+.app-page {
+    background: linear-gradient(180deg, #0d1520 0%, var(--bg) 30%, var(--bg) 100%) !important;
+}
+
+/* Don't apply starfield to landing/login (they have their own backgrounds) */
+.landing-page::before, .landing-page::after,
+.login-page-studini::before, .login-page-studini::after {
+    display: none !important;
+}
+
+/* --- Page Content Animations --- */
+.section-pad {
+    animation: fadeInPage 0.4s ease-out;
+}
+.duo-trail-container {
+    animation: fadeInPage 0.5s ease-out;
+}
+.quiz-content, .quiz-results {
+    animation: fadeInPage 0.4s ease-out;
+}
+.mode-select {
+    animation: fadeInScale 0.4s ease-out;
+}
+.chat-messages {
+    animation: fadeInPage 0.3s ease-out;
+}
+
+/* --- Subject Cards: Magical Glow on Hover/Active --- */
+.subject-card {
+    transition: transform 0.2s, box-shadow 0.3s, border-color 0.3s;
+    border: 2px solid rgba(255,150,0,0.15);
+    position: relative;
+    overflow: hidden;
+}
+.subject-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,150,0,0.06), transparent);
+    animation: shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+    width: 200%;
+}
+.subject-card:active {
+    border-color: rgba(255,150,0,0.4);
+    box-shadow: 0 0 16px rgba(255,150,0,0.2);
+}
+
+/* --- Subject Card Icon: Subtle glow --- */
+.subject-card-icon {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2);
+    transition: box-shadow 0.3s;
+}
+
+/* --- Duolingo Bubbles: Magic glow for active/done --- */
+.duo-bubble-active {
+    box-shadow: 0 0 12px rgba(255,150,0,0.3), 0 4px 0 rgba(0,0,0,0.3);
+    animation: pulseGlow 3s ease-in-out infinite;
+}
+.duo-bubble-done {
+    box-shadow: 0 0 10px rgba(88,204,2,0.25), 0 4px 0 rgba(0,0,0,0.3);
+}
+
+/* --- Module Headers: Magical gradient border --- */
+.duo-module-header {
+    position: relative;
+    overflow: hidden;
+}
+.duo-module-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,200,100,0.5), transparent);
+}
+
+/* --- Quiz: Enhanced feedback animations --- */
+.question-card {
+    animation: fadeInScale 0.3s ease-out;
+}
+.choice-btn {
+    transition: all 0.2s ease;
+    border: 2px solid var(--border);
+}
+.choice-btn:not(:disabled):active {
+    border-color: var(--primary);
+    box-shadow: 0 0 12px rgba(255,150,0,0.2);
+}
+.choice-correct {
+    box-shadow: 0 0 16px rgba(88,204,2,0.3) !important;
+}
+.choice-wrong {
+    box-shadow: 0 0 16px rgba(255,75,75,0.3) !important;
+}
+
+/* --- Quiz Results: Enhanced celebration --- */
+.results-title-big {
+    animation: fadeInScale 0.5s ease-out;
+}
+.results-stats-row {
+    animation: fadeInPage 0.6s ease-out 0.2s both;
+}
+.results-character-img {
+    animation: fadeInScale 0.5s ease-out;
+    filter: drop-shadow(0 4px 20px rgba(255,150,0,0.3));
+}
+
+/* --- Chat: Magical atmosphere --- */
+.chat-page .app-header {
+    background: linear-gradient(180deg, var(--bg-card), rgba(26,45,53,0.95));
+    border-bottom: 1px solid rgba(255,150,0,0.1);
+}
+.chip-btn {
+    border-color: rgba(255,150,0,0.3);
+    transition: all 0.2s, box-shadow 0.3s;
+}
+.chip-btn:active {
+    box-shadow: 0 0 12px rgba(255,150,0,0.3);
+}
+
+/* --- Headers: Subtle glow line at bottom --- */
+.app-header {
+    border-bottom: 1px solid rgba(255,150,0,0.1) !important;
+    background: linear-gradient(180deg, rgba(26,45,53,0.98), rgba(19,31,36,0.98)) !important;
+}
+
+/* --- Bottom Nav: Magical styling --- */
+.bottom-nav {
+    border-top: 1px solid rgba(255,150,0,0.1) !important;
+    background: rgba(19,31,36,0.98) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* --- Folder Items: Subtle hover glow --- */
+.folder-item {
+    transition: transform 0.15s, box-shadow 0.3s;
+    border: 1px solid rgba(255,150,0,0.08);
+}
+.folder-item:active {
+    box-shadow: 0 0 12px rgba(255,150,0,0.15);
+    border-color: rgba(255,150,0,0.2);
+}
+
+/* --- Child Avatar: Orange ring glow --- */
+.child-header-avatar {
+    box-shadow: 0 0 8px rgba(255,150,0,0.3);
+    border: 2px solid rgba(255,150,0,0.4);
+}
+.child-avatar-img {
+    border-radius: 50%;
+}
+
+/* --- Empty State: Gentler appearance --- */
+.empty-state {
+    animation: fadeInScale 0.5s ease-out;
+}
+.empty-icon {
+    filter: drop-shadow(0 2px 8px rgba(255,150,0,0.2));
+}
+
+/* --- Section Headings: Subtle orange accent --- */
+.section-heading {
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* --- Trail Variation Images: Magical float --- */
+.trail-variation-img {
+    animation: drift 6s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(255,150,0,0.2));
+}
+
+/* --- Spinner: Orange magic theme --- */
+.spinner {
+    border-top-color: var(--primary) !important;
+}
+
+/* --- Scrollbar Styling (webkit) --- */
+.app-page::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar,
+.duo-trail-container::-webkit-scrollbar {
+    width: 4px;
+}
+.app-page::-webkit-scrollbar-track,
+.chat-messages::-webkit-scrollbar-track,
+.duo-trail-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.app-page::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb,
+.duo-trail-container::-webkit-scrollbar-thumb {
+    background: rgba(255,150,0,0.2);
+    border-radius: 4px;
+}
