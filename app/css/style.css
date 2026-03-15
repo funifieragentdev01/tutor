@@ -3088,3 +3088,252 @@ body.has-bottom-nav .app-version {
     background: rgba(255,150,0,0.2);
     border-radius: 4px;
 }
+
+/* ===== Magical Dashboard ===== */
+.magical-dashboard {
+    padding-bottom: 120px;
+    overflow-x: hidden;
+}
+.magical-dashboard .app-header { display: none !important; }
+
+/* Runic background */
+.magic-runes-bg {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px; height: 420px;
+    background: url('../img/magic/runes-2.jpg') center/contain no-repeat;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 12s ease-in-out infinite;
+}
+
+/* Immersive Header */
+.magic-header {
+    text-align: center;
+    padding: 32px 20px 20px;
+    position: relative;
+    z-index: 1;
+    animation: fadeInPage 0.5s ease-out;
+}
+.magic-header-top {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+.magic-logout {
+    color: rgba(255,255,255,0.5);
+    font-size: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Avatar with golden glow ring */
+.magic-avatar-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+.magic-avatar-ring {
+    width: 108px; height: 108px;
+    border-radius: 50%;
+    padding: 4px;
+    background: conic-gradient(#FFD700, #FF9600, #FFD700, #FF9600, #FFD700);
+    box-shadow: 0 0 24px rgba(255,200,0,0.35), 0 0 60px rgba(255,150,0,0.15);
+    animation: pulseGlow 3s ease-in-out infinite;
+}
+.magic-avatar {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    border: 3px solid #131F24;
+}
+.magic-avatar-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+.magic-avatar-letter {
+    font-size: 36px;
+    font-weight: 800;
+    color: white;
+}
+
+/* Greeting */
+.magic-greeting {
+    font-size: 22px;
+    font-weight: 800;
+    color: #FFD700;
+    margin: 0 0 16px;
+    text-shadow: 0 0 20px rgba(255,200,0,0.3);
+}
+
+/* Stats row */
+.magic-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: rgba(26,45,53,0.7);
+    border: 1px solid rgba(255,150,0,0.2);
+    border-radius: 16px;
+    padding: 12px 28px;
+    display: inline-flex;
+}
+.magic-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.magic-stat-icon {
+    font-size: 18px;
+    color: #FFD700;
+}
+.magic-stat-icon.fire {
+    color: #FF6B35;
+}
+.magic-stat-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+}
+.magic-stat-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+}
+.magic-stat-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255,150,0,0.25);
+}
+
+/* Subject Grid */
+.magic-subject-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 0 4px;
+}
+.magic-subject-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 16px 12px 14px;
+    text-align: center;
+    cursor: pointer;
+    border: 1.5px solid rgba(255,150,0,0.12);
+    transition: transform 0.15s, box-shadow 0.3s, border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.magic-subject-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,150,0,0.06), transparent);
+    animation: shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+    width: 200%;
+}
+.magic-subject-card:active {
+    transform: scale(0.97);
+    border-color: rgba(255,150,0,0.4);
+    box-shadow: 0 0 20px rgba(255,150,0,0.2);
+}
+
+/* Card icon */
+.magic-card-icon-wrap {
+    width: 72px; height: 72px;
+    margin: 0 auto 10px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.magic-card-icon-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+
+/* Card title */
+.magic-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Potion progress bar */
+.magic-card-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.magic-card-progress-bar {
+    flex: 1;
+    height: 10px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.magic-card-progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #FF6B00, #FF9600, #FFBF40);
+    box-shadow: 0 0 8px rgba(255,150,0,0.4);
+    transition: width 0.6s ease;
+    min-width: 0;
+}
+.magic-card-progress-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 30px;
+    text-align: right;
+}
+
+/* Mascot */
+.magic-mascot {
+    position: fixed;
+    bottom: 70px;
+    right: 12px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    animation: fadeInScale 0.6s ease-out 0.3s both;
+}
+.magic-mascot-img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(255,150,0,0.3));
+    animation: drift 5s ease-in-out infinite;
+}
+.magic-speech-bubble {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,150,0,0.25);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    max-width: 200px;
+    margin-bottom: 6px;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.magic-speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    right: 24px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--bg-card);
+}

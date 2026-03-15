@@ -1,31 +1,54 @@
-<div class="app-page child-page">
-    <!-- Header -->
-    <div class="app-header">
-        <div class="header-left">
-            <div class="child-header-avatar" ng-style="{'background-color': avatarColor}">
-                <img ng-if="avatarUrl" ng-src="{{avatarUrl}}" class="child-avatar-img">
-                <span ng-if="!avatarUrl">{{childName.charAt(0).toUpperCase()}}</span>
-            </div>
-            <span class="header-greeting">Olá, {{childName}}!</span>
-        </div>
-        <div class="header-right">
-            <button class="btn-icon" ng-click="logout()">
+<div class="app-page child-page magical-dashboard">
+    <!-- Runic background overlay -->
+    <div class="magic-runes-bg"></div>
+
+    <!-- Immersive Magical Header -->
+    <div class="magic-header" ng-if="!loading">
+        <div class="magic-header-top">
+            <button class="btn-icon magic-logout" ng-click="logout()">
                 <span class="icon">↩</span>
             </button>
         </div>
+        <div class="magic-avatar-wrap">
+            <div class="magic-avatar-ring">
+                <div class="magic-avatar" ng-style="{'background-color': avatarColor}">
+                    <img ng-if="avatarUrl" ng-src="{{avatarUrl}}" class="magic-avatar-img">
+                    <span ng-if="!avatarUrl" class="magic-avatar-letter">{{childName.charAt(0).toUpperCase()}}</span>
+                </div>
+            </div>
+        </div>
+        <h1 class="magic-greeting">Bem-vindo, Aprendiz {{firstName}}!</h1>
+        <div class="magic-stats">
+            <div class="magic-stat">
+                <i class="fa fa-shield magic-stat-icon"></i>
+                <span class="magic-stat-value">{{playerXP || 0}}</span>
+                <span class="magic-stat-label">XP</span>
+            </div>
+            <div class="magic-stat-divider"></div>
+            <div class="magic-stat">
+                <i class="fa fa-fire magic-stat-icon fire"></i>
+                <span class="magic-stat-value">{{dailyStreak || 0}}</span>
+                <span class="magic-stat-label">dias</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Subjects (Duolingo-style trail) -->
-    <div class="section-pad">
+    <!-- Subjects (magical cards) -->
+    <div class="section-pad" ng-if="!loading">
         <h2 class="section-heading">Minhas Disciplinas</h2>
         
-        <div class="subject-grid" ng-if="subjects.length > 0">
-            <div class="subject-card" ng-repeat="subj in subjects" ng-click="openSubject(subj)">
-                <div class="subject-card-icon" ng-style="{'background-color': getColor($index)}">
-                    <span>{{getIcon(subj)}}</span>
+        <div class="magic-subject-grid" ng-if="subjects.length > 0">
+            <div class="magic-subject-card" ng-repeat="subj in subjects" ng-click="openSubject(subj)">
+                <div class="magic-card-icon-wrap">
+                    <img class="magic-card-icon-img" ng-src="img/magic/icon-{{magicIcons[$index % magicIcons.length]}}.jpg">
                 </div>
-                <div class="subject-card-title">{{subj.title}}</div>
-                <div class="subject-card-progress" ng-if="subj.total > 0">{{(subj.percent || 0) | number:0}}%</div>
+                <div class="magic-card-title">{{subj.title}}</div>
+                <div class="magic-card-progress-wrap">
+                    <div class="magic-card-progress-bar">
+                        <div class="magic-card-progress-fill" ng-style="{'width': (subj.percent || 0) + '%'}"></div>
+                    </div>
+                    <span class="magic-card-progress-text">{{(subj.percent || 0) | number:0}}%</span>
+                </div>
             </div>
         </div>
 
@@ -35,6 +58,14 @@
             <h3>Nenhuma disciplina ainda</h3>
             <p>Peça para seu pai ou mãe adicionar disciplinas para você!</p>
         </div>
+    </div>
+
+    <!-- Mascot -->
+    <div class="magic-mascot" ng-if="!loading && subjects.length > 0">
+        <div class="magic-speech-bubble">
+            <span>{{mascotPhrase}}</span>
+        </div>
+        <img src="img/landing/logo.png" class="magic-mascot-img">
     </div>
 
     <!-- Loading -->

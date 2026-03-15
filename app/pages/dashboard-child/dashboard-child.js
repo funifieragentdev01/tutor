@@ -1,33 +1,60 @@
 app.controller('ChildDashboardController', function($scope, $location, AuthService, ApiService) {
     var COLORS = ['#FF9600', '#00B894', '#FD79A8', '#FDCB6E', '#74B9FF', '#FF6B6B', '#FFB84D', '#00CEC9'];
-    var SUBJECT_ICONS = {
-        'matemática': '📐', 'português': '📖', 'inglês': '🇬🇧',
-        'história': '🏛️', 'geografia': '🌍', 'ciências': '🔬',
-        'arte': '🎨', 'música': '🎵', 'biologia': '🧬',
-        'física': '⚡', 'química': '🧪', 'filosofia': '💭'
-    };
     
     var childId = AuthService.getUser();
     
     $scope.childName = '';
+    $scope.firstName = '';
     $scope.avatarUrl = null;
     $scope.avatarColor = COLORS[0];
     $scope.subjects = [];
     $scope.loading = true;
+    $scope.playerXP = 0;
+    $scope.dailyStreak = 0;
+    
+    // Magical icon mapping
+    $scope.magicIcons = ['book', 'potion', 'crystal', 'portal', 'cauldron', 'wand', 'hourglass', 'scroll'];
+    
+    // Mascot phrases
+    var PHRASES = [
+        'Continue assim, {name}! Você está indo muito bem!',
+        'A magia do conhecimento é infinita!',
+        'Cada lição te deixa mais poderoso!',
+        'Você é um verdadeiro aprendiz!',
+        'O saber é a maior magia!'
+    ];
+    $scope.mascotPhrase = '';
+    
+    function pickPhrase(name) {
+        var p = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+        return p.replace('{name}', name);
+    }
     
     function init() {
-        // Get child player data + root_folder
         ApiService.getPlayer(childId).then(function(res) {
             var player = res.data || {};
             $scope.childName = player.name || childId.split('@')[0];
+            $scope.firstName = $scope.childName.split(' ')[0];
             if (player.image && player.image.small && player.image.small.url) {
                 $scope.avatarUrl = player.image.small.url;
+            }
+            $scope.mascotPhrase = pickPhrase($scope.firstName);
+            
+            // Try to get XP from player points
+            if (player.points) {
+                for (var i = 0; i < player.points.length; i++) {
+                    if (player.points[i].category === 'experience' || player.points[i].total) {
+                        $scope.playerXP = player.points[i].total || 0;
+                        break;
+                    }
+                }
             }
             
             var rootFolder = (player.extra && player.extra.root_folder) || childId;
             loadSubjects(rootFolder);
         }).catch(function() {
-            // Fallback: try with childId
+            $scope.firstName = childId.split('@')[0];
+            $scope.mascotPhrase = pickPhrase($scope.firstName);
             loadSubjects(childId);
         });
     }
@@ -40,7 +67,6 @@ app.controller('ChildDashboardController', function($scope, $location, AuthServi
             $scope.loading = false;
             $scope.$applyAsync();
         }).catch(function() {
-            // Fallback to inside
             ApiService.getFolderInside(rootFolder).then(function(res) {
                 var data = res.data || {};
                 $scope.subjects = (data.items || []).filter(function(i) { return i.folder !== false; });
@@ -52,15 +78,6 @@ app.controller('ChildDashboardController', function($scope, $location, AuthServi
             });
         });
     }
-    
-    $scope.getColor = function(idx) {
-        return COLORS[idx % COLORS.length];
-    };
-    
-    $scope.getIcon = function(subj) {
-        var key = (subj.title || '').toLowerCase();
-        return SUBJECT_ICONS[key] || '📘';
-    };
     
     $scope.openSubject = function(subj) {
         if (subj.is_unlocked === false) return;
